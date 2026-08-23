@@ -269,3 +269,102 @@ def insert_run_history(entry: Dict[str, Any]) -> None:
         print(f"⚠️  [DB] Could not save run history entry ({e})")
     finally:
         conn.close()
+
+
+# ── Reads ───────────────────────────────────────────────────────────
+# Used by main.py's GET /api/accounts(/<key>) and /api/people(/<key>) as
+# a fallback when the local output/ JSON file doesn't exist — e.g. a
+# freshly deployed instance that's never scraped anything itself, but
+# shares DATABASE_URL with one that has.
+
+def get_store(target_key: str):
+    """Posts for one target, reconstructed from Postgres into the same
+    {"data": {channel: {"posts": [...], "count": N}}} shape the JSON
+    store file uses — or None if nothing's there (DB unreachable, or
+    genuinely never scraped anywhere).
+    """
+    conn = _connect()
+    if conn is None:
+        return None
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT channel, raw FROM posts WHERE target_key = %s ORDER BY channel, rank",
+                (target_key,),
+            )
+            rows = cur.fetchall()
+        if not rows:
+            return None
+        data: Dict[str, Any] = {}
+        for channel, raw in rows:
+            data.setdefault(channel, {"posts": []})["posts"].append(raw)
+        for block in data.values():
+            block["count"] = len(block["posts"])
+        return {"data": data}
+    except Exception as e:
+        print(f"⚠️  [DB] Could not read posts for '{target_key}' ({e})")
+        return None
+    finally:
+        conn.close()
+
+
+def get_digest(target_key: str):
+    conn = _connect()
+    if conn is None:
+        return None
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT digest FROM digests WHERE target_key = %s", (target_key,))
+            row = cur.fetchone()
+        return row[0] if row else None
+    except Exception as e:
+        print(f"⚠️  [DB] Could not read digest for '{target_key}' ({e})")
+        return None
+    finally:
+        conn.close()
+
+
+def get_summary(target_key: str):
+    """Cheap total_posts/last_run for the list endpoint — avoids pulling
+    every post's full JSON just to count them.
+    """
+    conn = _connect()
+    if conn is None:
+        return None
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT count(*), max(last_seen) FROM posts WHERE target_key = %s",
+                (target_key,),
+            )
+            total, last_seen = cur.fetchone()
+        if not total:
+            return None
+        return {
+            "total_posts": total,
+            "last_run": last_seen.isoformat() if last_seen else None,
+        }
+    except Exception as e:
+        print(f"⚠️  [DB] Could not read summary for '{target_key}' ({e})")
+        return None
+    finally:
+        conn.close()
+
+
+def has_digest(target_key: str) -> bool:
+    conn = _connect()
+    if conn is None:
+        return False
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM digests WHERE target_key = %s", (target_key,))
+            return cur.fetchone() is not None
+    except Exception as e:
+        print(f"⚠️  [DB] Could not check digest for '{target_key}' ({e})")
+        return False
+    finally:
+        conn.close()

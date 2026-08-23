@@ -378,6 +378,7 @@ def cmd_serve(args) -> int:
             from targets import COMPANY_TARGETS
             from people_targets import PEOPLE_TARGETS
             from paths import store_path, digest_path
+            import db
 
             table = PEOPLE_TARGETS if kind == "person" else COMPANY_TARGETS
             items = []
@@ -385,15 +386,32 @@ def cmd_serve(args) -> int:
                 cfg = table[key]
                 store = self._read_json_file(store_path(key))
                 meta = (store or {}).get("metadata", {})
+                has_store = store is not None
+                has_digest = os.path.exists(digest_path(key))
+                total_posts = meta.get("total_posts")
+                last_run = (store or {}).get("store", {}).get("last_run")
+
+                # No local JSON file (e.g. a freshly deployed instance that
+                # hasn't scraped this target itself) — fall back to Postgres,
+                # which may have it from wherever it was originally scraped.
+                if store is None:
+                    summary = db.get_summary(key)
+                    if summary:
+                        has_store = True
+                        total_posts = summary["total_posts"]
+                        last_run = summary["last_run"]
+                if not has_digest and db.has_digest(key):
+                    has_digest = True
+
                 items.append({
                     "key": key,
                     "display_name": cfg.get("display_name", key),
                     "ticker": cfg.get("ticker") if kind == "company" else None,
                     "channels": _configured_channels(cfg),
-                    "has_store": store is not None,
-                    "has_digest": os.path.exists(digest_path(key)),
-                    "total_posts": meta.get("total_posts"),
-                    "last_run": (store or {}).get("store", {}).get("last_run"),
+                    "has_store": has_store,
+                    "has_digest": has_digest,
+                    "total_posts": total_posts,
+                    "last_run": last_run,
                 })
             list_key = "people" if kind == "person" else "accounts"
             self._send_json(200, {list_key: items})
@@ -403,6 +421,7 @@ def cmd_serve(args) -> int:
             from targets import resolve as resolve_company
             from people_targets import resolve as resolve_person
             from paths import store_path, digest_path
+            import db
 
             key = urllib.parse.unquote(raw_key).strip().strip("/")
             if not key:
@@ -417,10 +436,18 @@ def cmd_serve(args) -> int:
                 self._send_json(404, {"ok": False, "error": e.args[0] if e.args else str(e)})
                 return
 
+            # No local JSON file (e.g. a freshly deployed instance that
+            # hasn't scraped this target itself) — fall back to Postgres.
+            # Reconstructed from `posts`/`digests` rows, so it won't be
+            # byte-identical to the JSON file (no query/store metadata
+            # block), but carries the same post/digest content.
+            store = self._read_json_file(store_path(target["key"])) or db.get_store(target["key"])
+            digest = self._read_json_file(digest_path(target["key"])) or db.get_digest(target["key"])
+
             self._send_json(200, {
                 "target": target,
-                "store": self._read_json_file(store_path(target["key"])),
-                "digest": self._read_json_file(digest_path(target["key"])),
+                "store": store,
+                "digest": digest,
             })
 
         def do_POST(self):
