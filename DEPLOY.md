@@ -27,12 +27,32 @@ instance's hourly cost too (t3.micro is roughly $7-8/month on-demand).
 
 GitHub Actions doesn't build the image itself or push to a registry —
 it `rsync`s the repo to the EC2 box, then SSHes in to build the Docker
-image and restart the container **on the instance**. No registry, no
+images and restart the containers **on the instance**. No registry, no
 registry secrets, no separate deploy key: just one SSH keypair.
 
 ```
-push to main → GitHub Actions → rsync code to EC2 → ssh: docker build && docker run
+push to main → GitHub Actions → rsync code to EC2 → ssh: docker compose up -d --build
 ```
+
+Two containers run via `docker-compose.yml`: `app` (this Python service,
+not directly reachable from outside) and `caddy` (reverse proxy on 80/443
+— see "HTTPS" below for what it does with TLS). Only Caddy is ever
+reachable from the internet.
+
+## HTTPS
+
+There's no domain here, so `Caddyfile` uses `tls internal` — Caddy
+generates and serves a **self-signed** certificate rather than a
+Let's-Encrypt one (a public CA can't issue a trusted cert for a bare IP).
+Traffic is genuinely encrypted, but every browser will show a
+"certificate not trusted" warning once per device — click through it
+("Advanced" → "Proceed", wording varies by browser). Plain `http://`
+still works but redirects to `https://` rather than serving unencrypted.
+
+If you'd rather have a real no-warning padlock, that requires an actual
+hostname pointing at the instance (even a free one like a
+`sslip.io` subdomain works with Let's Encrypt) — ask if you want that
+swapped in later; it's a small `Caddyfile` change.
 
 ---
 
@@ -55,6 +75,8 @@ push to main → GitHub Actions → rsync code to EC2 → ssh: docker build && d
    - **HTTP (80)**: source `0.0.0.0/0` — this is fine because `/api/*`
      is gated by `API_KEY` (see step 3) and everything else served is
      already meant to be public (frontend, `output/*.json`, `API.md`).
+     Caddy redirects it to HTTPS rather than serving over it directly.
+   - **HTTPS (443)**: source `0.0.0.0/0` — same reasoning as port 80.
 6. Storage: default 8-30GB gp3 is plenty.
 7. Launch, then note the instance's **public IPv4 address**.
 
@@ -63,10 +85,12 @@ push to main → GitHub Actions → rsync code to EC2 → ssh: docker build && d
 SSH in (`ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>`), then:
 
 ```bash
-# Install Docker
+# Install Docker (the convenience script includes the Compose plugin)
 curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 newgrp docker    # or log out and back in
+
+docker compose version    # confirm the Compose plugin is present
 
 # Somewhere to persist scraped data across deploys (Postgres also
 # mirrors everything if DATABASE_URL is set, but this keeps the JSON
@@ -126,9 +150,11 @@ for the build/deploy log.
 
 ## 5. Verify
 
-- `http://<EC2_PUBLIC_IP>/frontend/` should load the app.
-- `curl http://<EC2_PUBLIC_IP>/api/accounts` should 401 without a key,
-  and return data with `-H "X-API-Key: <your API_KEY>"`.
+- `https://<EC2_PUBLIC_IP>/frontend/` should load the app, after clicking
+  through the self-signed cert warning once (see "HTTPS" above).
+- `curl -k https://<EC2_PUBLIC_IP>/api/accounts` should 401 without a key
+  (`-k` skips cert verification, since it's self-signed), and return data
+  with `-H "X-API-Key: <your API_KEY>"` added.
 - In the frontend itself, paste the same `API_KEY` into the small field
   next to the theme toggle (top right) — it's saved in that browser's
   `localStorage` and sent automatically on Run Pipeline / Save as Target
@@ -136,16 +162,19 @@ for the build/deploy log.
 
 ## Updating later
 
-Just push to `main` — the pipeline rebuilds and restarts the container.
+Just push to `main` — the pipeline rebuilds and restarts both containers.
 `output/` and Postgres data both survive (the volume mount and the
-database are untouched by a redeploy).
+database are untouched by a redeploy); so does the Caddy TLS certificate
+(the `caddy_data` volume persists across redeploys too).
 
 ## Rolling back / troubleshooting
 
 ```bash
 ssh -i your-key.pem ubuntu@<EC2_PUBLIC_IP>
-docker logs data-scrapper          # see what the app printed
-docker ps                          # confirm it's running
+cd ~/data_scrapper
+docker compose logs app            # see what the Python app printed
+docker compose logs caddy          # see what Caddy printed (TLS issues, etc.)
+docker compose ps                  # confirm both are running
 ```
 
 The box itself has no git history — code arrives via `rsync`, not a

@@ -35,7 +35,7 @@ jobs:
           remote_user: ${{ secrets.EC2_USER }}
           remote_key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Build image and restart container
+      - name: Build image and restart containers
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -44,13 +44,6 @@ jobs:
           script: |
             set -e
             cd ~/data_scrapper
-            docker build -t data-scrapper:latest .
-            docker stop data-scrapper 2>/dev/null || true
-            docker rm data-scrapper 2>/dev/null || true
             mkdir -p ~/data_scrapper_output
-            docker run -d --name data-scrapper --restart unless-stopped \
-              -p 80:8080 \
-              --env-file ~/data_scrapper.env \
-              -v ~/data_scrapper_output:/app/output \
-              data-scrapper:latest
+            docker compose up -d --build
             docker image prune -f
