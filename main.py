@@ -327,18 +327,52 @@ def cmd_serve(args) -> int:
             except (json.JSONDecodeError, OSError):
                 return None
 
+        def _require_api_key(self) -> bool:
+            """Gate on X-API-Key when API_KEY is set in .env; no-op locally.
+
+            Applies to every /api/* route (GET and POST) — /api/run can
+            trigger billed Apify scrapes and /api/send-email sends real
+            mail, so once this process is reachable by anything other than
+            the operator, those need a real check, not just obscurity.
+            """
+            from config import API_KEY
+
+            if not API_KEY:
+                return True
+            if self.headers.get("X-API-Key") == API_KEY:
+                return True
+            self._send_json(401, {"ok": False, "error": "Missing or invalid X-API-Key header"})
+            return False
+
+        # Everything else on disk (.env, *.py source, custom_targets.json,
+        # .git/, ...) is deliberately NOT reachable over HTTP — this list is
+        # the complete set of what's safe to serve publicly.
+        _PUBLIC_PREFIXES = ("/frontend/", "/output/")
+        _PUBLIC_EXACT = {"/API.md"}
+
         def do_GET(self):
             path = self.path.split("?", 1)[0]
-            if path == "/api/accounts":
-                self._handle_list("company")
-            elif path.startswith("/api/accounts/"):
-                self._handle_detail("company", path[len("/api/accounts/"):])
-            elif path == "/api/people":
-                self._handle_list("person")
-            elif path.startswith("/api/people/"):
-                self._handle_detail("person", path[len("/api/people/"):])
-            else:
+
+            if path.startswith("/api/"):
+                if not self._require_api_key():
+                    return
+                if path == "/api/accounts":
+                    self._handle_list("company")
+                elif path.startswith("/api/accounts/"):
+                    self._handle_detail("company", path[len("/api/accounts/"):])
+                elif path == "/api/people":
+                    self._handle_list("person")
+                elif path.startswith("/api/people/"):
+                    self._handle_detail("person", path[len("/api/people/"):])
+                else:
+                    self.send_error(404)
+                return
+
+            if path.startswith(self._PUBLIC_PREFIXES) or path in self._PUBLIC_EXACT:
                 super().do_GET()
+                return
+
+            self.send_error(404)
 
         def _handle_list(self, kind: str):
             from targets import COMPANY_TARGETS
@@ -390,6 +424,8 @@ def cmd_serve(args) -> int:
             })
 
         def do_POST(self):
+            if not self._require_api_key():
+                return
             if self.path == "/api/send-email":
                 self._handle_send_email()
             elif self.path == "/api/run":
@@ -510,17 +546,30 @@ def cmd_serve(args) -> int:
     class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         daemon_threads = True
 
+    # Local default stays 127.0.0.1 — the path allowlist above and the
+    # optional API_KEY gate make binding 0.0.0.0 safe (e.g. inside a
+    # container, where SERVE_HOST=0.0.0.0 lets Docker's port mapping
+    # reach it), but there's no reason to widen the local dev default.
+    host = os.getenv("SERVE_HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", args.port))
+
+    from config import API_KEY
     try:
-        with Server(("127.0.0.1", args.port), Handler) as httpd:
+        with Server((host, port), Handler) as httpd:
             _banner("SERVE")
-            print(f"  Frontend:  http://127.0.0.1:{args.port}/frontend/")
-            print("  Bound to localhost only, so .env stays private")
+            shown_host = "127.0.0.1" if host == "0.0.0.0" else host
+            print(f"  Frontend:  http://{shown_host}:{port}/frontend/")
+            print(
+                "  Bound to localhost only, so .env stays private" if host == "127.0.0.1"
+                else f"  Bound to {host} — only /frontend, /output, /API.md, and /api/* are servable"
+            )
+            print("  API_KEY required on /api/*" if API_KEY else "  API_KEY not set — /api/* is open to anyone who can reach this port")
             print("  Ctrl+C to stop\n")
             httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n  Stopped.")
     except OSError as e:
-        print(f"❌  Could not bind port {args.port}: {e}")
+        print(f"❌  Could not bind {host}:{port}: {e}")
         return 1
     return 0
 

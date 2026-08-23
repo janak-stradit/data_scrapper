@@ -268,6 +268,19 @@
     }
     .theme-btn:hover { background: var(--border-color); }
 
+    .api-key-input {
+      width: 120px;
+      padding: 7px 10px;
+      font-size: .78rem; font-family: inherit;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      flex-shrink: 0;
+    }
+    .api-key-input:focus { outline: none; border-color: var(--brand); }
+    @media (max-width: 767px) { .api-key-input { width: 90px; } }
+
     /* Main pad */
     .main-pad { padding: 28px 24px; }
 
@@ -944,6 +957,7 @@
           <li class="breadcrumb-item active">Select an account</li>
         </ol>
       </nav>
+      <input type="password" id="apiKeyInput" class="api-key-input" placeholder="API key" title="Only needed if this server has API_KEY set (e.g. a public deployment) — saved in this browser only">
       <button class="theme-btn" id="themeToggle" title="Toggle theme">🌙</button>
     </div>
 
@@ -1431,6 +1445,7 @@ $(function () {
       url: '/api/send-email',
       method: 'POST',
       contentType: 'application/json',
+      headers: apiHeaders(),
       data: JSON.stringify({ to: to, subject: email.subject, body: email.body })
     }).done(function (res) {
       if (res && res.ok) {
@@ -1597,6 +1612,7 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
+      headers: apiHeaders(),
       data: JSON.stringify({ kind: state.runKind, target: target, limit: limit, generate_digest: genDigest })
     }).done(function (res) {
       var entry = res && res.entry;
@@ -1633,6 +1649,7 @@ $(function () {
       url: '/api/save-target',
       method: 'POST',
       contentType: 'application/json',
+      headers: apiHeaders(),
       data: JSON.stringify({ kind: state.runKind, target: target })
     }).done(function (res) {
       if (res && res.ok) {
@@ -1781,6 +1798,24 @@ $(function () {
     $(this).text(next === 'dark' ? '☀️' : '🌙');
     try { localStorage.setItem('scraperTheme', next); } catch(e) {}
   });
+
+  /* ─── API key ──────────────────────────────────────────── */
+  // Only matters when the server has API_KEY set (e.g. a public
+  // deployment) — locally the server accepts every request regardless,
+  // so an empty key here is the normal, expected state.
+  try {
+    var savedKey = localStorage.getItem('scraperApiKey');
+    if (savedKey) $('#apiKeyInput').val(savedKey);
+  } catch (e) {}
+
+  $('#apiKeyInput').on('input', function () {
+    try { localStorage.setItem('scraperApiKey', $(this).val()); } catch (e) {}
+  });
+
+  function apiHeaders() {
+    var key = $('#apiKeyInput').val();
+    return key ? { 'X-API-Key': key } : {};
+  }
 
   /* ─── Mobile sidebar ───────────────────────────────────── */
   function closeSidebar() {

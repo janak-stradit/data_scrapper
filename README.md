@@ -162,7 +162,8 @@ Accounts and file paths are listed in `frontend/manifest.json`. The same
 `main.py serve` process also exposes `POST /api/run` (trigger the pipeline
 for a target given as raw JSON, no pre-registration needed) and
 `POST /api/send-email` — see **[API.md](API.md)** if you want another app
-to call this instead of using the UI.
+to call this instead of using the UI. To put this on AWS instead of
+running it locally, see **[DEPLOY.md](DEPLOY.md)**.
 
 ## 📁 Structure
 

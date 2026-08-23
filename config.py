@@ -56,6 +56,14 @@ GRAPH_TENANT_ID = os.getenv("GRAPH_TENANT_ID", "common")
 # stay fully functional on their own either way.
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
+# ─── API key (required only once this is reachable off localhost) ─
+# When set, every /api/* request (GET and POST) must send a matching
+# X-API-Key header or main.py's serve command rejects it with 401. Left
+# blank for local dev on purpose — set it before deploying anywhere the
+# app isn't the only thing that can reach the port, since /api/run can
+# trigger billed Apify scrapes and /api/send-email sends real mail.
+API_KEY = os.getenv("API_KEY", "")
+
 # Google News RSS locale.
 NEWS_LOCALE = {"hl": "en-US", "gl": "US"}
 

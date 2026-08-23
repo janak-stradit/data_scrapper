@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+.env
+.msal_token_cache.json
+custom_targets.json
+output/
+data_scrapper/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
