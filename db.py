@@ -1,0 +1,271 @@
+"""Optional Postgres mirror of the JSON files under output/.
+
+Every write here is best-effort: if DATABASE_URL isn't set in .env, or the
+database is unreachable, these functions log a warning and return without
+raising. The JSON files stay the source of truth for the frontend and CLI
+either way — this module exists so the same data is also queryable with
+SQL (e.g. across every target/channel/date at once, which the per-target
+JSON files can't do).
+
+Schema is created lazily on first successful connection — no separate
+migration step.
+"""
+import json
+from typing import Any, Dict
+
+from config import DATABASE_URL
+from store import post_key
+
+_SCHEMA_READY = False
+
+# Fields already broken out into their own columns — everything else on a
+# post goes into the `extra` JSONB column instead of being dropped.
+_CORE_POST_FIELDS = {
+    "platform", "rank", "post_url", "text", "author", "published_at",
+    "engagement", "media", "scraped_at", "first_seen", "last_seen",
+    "new_in_last_run",
+}
+
+_SCHEMA_STATEMENTS = [
+    """
+    CREATE TABLE IF NOT EXISTS targets (
+        key TEXT PRIMARY KEY,
+        kind TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        ticker TEXT,
+        config JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS posts (
+        id BIGSERIAL PRIMARY KEY,
+        target_key TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        post_key TEXT NOT NULL,
+        rank INT,
+        post_url TEXT,
+        body TEXT,
+        author TEXT,
+        published_at TEXT,
+        engagement JSONB,
+        media JSONB,
+        extra JSONB,
+        first_seen TIMESTAMPTZ,
+        last_seen TIMESTAMPTZ,
+        new_in_last_run BOOLEAN,
+        raw JSONB NOT NULL,
+        UNIQUE (target_key, channel, post_key)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS posts_target_channel_idx ON posts (target_key, channel)",
+    """
+    CREATE TABLE IF NOT EXISTS digests (
+        target_key TEXT PRIMARY KEY,
+        kind TEXT NOT NULL,
+        generated_at TIMESTAMPTZ,
+        llm TEXT,
+        posts_considered INT,
+        priority TEXT,
+        digest JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS run_history (
+        id BIGSERIAL PRIMARY KEY,
+        recorded_at TIMESTAMPTZ NOT NULL,
+        kind TEXT,
+        target_key TEXT,
+        display_name TEXT,
+        limit_requested INT,
+        new_posts INT,
+        total_posts INT,
+        platforms_scraped JSONB,
+        platforms_failed JSONB,
+        digest JSONB,
+        success BOOLEAN,
+        error TEXT,
+        duration_ms INT,
+        entry JSONB NOT NULL
+    )
+    """,
+]
+
+
+def _connect():
+    if not DATABASE_URL:
+        return None
+    import psycopg2
+    try:
+        return psycopg2.connect(DATABASE_URL)
+    except Exception as e:
+        print(f"⚠️  [DB] Could not connect ({e}); continuing with JSON only")
+        return None
+
+
+def _ensure_schema(conn) -> None:
+    global _SCHEMA_READY
+    if _SCHEMA_READY:
+        return
+    with conn.cursor() as cur:
+        for statement in _SCHEMA_STATEMENTS:
+            cur.execute(statement)
+    conn.commit()
+    _SCHEMA_READY = True
+
+
+def upsert_target(kind: str, target: Dict[str, Any]) -> None:
+    conn = _connect()
+    if conn is None:
+        return
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO targets (key, kind, display_name, ticker, config, updated_at)
+                VALUES (%s, %s, %s, %s, %s, now())
+                ON CONFLICT (key) DO UPDATE SET
+                    kind = EXCLUDED.kind,
+                    display_name = EXCLUDED.display_name,
+                    ticker = EXCLUDED.ticker,
+                    config = EXCLUDED.config,
+                    updated_at = now()
+                """,
+                (
+                    target["key"],
+                    kind,
+                    target.get("display_name", target["key"]),
+                    target.get("ticker"),
+                    json.dumps(target),
+                ),
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"⚠️  [DB] Could not save target '{target.get('key')}' ({e})")
+    finally:
+        conn.close()
+
+
+def upsert_posts(target_key: str, kind: str, data: Dict[str, Any]) -> None:
+    """Mirror one scrape's posts. `data` is a store document's "data" block:
+    {channel: {"posts": [...]}, ...} — same shape store.py writes to JSON.
+    """
+    conn = _connect()
+    if conn is None:
+        return
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            for channel, block in (data or {}).items():
+                if not isinstance(block, dict):
+                    continue
+                for post in block.get("posts", []):
+                    extra = {k: v for k, v in post.items() if k not in _CORE_POST_FIELDS}
+                    cur.execute(
+                        """
+                        INSERT INTO posts (
+                            target_key, kind, channel, post_key, rank, post_url,
+                            body, author, published_at, engagement, media, extra,
+                            first_seen, last_seen, new_in_last_run, raw
+                        )
+                        VALUES (
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s::timestamptz, %s::timestamptz, %s, %s
+                        )
+                        ON CONFLICT (target_key, channel, post_key) DO UPDATE SET
+                            rank = EXCLUDED.rank,
+                            last_seen = EXCLUDED.last_seen,
+                            new_in_last_run = EXCLUDED.new_in_last_run,
+                            raw = EXCLUDED.raw
+                        """,
+                        (
+                            target_key, kind, channel, post_key(channel, post),
+                            post.get("rank"), post.get("post_url"),
+                            post.get("text"), post.get("author"), post.get("published_at"),
+                            json.dumps(post.get("engagement") or {}),
+                            json.dumps(post.get("media") or []),
+                            json.dumps(extra),
+                            post.get("first_seen"), post.get("last_seen"),
+                            post.get("new_in_last_run"),
+                            json.dumps(post),
+                        ),
+                    )
+        conn.commit()
+    except Exception as e:
+        print(f"⚠️  [DB] Could not save posts for '{target_key}' ({e})")
+    finally:
+        conn.close()
+
+
+def upsert_digest(target_key: str, kind: str, digest: Dict[str, Any]) -> None:
+    conn = _connect()
+    if conn is None:
+        return
+    try:
+        _ensure_schema(conn)
+        email = digest.get("email") or {}
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO digests (
+                    target_key, kind, generated_at, llm, posts_considered,
+                    priority, digest, updated_at
+                )
+                VALUES (%s, %s, %s::timestamptz, %s, %s, %s, %s, now())
+                ON CONFLICT (target_key) DO UPDATE SET
+                    kind = EXCLUDED.kind,
+                    generated_at = EXCLUDED.generated_at,
+                    llm = EXCLUDED.llm,
+                    posts_considered = EXCLUDED.posts_considered,
+                    priority = EXCLUDED.priority,
+                    digest = EXCLUDED.digest,
+                    updated_at = now()
+                """,
+                (
+                    target_key, kind, digest.get("generated_at"), digest.get("llm"),
+                    digest.get("posts_considered"), email.get("priority"),
+                    json.dumps(digest),
+                ),
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"⚠️  [DB] Could not save digest for '{target_key}' ({e})")
+    finally:
+        conn.close()
+
+
+def insert_run_history(entry: Dict[str, Any]) -> None:
+    conn = _connect()
+    if conn is None:
+        return
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO run_history (
+                    recorded_at, kind, target_key, display_name, limit_requested,
+                    new_posts, total_posts, platforms_scraped, platforms_failed,
+                    digest, success, error, duration_ms, entry
+                )
+                VALUES (%s::timestamptz, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    entry.get("recorded_at"), entry.get("kind"), entry.get("key"),
+                    entry.get("display_name"), entry.get("limit"),
+                    entry.get("new_posts"), entry.get("total_posts"),
+                    json.dumps(entry.get("platforms_scraped") or []),
+                    json.dumps(entry.get("platforms_failed") or []),
+                    json.dumps(entry["digest"]) if entry.get("digest") is not None else None,
+                    entry.get("success"), entry.get("error"), entry.get("duration_ms"),
+                    json.dumps(entry),
+                ),
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"⚠️  [DB] Could not save run history entry ({e})")
+    finally:
+        conn.close()

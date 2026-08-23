@@ -1,0 +1,46 @@
+{
+  "accounts": [
+    {
+      "key": "bny",
+      "name": "BNY (Bank of New York Mellon)",
+      "ticker": "BK",
+      "file": "../output/stores/bny_output.json",
+      "digest": "../output/digests/bny_digest.json"
+    },
+    {
+      "key": "northern_trust",
+      "name": "Northern Trust",
+      "ticker": "NTRS",
+      "file": "../output/stores/northern_trust_output.json",
+      "digest": "../output/digests/northern_trust_digest.json"
+    },
+    {
+      "key": "blackrock",
+      "name": "BlackRock",
+      "ticker": "BLK",
+      "file": "../output/stores/blackrock_output.json",
+      "digest": "../output/digests/blackrock_digest.json"
+    },
+    {
+      "key": "vanguard",
+      "name": "The Vanguard Group",
+      "ticker": "—",
+      "file": "../output/stores/vanguard_output.json",
+      "digest": "../output/digests/vanguard_digest.json"
+    }
+  ],
+  "people": [
+    {
+      "key": "ranjit_samra",
+      "name": "Ranjit S. Samra (CIO, BNY)",
+      "file": "../output/stores/ranjit_samra_output.json",
+      "digest": "../output/digests/ranjit_samra_digest.json"
+    },
+    {
+      "key": "robin_vince",
+      "name": "Robin Vince (Chairman, President & CEO, BNY)",
+      "file": "../output/stores/robin_vince_output.json",
+      "digest": "../output/digests/robin_vince_digest.json"
+    }
+  ]
+}
