@@ -43,6 +43,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
+            # One-time cleanup: earlier deploys ran a standalone
+            # "data-scrapper" container bound to host port 80, which
+            # would otherwise conflict with Caddy claiming that port.
+            # Harmless no-op once that container is gone.
+            docker stop data-scrapper 2>/dev/null || true
+            docker rm data-scrapper 2>/dev/null || true
+
             cd ~/data_scrapper
             mkdir -p ~/data_scrapper_output
             docker compose up -d --build
