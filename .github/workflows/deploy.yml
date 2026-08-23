@@ -13,6 +13,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Secrets were added as environment secrets under "prod" — GitHub
+    # Actions only injects those into a job that declares this, otherwise
+    # ${{ secrets.* }} silently resolves to an empty string.
+    environment: prod
     steps:
       - uses: actions/checkout@v4
 
