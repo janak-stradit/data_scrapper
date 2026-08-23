@@ -50,6 +50,20 @@ jobs:
             docker stop data-scrapper 2>/dev/null || true
             docker rm data-scrapper 2>/dev/null || true
 
+            # Self-signed cert for Caddy, generated once (not regenerated
+            # on every deploy — that would invalidate every browser's
+            # already-accepted trust exception for no reason). The IP
+            # goes in as a SAN, which is what browsers actually check for
+            # an IP-address URL (the CN is effectively legacy/ignored).
+            mkdir -p ~/data_scrapper_certs
+            if [ ! -f ~/data_scrapper_certs/self-signed.crt ]; then
+              openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+                -keyout ~/data_scrapper_certs/self-signed.key \
+                -out ~/data_scrapper_certs/self-signed.crt \
+                -subj "/CN=${{ secrets.EC2_HOST }}" \
+                -addext "subjectAltName=IP:${{ secrets.EC2_HOST }}"
+            fi
+
             cd ~/data_scrapper
             mkdir -p ~/data_scrapper_output
             docker compose up -d --build

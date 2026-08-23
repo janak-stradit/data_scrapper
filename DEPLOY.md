@@ -41,18 +41,33 @@ reachable from the internet.
 
 ## HTTPS
 
-There's no domain here, so `Caddyfile` uses `tls internal` — Caddy
-generates and serves a **self-signed** certificate rather than a
-Let's-Encrypt one (a public CA can't issue a trusted cert for a bare IP).
-Traffic is genuinely encrypted, but every browser will show a
-"certificate not trusted" warning once per device — click through it
+There's no domain here, so this uses a **self-signed** certificate
+rather than a Let's-Encrypt one (a public CA can't issue a trusted cert
+for a bare IP). The deploy workflow generates it once with `openssl`
+(the instance's public IP baked in as the certificate's Subject
+Alternative Name — what browsers actually check for an IP-address URL)
+and stores it in `~/data_scrapper_certs/` on the box, outside the repo
+directory so it survives every redeploy unchanged. `Caddyfile` points at
+that file directly, rather than using Caddy's `tls internal` — that
+mode's automatic certificate issuance is hostname-based and has nothing
+to match against a bare-IP connection, which fails the handshake outright
+rather than falling back to "just serve something."
+
+Traffic is genuinely encrypted, but every browser will still show a
+"certificate not trusted" warning once per device (inherent to
+self-signed certs, unrelated to the above) — click through it
 ("Advanced" → "Proceed", wording varies by browser). Plain `http://`
 still works but redirects to `https://` rather than serving unencrypted.
+
+If the instance's public IP ever changes (e.g. stopped/restarted without
+an Elastic IP), the certificate's SAN won't match it anymore — delete
+`~/data_scrapper_certs/` on the box and redeploy to regenerate it for the
+new IP.
 
 If you'd rather have a real no-warning padlock, that requires an actual
 hostname pointing at the instance (even a free one like a
 `sslip.io` subdomain works with Let's Encrypt) — ask if you want that
-swapped in later; it's a small `Caddyfile` change.
+swapped in later; it's a `Caddyfile` change back to ACME-based issuance.
 
 ---
 

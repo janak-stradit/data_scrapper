@@ -1,9 +1,14 @@
-# Self-signed TLS (no domain, no public CA) — Caddy issues and manages
-# its own internal-CA certificate automatically. Browsers will show a
-# "certificate not trusted" warning once per device; click through it
-# (there's no way around that without a real hostname + Let's Encrypt).
+# Self-signed TLS for a bare IP (no domain, no public CA). `tls internal`
+# is deliberately NOT used here — its automatic issuance is hostname-
+# based, and a site address with no hostname (just :443) gives it nothing
+# to match against an incoming connection's SNI, which fails the
+# handshake with a generic "internal_error" alert. Pointing at a static
+# cert/key pair (generated once by deploy.yml, with the instance's IP as
+# the SAN) sidesteps that entirely. Browsers will still show a
+# "certificate not trusted" warning once per device — expected for any
+# self-signed cert, unrelated to the issue above.
 :443 {
-    tls internal
+    tls /certs/self-signed.crt /certs/self-signed.key
     reverse_proxy app:8080
 }
 
