@@ -930,7 +930,7 @@
     </div>
 
     <div class="sidebar-search">
-      <input type="search" id="accountSearch" placeholder="Search accounts…" autocomplete="off">
+      <input type="search" id="accountSearch" placeholder="🔍 Filter by name (optional — leave empty to see all)" autocomplete="off" spellcheck="false">
     </div>
 
     <button type="button" class="run-pipeline-nav" id="runPipelineNav">▶&nbsp;&nbsp;Run Pipeline</button>
@@ -1149,6 +1149,11 @@ $(function () {
         );
       });
   }
+  // Force this empty on every load — regardless of why it ends up
+  // pre-filled (browser autofill, a restored form field, whatever), a
+  // non-empty value here silently filters every account/person out of
+  // the sidebar with no visible error, which is a confusing dead end.
+  $('#accountSearch').val('');
   loadManifest();
 
   /* ─── Render account list ──────────────────────────────── */
@@ -1216,7 +1221,10 @@ $(function () {
     $('#channelSection').removeClass('d-none');
     $('#channelGrid').html('<div class="spinner-wrap"><div class="spinner"></div><span>Loading channels…</span></div>');
 
-    if (state.data[key]) { showAccount(acct, state.data[key], state.digestData[key]); return; }
+    if (state.data[key]) {
+      showAccount(acct, state.data[key], state.digestData[key]);
+      return;
+    }
 
     var apiPath = (acct.kind === 'person' ? '/api/people/' : '/api/accounts/') + encodeURIComponent(key);
     $.ajax({ url: apiPath, headers: apiHeaders() })
