@@ -246,14 +246,19 @@ curl -s -X POST http://127.0.0.1:8001/api/run \
 ### Cost note
 
 `linkedin`, `reddit`, `twitter`, and `blog` each run a real Apify actor
-billed against `APIFY_TOKEN` in `.env`. `sec`, `news`, `patents`, `rss`,
-and `youtube` are free public endpoints/APIs with no Apify cost (`youtube`
-needs a free `YOUTUBE_API_KEY` from Google Cloud Console, with its own
-10,000-unit/day quota — not billed, but can be exhausted on very heavy
-use). An integration calling this frequently on a target with social
-fields populated will consume Apify compute units on every call — there's
-no dedupe/rate-limiting beyond what the store's incremental fetch windows
-already do (see `store.py`).
+billed against `APIFY_TOKEN` in `.env`. So does `news`, partially — the
+headline list itself is free (Google's own RSS), but every article's full
+text is then fetched via the same website-content-crawler actor
+`blog` uses, one article per headline, best-effort (silently falls back
+to headline-only per-article if a publisher blocks the fetch — this
+doesn't reduce the Apify cost of having attempted it). `sec`, `patents`,
+`rss`, and `youtube` are the only channels with no Apify cost at all
+(`youtube` needs a free `YOUTUBE_API_KEY` from Google Cloud Console, with
+its own 10,000-unit/day quota — not billed, but can be exhausted on very
+heavy use). An integration calling this frequently on a target with
+social fields (or `news_query`) populated will consume Apify compute
+units on every call — there's no dedupe/rate-limiting beyond what the
+store's incremental fetch windows already do (see `store.py`).
 
 ---
 

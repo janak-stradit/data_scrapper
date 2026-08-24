@@ -1,7 +1,25 @@
-"""Google News scraper via the public News RSS feed.
+"""Google News scraper via the public News RSS feed, plus full-article
+content fetched through Apify's website-content-crawler.
 
-Uses Google's own RSS endpoint rather than an Apify actor: it is free, needs no
-token, and returns third-party coverage instead of company-published PR.
+The RSS feed itself is free — Google's own endpoint, no actor, no token —
+and gives only headlines; Google doesn't syndicate article bodies via RSS
+at all, regardless of how the feed is parsed. Getting real content means
+fetching each article's own page, which is what the Apify pass below is
+for. That part is NOT free — it runs the same actor blog_scraper.py uses,
+billed against APIFY_TOKEN, once per article per scrape.
+
+Two things confirmed by testing against live Google News links before
+writing this:
+1. Google News redirect links land on a cookie-consent interstitial when
+   Apify's proxy exits from an EU/GDPR region — apifyProxyCountry="US"
+   avoids that.
+2. Even with that fixed, individual publishers can still block the
+   crawler outright (Cloudflare, paywalls, bot-detection) — this is
+   inherent to scraping arbitrary third-party sites, not fixable in
+   general. So extraction is best-effort per article: on success the
+   post's text is replaced with the real article content; on failure
+   (blocked, or Apify itself fails/times out) it silently keeps the
+   RSS-only headline/summary instead of erroring the whole scrape.
 """
 import asyncio
 import re
@@ -10,8 +28,9 @@ from urllib.parse import quote
 from xml.etree import ElementTree
 
 import aiohttp
+from apify_client import ApifyClientAsync
 
-from config import DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
+from config import ACTORS, APIFY_TOKEN, DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
 from .base_scraper import BaseScraper
 
 RSS_URL = (
@@ -21,6 +40,16 @@ RSS_URL = (
 
 TAG_RE = re.compile(r"<[^>]+>")
 NORMALIZE_RE = re.compile(r"[^a-z0-9]+")
+
+# Heuristics for "this page is a block/consent/challenge wall, not the
+# article" — checked against the extracted title + the first stretch of
+# markdown. Kept short and lowercase; matched case-insensitively.
+_BLOCKED_MARKERS = (
+    "attention required", "enable javascript", "checking your browser",
+    "verify you are human", "just a moment", "cloudflare",
+    "before you continue", "we use cookies and data", "access denied",
+    "are you a robot", "unusual traffic",
+)
 
 # Aggregators auto-generate a story for every 13F position change. Google's RSS
 # ignores negative phrase terms, so filter them out on our side instead.
@@ -45,6 +74,77 @@ class GoogleNewsScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("news")
+        self.client = ApifyClientAsync(APIFY_TOKEN)
+        self.actor_id = ACTORS["blog"]  # generic website-content-crawler
+
+    @staticmethod
+    def _looks_blocked(title: str, markdown: str) -> bool:
+        """True if this looks like a consent/challenge/block page, not the
+        real article — a short body plus a known phrase is a strong tell;
+        a very short body alone (some legitimate articles are brief) is
+        weaker but still treated as "couldn't get real content"."""
+        combined = f"{title} {markdown[:500]}".lower()
+        if any(marker in combined for marker in _BLOCKED_MARKERS):
+            return True
+        return len(markdown.strip()) < 200
+
+    async def _fetch_full_content(self, posts: List[Dict[str, Any]]) -> None:
+        """Best-effort: replace each post's text with its real article
+        content. Mutates `posts` in place; never raises — any failure here
+        (actor error, timeout, every article blocked) just leaves the
+        RSS-only headline/summary already on each post.
+        """
+        if not posts:
+            return
+        try:
+            run_input = {
+                "startUrls": [{"url": p["post_url"]} for p in posts if p.get("post_url")],
+                "crawlerType": "playwright:adaptive",
+                "maxCrawlDepth": 0,
+                "maxCrawlPages": len(posts),
+                "maxResults": len(posts),
+                "saveMarkdown": True,
+                "removeCookieWarnings": True,
+                "blockMedia": True,
+                # US avoids the GDPR cookie-consent interstitial Google
+                # News redirects show to EU-region proxy exits — confirmed
+                # by testing directly against live links before this was
+                # written; without it every result is a consent page, not
+                # the article.
+                "proxyConfiguration": {"useApifyProxy": True, "apifyProxyCountry": "US"},
+            }
+            items = await self._run_actor(
+                self.client, self.actor_id, run_input, TIMEOUTS["news_content"],
+                memory_mbytes=4096,
+            )
+        except Exception as e:
+            print(f"⚠️  [Google News] Full-content fetch failed, keeping headlines only ({e})")
+            return
+
+        # crawl.referrerUrl is the original start URL (the Google redirect
+        # link) each result came from — that's what correlates a result
+        # back to the post it belongs to, since the *loaded* URL is
+        # whatever the redirect chain ends up at.
+        by_referrer = {
+            item.get("crawl", {}).get("referrerUrl"): item
+            for item in items
+            if isinstance(item, dict)
+        }
+
+        filled = 0
+        for post in posts:
+            item = by_referrer.get(post.get("post_url"))
+            if not item:
+                continue
+            title = (item.get("metadata", {}) or {}).get("title", "")
+            markdown = item.get("markdown") or ""
+            if self._looks_blocked(title, markdown):
+                continue
+            post["text"] = markdown[:5000]
+            post["full_content"] = True
+            filled += 1
+
+        print(f"   [Google News] Full content: {filled}/{len(posts)} articles (rest kept headline-only)")
 
     @staticmethod
     def _key(text: str) -> str:
@@ -154,6 +254,8 @@ class GoogleNewsScraper(BaseScraper):
 
             note = f" ({skipped} aggregator stubs filtered)" if skipped else ""
             print(f"✅ [Google News] Fetched {len(posts)} articles{note}")
+
+            await self._fetch_full_content(posts)
             return posts
 
         except ElementTree.ParseError as e:

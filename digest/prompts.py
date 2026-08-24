@@ -72,7 +72,10 @@ CHANNEL_GUIDANCE = {
         "Third-party coverage. Distinguish genuine journalism from syndicated "
         "company commentary and from algorithmic stock-ticker filler. "
         "Prioritise stories the company did not publish itself, and name the "
-        "outlet."
+        "outlet. Some posts carry the real article text (fetched separately "
+        "from the headline); others are headline-only where the publisher "
+        "blocked that fetch — treat a headline-only post's summary as just "
+        "the headline, not confirmation of what the article actually says."
     ),
     "rss": (
         "An owned feed — could be a blog, newsroom, or newsletter depending "
