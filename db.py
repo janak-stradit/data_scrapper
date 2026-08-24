@@ -301,7 +301,14 @@ def get_store(target_key: str):
             data.setdefault(channel, {"posts": []})["posts"].append(raw)
         for block in data.values():
             block["count"] = len(block["posts"])
-        return {"data": data}
+        return {
+            "data": data,
+            "metadata": {
+                "total_posts": len(rows),
+                "platforms_scraped": sorted(data.keys()),
+                "platforms_failed": [],
+            },
+        }
     except Exception as e:
         print(f"⚠️  [DB] Could not read posts for '{target_key}' ({e})")
         return None

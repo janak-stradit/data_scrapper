@@ -1099,7 +1099,7 @@ $(function () {
     }
   };
 
-  var state = { accounts: [], people: [], data: {}, account: null, channel: null, posts: [], currentEmail: null, runKind: 'company', apiDocsHtml: null };
+  var state = { accounts: [], people: [], data: {}, digestData: {}, account: null, channel: null, posts: [], currentEmail: null, runKind: 'company', apiDocsHtml: null };
 
   /* ─── Helpers ──────────────────────────────────────────── */
   function esc(s) { return $('<div>').text(s == null ? '' : s).html(); }
@@ -1121,17 +1121,31 @@ $(function () {
     return (name || '?').split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase();
   }
 
-  /* ─── Load manifest ────────────────────────────────────── */
+  /* ─── Load accounts/people ─────────────────────────────── */
+  // Sourced from the API (GET /api/accounts, /api/people), not the static
+  // manifest.json/output/*.json files directly — the API already falls
+  // back to Postgres when a target has no local JSON (e.g. this instance
+  // never scraped it itself, but another one sharing DATABASE_URL did).
   function loadManifest() {
-    return $.getJSON('manifest.json')
-      .done(function (m) {
-        state.accounts = $.map(m.accounts || [], function (a) { return $.extend({ kind: 'company' }, a); });
-        state.people = $.map(m.people || [], function (a) { return $.extend({ kind: 'person' }, a); });
+    var accountsReq = $.ajax({ url: '/api/accounts', headers: apiHeaders() });
+    var peopleReq = $.ajax({ url: '/api/people', headers: apiHeaders() });
+
+    return $.when(accountsReq, peopleReq)
+      .done(function (accRes, pplRes) {
+        var accounts = (accRes[0] && accRes[0].accounts) || [];
+        var people = (pplRes[0] && pplRes[0].people) || [];
+        state.accounts = $.map(accounts, function (a) {
+          return { kind: 'company', key: a.key, name: a.display_name, ticker: a.ticker };
+        });
+        state.people = $.map(people, function (a) {
+          return { kind: 'person', key: a.key, name: a.display_name, ticker: null };
+        });
         renderAccounts();
       })
-      .fail(function () {
+      .fail(function (xhr) {
+        var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Could not load /api/accounts — is the server running?';
         $('#accountList').html(
-          '<div style="padding:14px;font-size:.8rem;color:#f87171;">Could not load manifest.json — serve this folder over HTTP (see README).</div>'
+          '<div style="padding:14px;font-size:.8rem;color:#f87171;">' + esc(msg) + '</div>'
         );
       });
   }
@@ -1202,24 +1216,37 @@ $(function () {
     $('#channelSection').removeClass('d-none');
     $('#channelGrid').html('<div class="spinner-wrap"><div class="spinner"></div><span>Loading channels…</span></div>');
 
-    if (state.data[key]) { showAccount(acct, state.data[key]); return; }
+    if (state.data[key]) { showAccount(acct, state.data[key], state.digestData[key]); return; }
 
-    $.getJSON(acct.file)
-      .done(function (json) { state.data[key] = json; showAccount(acct, json); })
-      .fail(function () {
-        var personFlag = acct.kind === 'person' ? ' --person' : '';
+    var apiPath = (acct.kind === 'person' ? '/api/people/' : '/api/accounts/') + encodeURIComponent(key);
+    $.ajax({ url: apiPath, headers: apiHeaders() })
+      .done(function (res) {
+        if (!res.store) {
+          var personFlag = acct.kind === 'person' ? ' --person' : '';
+          $('#channelGrid').html(
+            '<div class="alert-scrape" style="grid-column:1/-1;">' +
+              'No data yet for <strong>' + esc(acct.name) + '</strong>. Run ' +
+              '<code>python main.py scrape ' + esc(key) + personFlag + ' --limit 20</code> to generate it.' +
+            '</div>'
+          );
+          $('#accountHeader').addClass('d-none');
+          return;
+        }
+        state.data[key] = res.store;
+        state.digestData[key] = res.digest;
+        showAccount(acct, res.store, res.digest);
+      })
+      .fail(function (xhr) {
+        var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Could not reach the API.';
         $('#channelGrid').html(
-          '<div class="alert-scrape" style="grid-column:1/-1;">' +
-            'No data file yet for <strong>' + esc(acct.name) + '</strong>. Run ' +
-            '<code>python main.py scrape ' + esc(key) + personFlag + ' --limit 20</code> to generate it.' +
-          '</div>'
+          '<div class="alert-scrape" style="grid-column:1/-1;">' + esc(msg) + '</div>'
         );
         $('#accountHeader').addClass('d-none');
       });
   });
 
   /* ─── Show account ─────────────────────────────────────── */
-  function showAccount(acct, json) {
+  function showAccount(acct, json, digest) {
     state.account = { meta: acct, json: json };
     state.channel = null;
 
@@ -1270,26 +1297,26 @@ $(function () {
       $g.html('<div style="font-size:.83rem;color:var(--text-muted);">No channels in this file.</div>');
     }
 
-    loadDigest(acct);
+    loadDigest(acct, digest);
   }
 
   /* ─── Digest ───────────────────────────────────────────── */
-  function loadDigest(acct) {
-    var $d = $('#digestSection').removeClass('d-none').html(
-      '<div class="spinner-wrap"><div class="spinner"></div><span>Loading digest…</span></div>'
-    );
+  // digest is already fetched (part of the same /api/accounts/<key>
+  // response showAccount got its data from) — no separate request needed.
+  function loadDigest(acct, digest) {
+    var $d = $('#digestSection').removeClass('d-none');
 
-    $.getJSON(acct.digest || ('../output/digests/' + acct.key + '_digest.json'))
-      .done(function (digest) { renderDigest(digest); })
-      .fail(function () {
-        var personFlag = acct.kind === 'person' ? ' --person' : '';
-        $d.html(
-          '<div class="alert-scrape" style="margin-bottom:24px;">' +
-            'No digest yet for <strong>' + esc(acct.name) + '</strong>. Run ' +
-            '<code>python main.py digest ' + esc(acct.key) + personFlag + '</code> to generate the briefing and channel storylines.' +
-          '</div>'
-        );
-      });
+    if (!digest) {
+      var personFlag = acct.kind === 'person' ? ' --person' : '';
+      $d.html(
+        '<div class="alert-scrape" style="margin-bottom:24px;">' +
+          'No digest yet for <strong>' + esc(acct.name) + '</strong>. Run ' +
+          '<code>python main.py digest ' + esc(acct.key) + personFlag + '</code> to generate the briefing and channel storylines.' +
+        '</div>'
+      );
+      return;
+    }
+    renderDigest(digest);
   }
 
   function renderList(title, items, warn) {
