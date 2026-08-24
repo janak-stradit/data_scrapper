@@ -49,6 +49,11 @@ PEOPLE_TARGETS: Dict[str, Dict[str, Any]] = {
         "sec_cik": "0001825740",
         "news_query": '"Robin Vince"',
         "patents_query": "Robin Vince",
+        # Third-party filings naming him — clean signal for an individual
+        # name (verified live: 157 hits vs. BNY-the-company's 10,000+),
+        # already surfaced a real exhibit (an 8-K press-release attachment)
+        # beyond what sec_cik alone finds.
+        "sec_mentions_query": "Robin Vince",
     },
 }
 PEOPLE_TARGETS.update(custom_targets.load_section("people"))

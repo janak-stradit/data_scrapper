@@ -180,6 +180,8 @@ channels that get scraped are exactly the ones with a truthy value here:
 | `patents_query` | patents | — | ✓ |
 | `rss_url` | rss | ✓ | ✓ |
 | `youtube_channel_id` | youtube | ✓ | ✓ |
+| `sec_mentions_query` | sec_mentions | ✓ | ✓ |
+| `regulatory_query` | regulatory | ✓ | ✓ |
 
 ### Response — `200 OK`
 

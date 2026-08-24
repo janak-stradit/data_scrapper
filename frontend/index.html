@@ -402,6 +402,8 @@
     .ch-patents  { background: #fdf4ff; color: #a21caf; }
     .ch-rss      { background: #ecfeff; color: #0e7490; }
     .ch-youtube  { background: #fef2f2; color: #dc2626; }
+    .ch-secmentions { background: #eef2ff; color: #4338ca; }
+    .ch-regulatory  { background: #f7fee7; color: #4d7c0f; }
     .ch-digest   { background: #f0fdfa; color: #0f766e; }
 
     [data-theme="dark"] .ch-linkedin { background: #172554; color: #60a5fa; }
@@ -414,6 +416,8 @@
     [data-theme="dark"] .ch-patents  { background: #4a044e; color: #e879f9; }
     [data-theme="dark"] .ch-rss      { background: #083344; color: #22d3ee; }
     [data-theme="dark"] .ch-youtube  { background: #450a0a; color: #f87171; }
+    [data-theme="dark"] .ch-secmentions { background: #1e1b4b; color: #818cf8; }
+    [data-theme="dark"] .ch-regulatory  { background: #1a2e05; color: #a3e635; }
     [data-theme="dark"] .ch-digest   { background: #042f2e; color: #2dd4bf; }
 
     .ch-name { font-weight: 600; font-size: .88rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -1076,7 +1080,9 @@ $(function () {
     news:     { label: 'Google News', icon: '📰', cls: 'ch-news'     },
     patents:  { label: 'Patents',     icon: '🧪', cls: 'ch-patents'  },
     rss:      { label: 'RSS Feed',    icon: '📡', cls: 'ch-rss'      },
-    youtube:  { label: 'YouTube',     icon: '▶️', cls: 'ch-youtube'  }
+    youtube:  { label: 'YouTube',     icon: '▶️', cls: 'ch-youtube'  },
+    sec_mentions: { label: 'SEC mentions',  icon: '🔎', cls: 'ch-secmentions' },
+    regulatory:   { label: 'Regulatory',    icon: '🏦', cls: 'ch-regulatory'  }
   };
 
   var DIGEST_META = { label: 'Digest', icon: '📋', cls: 'ch-digest' };

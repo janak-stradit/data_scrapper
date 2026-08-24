@@ -36,6 +36,8 @@ TIMEOUTS = {
     "sec": 30,
     "news": 30,
     "news_content": 180,
+    "sec_mentions": 30,
+    "regulatory": 30,
     "patents": 30,
     "rss": 30,
     "youtube": 30,

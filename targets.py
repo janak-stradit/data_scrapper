@@ -30,6 +30,15 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         # BNY's own press-release RSS feed (all categories) — found via
         # bny.com/.../newsroom/rss-feeds.html, verified live before adding.
         "rss_url": "https://www.bny.com/bin/bnymellon/rssFeedGeneratorServlet.report",
+        # Fed/OCC enforcement-action feeds naming BNY — low-noise (unlike
+        # sec_mentions_query below, these feeds are small and don't have
+        # BNY's custodian-boilerplate problem), so safe as a default for
+        # the company itself. Deliberately NOT adding sec_mentions_query
+        # here — "BNY Mellon"/"Bank of New York Mellon" returns 10,000+
+        # hits there, nearly all custodian-relationship boilerplate in
+        # unrelated funds' filings (verified live). That channel is far
+        # more useful on individual names — see people_targets.py.
+        "regulatory_query": "Bank of New York Mellon",
     },
     "northern_trust": {
         "display_name": "Northern Trust",

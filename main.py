@@ -38,6 +38,8 @@ CHANNEL_FIELDS = {
     "patents": "patents_query",
     "rss": "rss_url",
     "youtube": "youtube_channel_id",
+    "sec_mentions": "sec_mentions_query",
+    "regulatory": "regulatory_query",
 }
 
 

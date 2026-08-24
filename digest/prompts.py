@@ -24,6 +24,8 @@ CHANNEL_LABELS = {
     "patents": "Patents",
     "rss": "RSS feed",
     "youtube": "YouTube",
+    "sec_mentions": "SEC filings (third-party mentions)",
+    "regulatory": "Regulatory actions (Fed/OCC)",
 }
 
 # What each channel is actually good for. Sent alongside that channel's posts so
@@ -91,6 +93,29 @@ CHANNEL_GUIDANCE = {
         "they're unusually high or low for this channel; don't over-index "
         "on them without a baseline."
     ),
+    "sec_mentions": (
+        "Third-party filings that mention this company by name — NOT the "
+        "company's own filings (that's the separate 'sec' channel). For a "
+        "large custodian bank or asset manager, most hits are boilerplate: "
+        "the name appears as custodian, sub-adviser, or index benchmark in "
+        "some unrelated fund's routine paperwork (485BPOS, N-CEN, N-PX, "
+        "497 forms especially). That is not news. Only surface a hit if the "
+        "form type or description suggests something substantive — a "
+        "material event, litigation, an ownership stake (SC 13D/13G), or "
+        "an unusual filer relationship. Say plainly if every hit this "
+        "period is routine boilerplate — that is itself the honest finding, "
+        "not a channel to pad."
+    ),
+    "regulatory": (
+        "Federal Reserve or OCC press releases/enforcement actions naming "
+        "this company. This is a shared feed filtered by name match, so a "
+        "hit is real regulator attention, not noise — but distinguish an "
+        "enforcement action AGAINST the company from a routine mention (a "
+        "termination of some other institution's action that happens to "
+        "list this company nearby, a passing reference). Report which case "
+        "it is plainly; a live enforcement action is high-priority "
+        "material, a passing mention is not."
+    ),
 }
 
 # Same idea as CHANNEL_GUIDANCE, but for an individual contact rather than a
@@ -143,10 +168,26 @@ PERSON_CHANNEL_GUIDANCE = {
         "descriptions are his own framing of the topic; extract initiatives, "
         "opinions, and projects he's personally attached to."
     ),
+    "regulatory": (
+        "Federal Reserve/OCC press releases naming him individually — most "
+        "often an enforcement action against a 'former employee' of an "
+        "institution. This is serious if it names him; verify the name "
+        "match is really him (not a same-name coincidence) before treating "
+        "it as fact, and if confirmed, this is do-not-say material, not a "
+        "talking point — flag it, do not raise it with the account."
+    ),
     "rss": (
         "A personal blog or newsletter feed, if he has one — his own "
         "writing, not third-party coverage. Extract what he's personally "
         "publishing about, same treatment as his own LinkedIn posts."
+    ),
+    "sec_mentions": (
+        "Filings by OTHER entities that name him — distinct from the "
+        "'sec' channel, which is his own Form 3/4/5 filings. A hit here "
+        "usually means his employer's own filings mention him (e.g. a "
+        "CEO certification exhibit) — a real name match is much less "
+        "noisy for an individual than for a company, but still check the "
+        "filer isn't an unrelated person with the same name."
     ),
 }
 

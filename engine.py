@@ -30,6 +30,8 @@ from scrapers import (
     PatentsScraper,
     RSSScraper,
     YouTubeScraper,
+    SECFullTextScraper,
+    RegulatoryScraper,
 )
 from targets import resolve as resolve_company, COMPANY_TARGETS
 from people_targets import resolve as resolve_person, PEOPLE_TARGETS
@@ -56,6 +58,8 @@ class ApifyScraperEngine:
         self.patents = PatentsScraper()
         self.rss = RSSScraper()
         self.youtube = YouTubeScraper()
+        self.sec_mentions = SECFullTextScraper()
+        self.regulatory = RegulatoryScraper()
 
     async def scrape_all(
         self,
@@ -78,6 +82,8 @@ class ApifyScraperEngine:
         patents_query: Optional[str] = None,
         rss_url: Optional[str] = None,
         youtube_channel_id: Optional[str] = None,
+        sec_mentions_query: Optional[str] = None,
+        regulatory_query: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Scrape all specified platforms in parallel.
@@ -91,6 +97,12 @@ class ApifyScraperEngine:
             news_query: Google News search query
             rss_url: Any RSS/Atom feed URL
             youtube_channel_id: YouTube channel ID (starts with "UC")
+            sec_mentions_query: Name to search across ALL EDGAR filers'
+                filings (distinct from sec_cik, which is one company's
+                own filings) — noisy for large/ubiquitous names, best
+                for individuals or narrower company names
+            regulatory_query: Name to match against Federal Reserve and
+                OCC press/enforcement-action feeds
             limit: Number of posts per platform (default: 10)
 
         Returns:
@@ -110,6 +122,8 @@ class ApifyScraperEngine:
                 "patents_query": patents_query,
                 "rss_url": rss_url,
                 "youtube_channel_id": youtube_channel_id,
+                "sec_mentions_query": sec_mentions_query,
+                "regulatory_query": regulatory_query,
                 "limit": limit,
                 "requested_at": datetime.utcnow().isoformat() + "Z",
             },
@@ -177,6 +191,14 @@ class ApifyScraperEngine:
         if youtube_channel_id:
             tasks.append(self.youtube.scrape(youtube_channel_id, limit))
             task_map[len(tasks) - 1] = "youtube"
+
+        if sec_mentions_query:
+            tasks.append(self.sec_mentions.scrape(sec_mentions_query, limit))
+            task_map[len(tasks) - 1] = "sec_mentions"
+
+        if regulatory_query:
+            tasks.append(self.regulatory.scrape(regulatory_query, limit))
+            task_map[len(tasks) - 1] = "regulatory"
 
         if not tasks:
             result["success"] = False
@@ -292,6 +314,8 @@ class ApifyScraperEngine:
             news_exclude=target.get("news_exclude"),
             rss_url=target.get("rss_url") if want("rss") else None,
             youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
+            sec_mentions_query=target.get("sec_mentions_query") if want("sec_mentions") else None,
+            regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
         )
 
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
@@ -398,6 +422,8 @@ class ApifyScraperEngine:
             patents_query=target.get("patents_query") if want("patents") else None,
             rss_url=target.get("rss_url") if want("rss") else None,
             youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
+            sec_mentions_query=target.get("sec_mentions_query") if want("sec_mentions") else None,
+            regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
         )
 
         # store.merge() keys the stored identity block off result["company"];
@@ -521,7 +547,8 @@ async def main():
     parser.add_argument(
         "--only",
         help="comma-separated channels to scrape "
-        "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,youtube)",
+        "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,"
+        "youtube,sec_mentions,regulatory)",
     )
     parser.add_argument(
         "--reset-channel",
