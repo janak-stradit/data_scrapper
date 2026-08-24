@@ -27,6 +27,9 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "blog_glob": "https://www.bny.com/corporate/global/en/insights/**",
         "newsroom_url": "https://www.bny.com/corporate/global/en/about-us/newsroom.html",
         "newsroom_glob": "https://www.bny.com/corporate/global/en/about-us/newsroom/**",
+        # BNY's own press-release RSS feed (all categories) — found via
+        # bny.com/.../newsroom/rss-feeds.html, verified live before adding.
+        "rss_url": "https://www.bny.com/bin/bnymellon/rssFeedGeneratorServlet.report",
     },
     "northern_trust": {
         "display_name": "Northern Trust",
