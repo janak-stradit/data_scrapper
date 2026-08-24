@@ -382,7 +382,13 @@ def cmd_serve(args) -> int:
             from paths import store_path, digest_path
             import db
 
-            table = PEOPLE_TARGETS if kind == "person" else COMPANY_TARGETS
+            table = dict(PEOPLE_TARGETS if kind == "person" else COMPANY_TARGETS)
+            # Targets that exist in Postgres but were never registered here
+            # (e.g. an ad-hoc /api/run target, scraped but never explicitly
+            # saved via /api/save-target) — DB-unreachable is a silent no-op.
+            for row in db.list_targets(kind):
+                table.setdefault(row["key"], row["config"])
+
             items = []
             for key in sorted(table):
                 cfg = table[key]
@@ -434,9 +440,18 @@ def cmd_serve(args) -> int:
             try:
                 target = resolve_fn(key)
             except KeyError as e:
-                # KeyError.__str__ reprs its message (adds quotes) — unwrap it.
-                self._send_json(404, {"ok": False, "error": e.args[0] if e.args else str(e)})
-                return
+                # Not registered in targets.py/people_targets.py/
+                # custom_targets.json — check Postgres before giving up
+                # (an ad-hoc /api/run target that was scraped but never
+                # explicitly saved still has a row there).
+                target = next(
+                    (dict(row["config"], key=row["key"]) for row in db.list_targets(kind) if row["key"] == key),
+                    None,
+                )
+                if target is None:
+                    # KeyError.__str__ reprs its message (adds quotes) — unwrap it.
+                    self._send_json(404, {"ok": False, "error": e.args[0] if e.args else str(e)})
+                    return
 
             # No local JSON file (e.g. a freshly deployed instance that
             # hasn't scraped this target itself) — fall back to Postgres.

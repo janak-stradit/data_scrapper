@@ -149,6 +149,34 @@ def upsert_target(kind: str, target: Dict[str, Any]) -> None:
         conn.close()
 
 
+def list_targets(kind: str) -> list:
+    """Every target of one kind Postgres knows about — key + full config.
+
+    Includes ad-hoc targets that were scraped via /api/run and mirrored
+    here (engine.py calls upsert_target on every scrape) but never
+    explicitly registered via /api/save-target — those don't exist in
+    targets.py/people_targets.py/custom_targets.json at all, so this is
+    the only place they're discoverable from.
+    """
+    conn = _connect()
+    if conn is None:
+        return []
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT key, config FROM targets WHERE kind = %s ORDER BY key",
+                (kind,),
+            )
+            rows = cur.fetchall()
+        return [{"key": key, "config": config} for key, config in rows]
+    except Exception as e:
+        print(f"⚠️  [DB] Could not list {kind} targets ({e})")
+        return []
+    finally:
+        conn.close()
+
+
 def upsert_posts(target_key: str, kind: str, data: Dict[str, Any]) -> None:
     """Mirror one scrape's posts. `data` is a store document's "data" block:
     {channel: {"posts": [...]}, ...} — same shape store.py writes to JSON.
