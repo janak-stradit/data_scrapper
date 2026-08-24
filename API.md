@@ -178,6 +178,8 @@ channels that get scraped are exactly the ones with a truthy value here:
 | `blog_url`, `blog_glob`, `blog_sitemap`, `blog_min_segments` | blog | ✓ | — |
 | `newsroom_url`, `newsroom_glob`, `newsroom_sitemap` | newsroom | ✓ | — |
 | `patents_query` | patents | — | ✓ |
+| `rss_url` | rss | ✓ | ✓ |
+| `youtube_channel_id` | youtube | ✓ | ✓ |
 
 ### Response — `200 OK`
 
@@ -244,11 +246,14 @@ curl -s -X POST http://127.0.0.1:8001/api/run \
 ### Cost note
 
 `linkedin`, `reddit`, `twitter`, and `blog` each run a real Apify actor
-billed against `APIFY_TOKEN` in `.env`. `sec`, `news`, and `patents` are
-free public endpoints with no cost. An integration calling this
-frequently on a target with social fields populated will consume Apify
-compute units on every call — there's no dedupe/rate-limiting beyond what
-the store's incremental fetch windows already do (see `store.py`).
+billed against `APIFY_TOKEN` in `.env`. `sec`, `news`, `patents`, `rss`,
+and `youtube` are free public endpoints/APIs with no Apify cost (`youtube`
+needs a free `YOUTUBE_API_KEY` from Google Cloud Console, with its own
+10,000-unit/day quota — not billed, but can be exhausted on very heavy
+use). An integration calling this frequently on a target with social
+fields populated will consume Apify compute units on every call — there's
+no dedupe/rate-limiting beyond what the store's incremental fetch windows
+already do (see `store.py`).
 
 ---
 

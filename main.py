@@ -36,6 +36,8 @@ CHANNEL_FIELDS = {
     "blog": "blog_url",
     "newsroom": "newsroom_url",
     "patents": "patents_query",
+    "rss": "rss_url",
+    "youtube": "youtube_channel_id",
 }
 
 

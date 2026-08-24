@@ -28,6 +28,8 @@ from scrapers import (
     SECScraper,
     GoogleNewsScraper,
     PatentsScraper,
+    RSSScraper,
+    YouTubeScraper,
 )
 from targets import resolve as resolve_company, COMPANY_TARGETS
 from people_targets import resolve as resolve_person, PEOPLE_TARGETS
@@ -52,6 +54,8 @@ class ApifyScraperEngine:
         self.sec = SECScraper()
         self.news = GoogleNewsScraper()
         self.patents = PatentsScraper()
+        self.rss = RSSScraper()
+        self.youtube = YouTubeScraper()
 
     async def scrape_all(
         self,
@@ -72,6 +76,8 @@ class ApifyScraperEngine:
         news_days: int = 30,
         news_exclude: Optional[str] = None,
         patents_query: Optional[str] = None,
+        rss_url: Optional[str] = None,
+        youtube_channel_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Scrape all specified platforms in parallel.
@@ -83,6 +89,8 @@ class ApifyScraperEngine:
             blog_url: Blog homepage or RSS feed URL
             sec_cik: 10-digit SEC CIK for EDGAR filings
             news_query: Google News search query
+            rss_url: Any RSS/Atom feed URL
+            youtube_channel_id: YouTube channel ID (starts with "UC")
             limit: Number of posts per platform (default: 10)
 
         Returns:
@@ -100,6 +108,8 @@ class ApifyScraperEngine:
                 "sec_cik": sec_cik,
                 "news_query": news_query,
                 "patents_query": patents_query,
+                "rss_url": rss_url,
+                "youtube_channel_id": youtube_channel_id,
                 "limit": limit,
                 "requested_at": datetime.utcnow().isoformat() + "Z",
             },
@@ -159,6 +169,14 @@ class ApifyScraperEngine:
         if patents_query:
             tasks.append(self.patents.scrape(patents_query, limit))
             task_map[len(tasks) - 1] = "patents"
+
+        if rss_url:
+            tasks.append(self.rss.scrape(rss_url, limit))
+            task_map[len(tasks) - 1] = "rss"
+
+        if youtube_channel_id:
+            tasks.append(self.youtube.scrape(youtube_channel_id, limit))
+            task_map[len(tasks) - 1] = "youtube"
 
         if not tasks:
             result["success"] = False
@@ -272,6 +290,8 @@ class ApifyScraperEngine:
             if want("news")
             else None,
             news_exclude=target.get("news_exclude"),
+            rss_url=target.get("rss_url") if want("rss") else None,
+            youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
         )
 
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
@@ -376,6 +396,8 @@ class ApifyScraperEngine:
             if want("news")
             else None,
             patents_query=target.get("patents_query") if want("patents") else None,
+            rss_url=target.get("rss_url") if want("rss") else None,
+            youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
         )
 
         # store.merge() keys the stored identity block off result["company"];
@@ -498,7 +520,7 @@ async def main():
     parser.add_argument(
         "--only",
         help="comma-separated channels to scrape "
-        "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents)",
+        "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,youtube)",
     )
     parser.add_argument(
         "--reset-channel",

@@ -6,6 +6,8 @@ from .blog_scraper import BlogScraper
 from .sec_scraper import SECScraper
 from .news_scraper import GoogleNewsScraper
 from .patents_scraper import PatentsScraper
+from .rss_scraper import RSSScraper
+from .youtube_scraper import YouTubeScraper
 
 __all__ = [
     "LinkedInScraper",
@@ -15,4 +17,6 @@ __all__ = [
     "SECScraper",
     "GoogleNewsScraper",
     "PatentsScraper",
+    "RSSScraper",
+    "YouTubeScraper",
 ]

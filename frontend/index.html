@@ -400,6 +400,8 @@
     .ch-sec      { background: #f0f9ff; color: #0369a1; }
     .ch-news     { background: #fffbeb; color: #b45309; }
     .ch-patents  { background: #fdf4ff; color: #a21caf; }
+    .ch-rss      { background: #ecfeff; color: #0e7490; }
+    .ch-youtube  { background: #fef2f2; color: #dc2626; }
     .ch-digest   { background: #f0fdfa; color: #0f766e; }
 
     [data-theme="dark"] .ch-linkedin { background: #172554; color: #60a5fa; }
@@ -410,6 +412,8 @@
     [data-theme="dark"] .ch-sec      { background: #082f49; color: #38bdf8; }
     [data-theme="dark"] .ch-news     { background: #451a03; color: #fbbf24; }
     [data-theme="dark"] .ch-patents  { background: #4a044e; color: #e879f9; }
+    [data-theme="dark"] .ch-rss      { background: #083344; color: #22d3ee; }
+    [data-theme="dark"] .ch-youtube  { background: #450a0a; color: #f87171; }
     [data-theme="dark"] .ch-digest   { background: #042f2e; color: #2dd4bf; }
 
     .ch-name { font-weight: 600; font-size: .88rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -1070,7 +1074,9 @@ $(function () {
     newsroom: { label: 'Newsroom',    icon: '📢', cls: 'ch-newsroom' },
     sec:      { label: 'SEC EDGAR',   icon: '🏛️', cls: 'ch-sec'      },
     news:     { label: 'Google News', icon: '📰', cls: 'ch-news'     },
-    patents:  { label: 'Patents',     icon: '🧪', cls: 'ch-patents'  }
+    patents:  { label: 'Patents',     icon: '🧪', cls: 'ch-patents'  },
+    rss:      { label: 'RSS Feed',    icon: '📡', cls: 'ch-rss'      },
+    youtube:  { label: 'YouTube',     icon: '▶️', cls: 'ch-youtube'  }
   };
 
   var DIGEST_META = { label: 'Digest', icon: '📋', cls: 'ch-digest' };
@@ -1085,7 +1091,9 @@ $(function () {
       reddit_query: '"Example Co"',
       sec_cik: '0000000000',
       news_query: '"Example Co"',
-      blog_url: 'https://example.com/insights'
+      blog_url: 'https://example.com/insights',
+      rss_url: 'https://example.com/feed.xml',
+      youtube_channel_id: 'UCxxxxxxxxxxxxxxxxxxxxxx'
     },
     person: {
       key: 'jane_doe',
@@ -1095,7 +1103,9 @@ $(function () {
       reddit_query: '"Jane Doe"',
       sec_cik: null,
       news_query: '"Jane Doe"',
-      patents_query: 'Jane Doe'
+      patents_query: 'Jane Doe',
+      youtube_channel_id: null,
+      rss_url: null
     }
   };
 

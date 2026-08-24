@@ -22,6 +22,8 @@ CHANNEL_LABELS = {
     "sec": "SEC EDGAR filings",
     "news": "Press coverage",
     "patents": "Patents",
+    "rss": "RSS feed",
+    "youtube": "YouTube",
 }
 
 # What each channel is actually good for. Sent alongside that channel's posts so
@@ -72,6 +74,20 @@ CHANNEL_GUIDANCE = {
         "Prioritise stories the company did not publish itself, and name the "
         "outlet."
     ),
+    "rss": (
+        "An owned feed — could be a blog, newsroom, or newsletter depending "
+        "on what this target's rss_url points at. Read it the same way as "
+        "owned content: extract what the company wants known and any named "
+        "clients, products, or figures, rather than treating it as neutral "
+        "third-party coverage."
+    ),
+    "youtube": (
+        "Owned video content. Titles and descriptions are company "
+        "messaging, not independent commentary — read them the way you'd "
+        "read a press release, not a review. Note view/like counts only if "
+        "they're unusually high or low for this channel; don't over-index "
+        "on them without a baseline."
+    ),
 }
 
 # Same idea as CHANNEL_GUIDANCE, but for an individual contact rather than a
@@ -117,6 +133,17 @@ PERSON_CHANNEL_GUIDANCE = {
         "Report the title, assignee company, and filing/grant date plainly; "
         "these signal technical domains he has worked in, not current "
         "projects (patents often publish years after filing)."
+    ),
+    "youtube": (
+        "His own channel, or one he's a named guest on — check which from "
+        "the channel title before treating it as his own voice. Titles and "
+        "descriptions are his own framing of the topic; extract initiatives, "
+        "opinions, and projects he's personally attached to."
+    ),
+    "rss": (
+        "A personal blog or newsletter feed, if he has one — his own "
+        "writing, not third-party coverage. Extract what he's personally "
+        "publishing about, same treatment as his own LinkedIn posts."
     ),
 }
 

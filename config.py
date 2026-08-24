@@ -36,6 +36,8 @@ TIMEOUTS = {
     "sec": 30,
     "news": 30,
     "patents": 30,
+    "rss": 30,
+    "youtube": 30,
 }
 
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
@@ -43,6 +45,10 @@ TIMEOUTS = {
 SEC_USER_AGENT = os.getenv(
     "SEC_USER_AGENT", "StockFinDataDownload janakpanchal13@gmail.com"
 )
+
+# YouTube Data API v3 — free key from Google Cloud Console (enable
+# "YouTube Data API v3" under APIs & Services, then Credentials -> API key).
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
 # ─── Outbound mail (Microsoft Graph, OAuth2 device-code login) ───
 # Legacy SMTP AUTH is disabled on many M365 tenants, so mailer.py signs in
