@@ -468,10 +468,11 @@ async def scrape_and_store(
     merged, stats = store.merge(result)
     store.save()
     for channel, counts in sorted(stats.items()):
-        if counts["new"] or counts["duplicate"]:
+        if counts["new"] or counts["duplicate"] or counts.get("filtered"):
+            filtered_note = f", {counts['filtered']} filtered" if counts.get("filtered") else ""
             print(
                 f"   {channel:<9} +{counts['new']} new, "
-                f"{counts['duplicate']} already stored"
+                f"{counts['duplicate']} already stored{filtered_note}"
             )
     print(
         f"🆕  {merged['metadata']['new_last_run']} new posts, "
@@ -571,9 +572,10 @@ async def main():
         response, stats = store.merge(response)
         store.save()
         for channel, s_ in sorted(stats.items()):
-            if s_["new"] or s_["duplicate"]:
+            if s_["new"] or s_["duplicate"] or s_.get("filtered"):
+                filtered_note = f", {s_['filtered']} filtered" if s_.get("filtered") else ""
                 print(
-                    f"   {channel:<9} +{s_['new']} new, {s_['duplicate']} already stored"
+                    f"   {channel:<9} +{s_['new']} new, {s_['duplicate']} already stored{filtered_note}"
                 )
         print(
             f"🆕  {response['metadata']['new_last_run']} new posts, "

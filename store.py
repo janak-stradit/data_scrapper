@@ -11,6 +11,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from profanity_filter import is_abusive
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -123,6 +125,26 @@ class ScrapeStore:
             block["count"] = len(kept)
         return removed
 
+    def purge_abusive(self) -> int:
+        """Remove already-stored posts matching profanity_filter.
+
+        merge() keeps every future scrape clean; this is for posts that
+        were stored before that filter existed. Doesn't save() — caller
+        decides when to persist.
+        """
+        removed = 0
+        for block in self.doc.get("data", {}).values():
+            posts = block.get("posts", [])
+            kept = [p for p in posts if not is_abusive(p.get("text", ""), p.get("title", ""))]
+            removed += len(posts) - len(kept)
+            block["posts"] = kept
+            block["count"] = len(kept)
+        if removed:
+            self.doc["metadata"]["total_posts"] = sum(
+                b.get("count", 0) for b in self.doc.get("data", {}).values()
+            )
+        return removed
+
     def merge(self, result: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Dict[str, int]]]:
         """Fold a fresh scrape into the store, keeping one copy of each post.
 
@@ -156,7 +178,11 @@ class ScrapeStore:
             index = {post_key(channel, p): p for p in existing_posts}
 
             new_count = 0
+            filtered_count = 0
             for post in block.get("posts", []):
+                if is_abusive(post.get("text", ""), post.get("title", "")):
+                    filtered_count += 1
+                    continue
                 key = post_key(channel, post)
                 if key in index:
                     # Already stored — just note that it is still live.
@@ -169,6 +195,8 @@ class ScrapeStore:
                 existing_posts.append(post)
                 index[key] = post
                 new_count += 1
+            if filtered_count:
+                print(f"🚫  [Store] Filtered {filtered_count} {channel} post(s) with abusive/explicit language")
 
             # Posts absent from this run stay stored, but are no longer "new".
             for post in existing_posts:
@@ -191,7 +219,8 @@ class ScrapeStore:
 
             stats[channel] = {
                 "new": new_count,
-                "duplicate": len(block.get("posts", [])) - new_count,
+                "duplicate": len(block.get("posts", [])) - new_count - filtered_count,
+                "filtered": filtered_count,
             }
 
         totals = sum(b.get("count", 0) for b in merged["data"].values())
