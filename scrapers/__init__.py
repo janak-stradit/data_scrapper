@@ -10,6 +10,7 @@ from .rss_scraper import RSSScraper
 from .youtube_scraper import YouTubeScraper
 from .sec_fulltext_scraper import SECFullTextScraper
 from .regulatory_scraper import RegulatoryScraper
+from .linkedin_jobs_scraper import LinkedInJobsScraper
 
 __all__ = [
     "LinkedInScraper",
@@ -23,4 +24,5 @@ __all__ = [
     "YouTubeScraper",
     "SECFullTextScraper",
     "RegulatoryScraper",
+    "LinkedInJobsScraper",
 ]

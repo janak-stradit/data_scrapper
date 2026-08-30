@@ -36,6 +36,30 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# Per-channel calls (extract facts from one channel's posts) run far more
+# often than the one email-rollup call per digest and need less judgment —
+# a lighter/faster model handles that extraction fine, so only the email
+# synthesis step pays for the flagship model. No cheaper tier exists for
+# ollama (already local/free), so it keeps its one model.
+_CHEAP_MODELS: Dict[str, str] = {
+    "anthropic": "claude-haiku-4-5-20251001",
+    "openai": "gpt-4o-mini",
+}
+
+
+def channel_model(provider: str = None) -> str:
+    """Which model per-channel summarisation should use.
+
+    CHANNEL_LLM_MODEL in .env overrides this outright; otherwise falls back
+    to the cheap tier for the active provider, or that provider's normal
+    default if it has no cheap tier (e.g. ollama).
+    """
+    provider = (provider or PROVIDER).lower()
+    override = os.getenv("CHANNEL_LLM_MODEL")
+    if override:
+        return override
+    return _CHEAP_MODELS.get(provider) or PROVIDERS.get(provider, {}).get("default_model")
+
 
 class LLMError(RuntimeError):
     """Raised when the provider rejects a request or is not configured."""
@@ -48,8 +72,8 @@ class LLMClient:
         self,
         provider: str = None,
         model: str = None,
-        max_tokens: int = 4000,
-        timeout: int = 120,
+        max_tokens: int = 8000,
+        timeout: int = 240,
     ):
         self.provider = (provider or PROVIDER).lower()
         if self.provider not in PROVIDERS and self.provider != "dry-run":
@@ -90,6 +114,14 @@ class LLMClient:
             raise LLMError(f"{self.provider} returned HTTP {e.code}: {detail}") from e
         except urllib.error.URLError as e:
             raise LLMError(f"Could not reach {self.provider}: {e.reason}") from e
+        except TimeoutError as e:
+            # Newer Python raises a bare TimeoutError from the socket layer
+            # for a slow read, rather than wrapping it in URLError — a large
+            # max_tokens response on a busy channel can legitimately take
+            # longer than the timeout to finish streaming. Without this,
+            # the exception was uncaught and crashed the whole `digest --all`
+            # run instead of just skipping this one channel.
+            raise LLMError(f"{self.provider} timed out after {self.timeout}s") from e
 
         return self._extract_text(payload)
 
@@ -196,6 +228,7 @@ class LLMClient:
                         {"point": f"{tag} {t[:120]}", "source_url": "", "channel": "n/a"}
                         for t in top[:3]
                     ],
+                    "capability_opportunities": [],
                     "priority": "low",
                     "priority_reason": f"{tag} placeholder, not a real assessment.",
                     "confidence": "low",
@@ -219,6 +252,7 @@ class LLMClient:
                 "notable_posts": [
                     {"headline": t[:120], "source_url": "", "why": tag} for t in top[:3]
                 ],
+                "capability_matches": [],
                 "storyline": {
                     "hook": f"{tag} {top[0][:120]}",
                     "angle": f"{tag} set an API key to generate real analysis.",

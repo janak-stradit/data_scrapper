@@ -182,6 +182,7 @@ channels that get scraped are exactly the ones with a truthy value here:
 | `youtube_channel_id` | youtube | ✓ | ✓ |
 | `sec_mentions_query` | sec_mentions | ✓ | ✓ |
 | `regulatory_query` | regulatory | ✓ | ✓ |
+| `linkedin_jobs_query` | linkedin_jobs | ✓ | — |
 
 ### Response — `200 OK`
 
@@ -253,8 +254,11 @@ headline list itself is free (Google's own RSS), but every article's full
 text is then fetched via the same website-content-crawler actor
 `blog` uses, one article per headline, best-effort (silently falls back
 to headline-only per-article if a publisher blocks the fetch — this
-doesn't reduce the Apify cost of having attempted it). `sec`, `patents`,
-`rss`, and `youtube` are the only channels with no Apify cost at all
+doesn't reduce the Apify cost of having attempted it). `linkedin_jobs` also
+runs a real Apify actor (`harvestapi/linkedin-job-search`), but pay-per-result
+at $1/1,000 jobs — negligible at the ~10-20 postings per run this pipeline
+asks for. `sec`, `patents`, `rss`, and `youtube` are the only channels with
+no Apify cost at all
 (`youtube` needs a free `YOUTUBE_API_KEY` from Google Cloud Console, with
 its own 10,000-unit/day quota — not billed, but can be exhausted on very
 heavy use). An integration calling this frequently on a target with

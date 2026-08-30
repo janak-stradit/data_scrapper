@@ -25,6 +25,9 @@ ACTORS = {
 
     # Website Content Crawler - blogs, insights, and newsroom pages
     "blog": os.getenv("BLOG_ACTOR_ID", "apify/website-content-crawler"),
+
+    # LinkedIn Jobs Scraper - open roles filtered by company, no cookies
+    "linkedin_jobs": os.getenv("LINKEDIN_JOBS_ACTOR_ID", "harvestapi/linkedin-job-search"),
 }
 
 # ─── Timeouts (seconds) ──────────────────────────────────────────
@@ -41,6 +44,7 @@ TIMEOUTS = {
     "patents": 30,
     "rss": 30,
     "youtube": 30,
+    "linkedin_jobs": 90,
 }
 
 # ─── Free public APIs (no Apify actor, no compute units) ─────────

@@ -61,6 +61,30 @@ _SCHEMA_STATEMENTS = [
     """,
     "CREATE INDEX IF NOT EXISTS posts_target_channel_idx ON posts (target_key, channel)",
     """
+    CREATE TABLE IF NOT EXISTS linkedin_jobs (
+        id BIGSERIAL PRIMARY KEY,
+        target_key TEXT NOT NULL REFERENCES targets (key) ON DELETE CASCADE,
+        job_key TEXT NOT NULL,
+        title TEXT,
+        company_name TEXT,
+        location TEXT,
+        employment_type TEXT,
+        workplace_type TEXT,
+        posted_date TEXT,
+        applicants INT,
+        views INT,
+        salary JSONB,
+        job_url TEXT,
+        description TEXT,
+        first_seen TIMESTAMPTZ,
+        last_seen TIMESTAMPTZ,
+        new_in_last_run BOOLEAN,
+        raw JSONB NOT NULL,
+        UNIQUE (target_key, job_key)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS linkedin_jobs_target_idx ON linkedin_jobs (target_key)",
+    """
     CREATE TABLE IF NOT EXISTS digests (
         target_key TEXT PRIMARY KEY,
         kind TEXT NOT NULL,
@@ -149,6 +173,33 @@ def upsert_target(kind: str, target: Dict[str, Any]) -> None:
         conn.close()
 
 
+def delete_target(kind: str, key: str) -> None:
+    """Remove a target and everything Postgres holds about it.
+
+    Covers the row in `targets` plus every `posts`/`digests`/`run_history`
+    row keyed to it — leaving those behind would let a "deleted" account
+    keep reappearing via get_store()/get_digest()'s DB fallback.
+    """
+    conn = _connect()
+    if conn is None:
+        return
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM targets WHERE key = %s AND kind = %s", (key, kind))
+            cur.execute("DELETE FROM posts WHERE target_key = %s AND kind = %s", (key, kind))
+            cur.execute("DELETE FROM digests WHERE target_key = %s AND kind = %s", (key, kind))
+            cur.execute("DELETE FROM run_history WHERE target_key = %s AND kind = %s", (key, kind))
+            # No kind column here — linkedin_jobs is company-only (see
+            # engine.py's scrape_company), so this is a no-op for persons.
+            cur.execute("DELETE FROM linkedin_jobs WHERE target_key = %s", (key,))
+        conn.commit()
+    except Exception as e:
+        print(f"⚠️  [DB] Could not delete target '{key}' ({e})")
+    finally:
+        conn.close()
+
+
 def list_targets(kind: str) -> list:
     """Every target of one kind Postgres knows about — key + full config.
 
@@ -221,9 +272,85 @@ def upsert_posts(target_key: str, kind: str, data: Dict[str, Any]) -> None:
                             json.dumps(post),
                         ),
                     )
+                    if channel == "linkedin_jobs":
+                        _upsert_linkedin_job(cur, target_key, post)
         conn.commit()
     except Exception as e:
         print(f"⚠️  [DB] Could not save posts for '{target_key}' ({e})")
+    finally:
+        conn.close()
+
+
+def _upsert_linkedin_job(cur, target_key: str, post: Dict[str, Any]) -> None:
+    """One job posting into the dedicated linkedin_jobs table, structured
+    instead of buried in the generic posts table's JSONB `extra` column —
+    lets job data be queried/filtered directly (by employment_type,
+    location, etc.) rather than only read back whole.
+
+    Called from upsert_posts() for every post on the linkedin_jobs channel,
+    so it's mirrored alongside (not instead of) the generic posts row —
+    every other read path (get_store, get_digest) keeps working unchanged.
+    """
+    engagement = post.get("engagement") or {}
+    cur.execute(
+        """
+        INSERT INTO linkedin_jobs (
+            target_key, job_key, title, company_name, location,
+            employment_type, workplace_type, posted_date, applicants, views,
+            salary, job_url, description, first_seen, last_seen,
+            new_in_last_run, raw
+        )
+        VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+            %s::timestamptz, %s::timestamptz, %s, %s
+        )
+        ON CONFLICT (target_key, job_key) DO UPDATE SET
+            applicants = EXCLUDED.applicants,
+            views = EXCLUDED.views,
+            last_seen = EXCLUDED.last_seen,
+            new_in_last_run = EXCLUDED.new_in_last_run,
+            raw = EXCLUDED.raw
+        """,
+        (
+            target_key, post_key("linkedin_jobs", post),
+            post.get("title"), post.get("author"), post.get("location"),
+            post.get("employment_type"), post.get("workplace_type"),
+            post.get("published_at"),
+            engagement.get("applicants"), engagement.get("views"),
+            json.dumps(post.get("salary")) if post.get("salary") else None,
+            post.get("post_url"), post.get("text"),
+            post.get("first_seen"), post.get("last_seen"),
+            post.get("new_in_last_run"),
+            json.dumps(post),
+        ),
+    )
+
+
+def get_linkedin_jobs(target_key: str) -> list:
+    """All job postings on file for one account, newest-posted first."""
+    conn = _connect()
+    if conn is None:
+        return []
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT title, company_name, location, employment_type,
+                       workplace_type, posted_date, applicants, views,
+                       salary, job_url, description
+                FROM linkedin_jobs
+                WHERE target_key = %s
+                ORDER BY posted_date DESC NULLS LAST
+                """,
+                (target_key,),
+            )
+            cols = [d.name for d in cur.description]
+            rows = cur.fetchall()
+        return [dict(zip(cols, row)) for row in rows]
+    except Exception as e:
+        print(f"⚠️  [DB] Could not read linkedin_jobs for '{target_key}' ({e})")
+        return []
     finally:
         conn.close()
 

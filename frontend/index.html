@@ -404,6 +404,7 @@
     .ch-youtube  { background: #fef2f2; color: #dc2626; }
     .ch-secmentions { background: #eef2ff; color: #4338ca; }
     .ch-regulatory  { background: #f7fee7; color: #4d7c0f; }
+    .ch-jobs        { background: #fdf2f8; color: #be185d; }
     .ch-digest   { background: #f0fdfa; color: #0f766e; }
 
     [data-theme="dark"] .ch-linkedin { background: #172554; color: #60a5fa; }
@@ -418,6 +419,7 @@
     [data-theme="dark"] .ch-youtube  { background: #450a0a; color: #f87171; }
     [data-theme="dark"] .ch-secmentions { background: #1e1b4b; color: #818cf8; }
     [data-theme="dark"] .ch-regulatory  { background: #1a2e05; color: #a3e635; }
+    [data-theme="dark"] .ch-jobs        { background: #500724; color: #f472b6; }
     [data-theme="dark"] .ch-digest   { background: #042f2e; color: #2dd4bf; }
 
     .ch-name { font-weight: 600; font-size: .88rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -601,6 +603,25 @@
     .send-mail-status.ok { color: #16a34a; }
     .send-mail-status.err { color: #dc2626; }
 
+    .copy-btn {
+      padding: 8px 14px;
+      font-size: .8rem; font-weight: 600;
+      font-family: inherit;
+      border: 1px solid var(--border-color); border-radius: var(--radius-md);
+      background: var(--card-bg); color: var(--text-primary);
+      cursor: pointer; white-space: nowrap;
+    }
+    .copy-btn:hover { background: var(--input-bg); }
+    .copy-btn-inline {
+      padding: 2px 9px;
+      font-size: .7rem; font-weight: 600;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .copy-status { font-size: .78rem; }
+    .copy-status.ok { color: #16a34a; }
+    .copy-status.err { color: #dc2626; }
+
     /* ── Run Pipeline ───────────────────────────────────────────── */
     .run-pipeline-nav {
       display: flex; align-items: center; gap: 4px;
@@ -781,6 +802,24 @@
     .data-gaps { font-size: .8rem; color: var(--text-secondary); margin-top: 12px; }
     .data-gaps-label { font-weight: 600; margin-bottom: 4px; }
     .data-gaps ul { margin: 0; padding-left: 16px; }
+
+    .capability-section { margin-top: 16px; }
+    .capability-section-label { font-weight: 600; font-size: .8rem; color: var(--text-secondary); margin-bottom: 8px; }
+    .capability-card {
+      border-left: 3px solid #22c55e;
+      background: rgba(34,197,94,.06);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: .82rem;
+      color: var(--text-secondary);
+    }
+    [data-theme="dark"] .capability-card { background: rgba(34,197,94,.1); }
+    .capability-card .capability-offering { font-weight: 600; color: #16a34a; font-size: .78rem; }
+    [data-theme="dark"] .capability-card .capability-offering { color: #4ade80; }
+    .capability-card .capability-pitch { color: var(--text-primary); margin: 4px 0; }
+    .capability-card .capability-quote { font-style: italic; color: var(--text-muted); font-size: .78rem; }
+    .capability-card a { color: var(--brand); }
 
     /* Storylines */
     .storyline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 14px; }
@@ -1082,7 +1121,8 @@ $(function () {
     rss:      { label: 'RSS Feed',    icon: '📡', cls: 'ch-rss'      },
     youtube:  { label: 'YouTube',     icon: '▶️', cls: 'ch-youtube'  },
     sec_mentions: { label: 'SEC mentions',  icon: '🔎', cls: 'ch-secmentions' },
-    regulatory:   { label: 'Regulatory',    icon: '🏦', cls: 'ch-regulatory'  }
+    regulatory:   { label: 'Regulatory',    icon: '🏦', cls: 'ch-regulatory'  },
+    linkedin_jobs: { label: 'Job postings', icon: '💼', cls: 'ch-jobs' }
   };
 
   var DIGEST_META = { label: 'Digest', icon: '📋', cls: 'ch-digest' };
@@ -1357,6 +1397,24 @@ $(function () {
     '</div>';
   }
 
+  function renderCapabilities(title, items) {
+    if (!items || !items.length) return '';
+    var cards = items.map(function (c) {
+      return '<div class="capability-card">' +
+        '<div class="capability-offering">' + esc(c.offering || '') +
+          (c.theme ? ' <span style="color:var(--text-muted);font-weight:400;">— ' + esc(c.theme) + '</span>' : '') +
+        '</div>' +
+        (c.pitch ? '<div class="capability-pitch">' + esc(c.pitch) + '</div>' : '') +
+        (c.supporting_quote ? '<div class="capability-quote">"' + esc(c.supporting_quote) + '"</div>' : '') +
+        (c.source_url ? ' <a href="' + esc(c.source_url) + '" target="_blank" rel="noopener" style="font-size:.75rem;">source ↗</a>' : '') +
+      '</div>';
+    }).join('');
+    return '<div class="capability-section">' +
+      '<div class="capability-section-label">🎯 ' + esc(title) + '</div>' +
+      cards +
+    '</div>';
+  }
+
   function renderPoints(points) {
     if (!points || !points.length) return '';
     var items = points.map(function (p) {
@@ -1366,7 +1424,10 @@ $(function () {
       var ch = p.channel ? ' <span style="color:var(--text-muted);font-size:.75rem;">(' + esc(p.channel) + ')</span>' : '';
       return '<li>' + esc(p.point || '') + ch + src + '</li>';
     }).join('');
-    return '<div class="talking-points-label">💬 Talking points</div>' +
+    return '<div class="talking-points-label">💬 Talking points' +
+        '<button type="button" class="copy-btn copy-btn-inline" id="copyTalkingPointsBtn">📋 Copy</button>' +
+        ' <span class="copy-status" id="copyTalkingPointsStatus"></span>' +
+      '</div>' +
       '<ul class="talking-points-list">' + items + '</ul>';
   }
 
@@ -1381,7 +1442,7 @@ $(function () {
     var dry = /dry-run|not set/i.test(digest.llm || '') || email.dry_run;
     var isPerson = digest.kind === 'person';
 
-    state.currentEmail = { subject: email.subject || '', body: email.body || '' };
+    state.currentEmail = { subject: email.subject || '', body: email.body || '', talking_points: email.talking_points || [] };
 
     var prioCls = { high: 'pill-danger', medium: 'pill-warning', low: '' }[email.priority] || '';
 
@@ -1398,13 +1459,16 @@ $(function () {
         '<div class="send-mail-bar">' +
           '<input type="email" class="send-mail-input" id="sendMailTo" placeholder="recipient@example.com">' +
           '<button type="button" class="send-mail-btn" id="sendMailBtn">Send Mail</button>' +
+          '<button type="button" class="copy-btn" id="copyEmailBtn">📋 Copy Email</button>' +
           '<span class="send-mail-status" id="sendMailStatus"></span>' +
+          '<span class="copy-status" id="copyEmailStatus"></span>' +
         '</div>' +
         '<div class="digest-body">' +
           '<div class="subject-row"><strong>Subject:</strong> ' + esc(email.subject || '—') + '</div>' +
           (email.priority_reason ? '<div class="priority-note">' + esc(email.priority_reason) + '</div>' : '') +
           '<pre class="email-pre">' + esc(email.body || '') + '</pre>' +
           renderPoints(email.talking_points) +
+          renderCapabilities('Capability opportunities', email.capability_opportunities) +
           renderList('⚠️ Do not say', email.do_not_say, true) +
           renderList('Data gaps', email.data_gaps, false) +
           '<div class="digest-meta-row" style="margin-top:16px;">Generated ' + esc(fmtDate(digest.generated_at)) + ' · ' + esc(digest.llm || '') + '</div>' +
@@ -1458,6 +1522,7 @@ $(function () {
               (story.suggested_tone ? ' <em style="color:var(--text-muted);">(' + esc(story.suggested_tone) + ')</em>' : '') + '</div>' : '') +
             (ideas ? '<div class="storyline-detail"><strong>Post ideas:</strong><ul style="margin:4px 0 0;padding-left:16px;font-size:.8rem;color:var(--text-secondary);">' + ideas + '</ul></div>' : '') +
             (story.avoid ? '<div class="storyline-detail" style="margin-top:8px;"><strong>Avoid:</strong> <span style="color:var(--text-muted);">' + esc(story.avoid) + '</span></div>' : '') +
+            renderCapabilities('Capability matches', ch.capability_matches) +
             renderList('⚠️ Do not say', ch.do_not_say, true) +
           '</div>' +
         '</div>';
@@ -1475,6 +1540,49 @@ $(function () {
     var $body = $('#story-' + idx);
     $(this).toggleClass('open');
     $body.toggleClass('open');
+  });
+
+  // Copy to clipboard, with a textarea/execCommand fallback for non-secure
+  // contexts where navigator.clipboard is unavailable.
+  function copyToClipboard(text, $status) {
+    function done(ok) {
+      if (!$status || !$status.length) return;
+      $status.text(ok ? 'Copied!' : 'Copy failed').removeClass('ok err').addClass(ok ? 'ok' : 'err');
+      setTimeout(function () { $status.text('').removeClass('ok err'); }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    done(ok);
+  }
+
+  // Copy Email — subject + body of the current sales email / contact briefing.
+  $(document).on('click', '#copyEmailBtn', function () {
+    var email = state.currentEmail || {};
+    var text = 'Subject: ' + (email.subject || '') + '\n\n' + (email.body || '');
+    copyToClipboard(text, $('#copyEmailStatus'));
+  });
+
+  // Copy Talking points — each point plus its source link, one per line.
+  $(document).on('click', '#copyTalkingPointsBtn', function () {
+    var points = (state.currentEmail || {}).talking_points || [];
+    var text = points.map(function (p) {
+      var line = '- ' + (p.point || '');
+      if (p.source_url) line += ' (' + p.source_url + ')';
+      return line;
+    }).join('\n');
+    copyToClipboard(text, $('#copyTalkingPointsStatus'));
   });
 
   // Send Mail — delegated once, same reasoning as the accordion toggle above.

@@ -38,3 +38,14 @@ def save(section: str, key: str, target: Dict[str, Any]) -> None:
     data[section][key] = target
     with open(_PATH, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
+
+
+def delete(section: str, key: str) -> bool:
+    """Remove one target from `section`. Returns whether it was present."""
+    data = _load()
+    if key not in data[section]:
+        return False
+    del data[section][key]
+    with open(_PATH, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+    return True

@@ -35,6 +35,25 @@ def render_markdown(digest: Dict[str, Any]) -> str:
         ]
         lines.append("")
 
+    opportunities = email.get("capability_opportunities") or []
+    if opportunities:
+        lines += ["### Capability opportunities", ""]
+        lines += ["| Theme | Offering | Pitch | Source |", "| --- | --- | --- | --- |"]
+        lines += [
+            f"| {o.get('theme', '')} | {o.get('offering', '')} | {o.get('pitch', '')} "
+            f"| [link]({o.get('source_url', '')}) |"
+            for o in opportunities
+        ]
+        lines.append("")
+        lines += ["**Supporting quotes:**", ""]
+        lines += [
+            f"- _{o.get('offering', '')}_ — \"{o.get('supporting_quote', '')}\" "
+            f"— <{o.get('source_url', '')}>"
+            for o in opportunities
+            if o.get("supporting_quote")
+        ]
+        lines.append("")
+
     for label, key in (("⚠️ Do not say", "do_not_say"), ("Data gaps", "data_gaps")):
         items = email.get(key) or []
         if items:
@@ -74,6 +93,16 @@ def render_markdown(digest: Dict[str, Any]) -> str:
             lines += [
                 f"- [{n.get('headline', '')}]({n.get('source_url', '')}) — {n.get('why', '')}"
                 for n in notable
+            ]
+            lines.append("")
+
+        matches = ch.get("capability_matches") or []
+        if matches:
+            lines += ["**Capability matches:**"]
+            lines += [
+                f"- **{m.get('offering', '')}** — {m.get('pitch', '')}  \n"
+                f"  \"{m.get('supporting_quote', '')}\" — <{m.get('source_url', '')}>"
+                for m in matches
             ]
             lines.append("")
 

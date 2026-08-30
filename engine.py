@@ -32,6 +32,7 @@ from scrapers import (
     YouTubeScraper,
     SECFullTextScraper,
     RegulatoryScraper,
+    LinkedInJobsScraper,
 )
 from targets import resolve as resolve_company, COMPANY_TARGETS
 from people_targets import resolve as resolve_person, PEOPLE_TARGETS
@@ -60,6 +61,7 @@ class ApifyScraperEngine:
         self.youtube = YouTubeScraper()
         self.sec_mentions = SECFullTextScraper()
         self.regulatory = RegulatoryScraper()
+        self.linkedin_jobs = LinkedInJobsScraper()
 
     async def scrape_all(
         self,
@@ -84,6 +86,7 @@ class ApifyScraperEngine:
         youtube_channel_id: Optional[str] = None,
         sec_mentions_query: Optional[str] = None,
         regulatory_query: Optional[str] = None,
+        linkedin_jobs_query: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Scrape all specified platforms in parallel.
@@ -103,6 +106,8 @@ class ApifyScraperEngine:
                 for individuals or narrower company names
             regulatory_query: Name to match against Federal Reserve and
                 OCC press/enforcement-action feeds
+            linkedin_jobs_query: Company name or LinkedIn company URL to
+                filter open job postings by
             limit: Number of posts per platform (default: 10)
 
         Returns:
@@ -124,6 +129,7 @@ class ApifyScraperEngine:
                 "youtube_channel_id": youtube_channel_id,
                 "sec_mentions_query": sec_mentions_query,
                 "regulatory_query": regulatory_query,
+                "linkedin_jobs_query": linkedin_jobs_query,
                 "limit": limit,
                 "requested_at": datetime.utcnow().isoformat() + "Z",
             },
@@ -199,6 +205,10 @@ class ApifyScraperEngine:
         if regulatory_query:
             tasks.append(self.regulatory.scrape(regulatory_query, limit))
             task_map[len(tasks) - 1] = "regulatory"
+
+        if linkedin_jobs_query:
+            tasks.append(self.linkedin_jobs.scrape(linkedin_jobs_query, limit))
+            task_map[len(tasks) - 1] = "linkedin_jobs"
 
         if not tasks:
             result["success"] = False
@@ -316,6 +326,7 @@ class ApifyScraperEngine:
             youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
             sec_mentions_query=target.get("sec_mentions_query") if want("sec_mentions") else None,
             regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
+            linkedin_jobs_query=target.get("linkedin_jobs_query") if want("linkedin_jobs") else None,
         )
 
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
@@ -548,7 +559,7 @@ async def main():
         "--only",
         help="comma-separated channels to scrape "
         "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,"
-        "youtube,sec_mentions,regulatory)",
+        "youtube,sec_mentions,regulatory,linkedin_jobs)",
     )
     parser.add_argument(
         "--reset-channel",

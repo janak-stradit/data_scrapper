@@ -17,6 +17,11 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "display_name": "BNY (Bank of New York Mellon)",
         "ticker": "BK",
         "linkedin_url": "https://www.linkedin.com/company/bny-mellon/",
+        # Same company page, used as the company filter for the LinkedIn
+        # Jobs actor — open roles are often an earlier signal than a press
+        # release (a "Blockchain Settlement Engineer" req shows up before
+        # the partnership announcement does).
+        "linkedin_jobs_query": "https://www.linkedin.com/company/bny-mellon/",
         "twitter_handle": "@BNYglobal",
         # Reddit has no company account — track mentions instead.
         "reddit_query": '"BNY Mellon"',
@@ -44,6 +49,7 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "display_name": "Northern Trust",
         "ticker": "NTRS",
         "linkedin_url": "https://www.linkedin.com/company/northern-trust/",
+        "linkedin_jobs_query": "https://www.linkedin.com/company/northern-trust/",
         "twitter_handle": "@NorthernTrust",
         "reddit_query": '"Northern Trust"',
         "reddit_keywords": ["northern trust", "ntrs"],
@@ -63,6 +69,7 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "display_name": "BlackRock",
         "ticker": "BLK",
         "linkedin_url": "https://www.linkedin.com/company/blackrock/",
+        "linkedin_jobs_query": "https://www.linkedin.com/company/blackrock/",
         "twitter_handle": "@blackrock",
         "reddit_query": '"BlackRock"',
         "reddit_keywords": ["blackrock", "blk", "ishares"],
@@ -77,6 +84,7 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "display_name": "The Vanguard Group",
         "ticker": None,  # privately held, client-owned
         "linkedin_url": "https://www.linkedin.com/company/vanguard/",
+        "linkedin_jobs_query": "https://www.linkedin.com/company/vanguard/",
         "twitter_handle": "@Vanguard_Group",
         # "Vanguard" also names a Riot Games anti-cheat driver and a Marvel
         # character, so the query is narrowed and gaming hits are excluded.

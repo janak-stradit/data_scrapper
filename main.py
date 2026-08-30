@@ -40,6 +40,7 @@ CHANNEL_FIELDS = {
     "youtube": "youtube_channel_id",
     "sec_mentions": "sec_mentions_query",
     "regulatory": "regulatory_query",
+    "linkedin_jobs": "linkedin_jobs_query",
 }
 
 
@@ -588,6 +589,67 @@ def cmd_serve(args) -> int:
 
             _upsert_manifest_entry(kind, saved)
             self._send_json(200, {"ok": True, "target": saved})
+
+        def do_DELETE(self):
+            if not self._require_api_key():
+                return
+            path = self.path.split("?", 1)[0]
+            if path.startswith("/api/accounts/"):
+                self._handle_delete("company", path[len("/api/accounts/"):])
+            elif path.startswith("/api/people/"):
+                self._handle_delete("person", path[len("/api/people/"):])
+            else:
+                self.send_error(404)
+
+        def _handle_delete(self, kind: str, raw_key: str):
+            """Remove a target: custom_targets.json entry (if any), local
+            store/digest files, and its Postgres rows.
+
+            Refuses to delete a target hand-written in targets.py/
+            people_targets.py — those are source code, not data; removing
+            one means editing the file, not calling this endpoint.
+            """
+            import urllib.parse
+            import custom_targets
+            import db
+            from targets import COMPANY_TARGETS
+            from people_targets import PEOPLE_TARGETS
+            from paths import store_path, digest_path
+
+            key = urllib.parse.unquote(raw_key).strip().strip("/")
+            if not key:
+                self._send_json(404, {"ok": False, "error": "Missing key in URL"})
+                return
+
+            section = "people" if kind == "person" else "companies"
+            table = PEOPLE_TARGETS if kind == "person" else COMPANY_TARGETS
+            in_custom = key in custom_targets.load_section(section)
+
+            if key in table and not in_custom:
+                source_file = "people_targets.py" if kind == "person" else "targets.py"
+                self._send_json(400, {
+                    "ok": False,
+                    "error": f"'{key}' is a built-in target defined in {source_file} "
+                    "— edit that file to remove it, this endpoint only removes "
+                    "targets saved from the UI or scraped ad-hoc.",
+                })
+                return
+
+            db_hit = any(row["key"] == key for row in db.list_targets(kind))
+            if not in_custom and not db_hit:
+                self._send_json(404, {"ok": False, "error": f"No such {kind} target: '{key}'"})
+                return
+
+            if in_custom:
+                custom_targets.delete(section, key)
+                table.pop(key, None)
+
+            for path in (store_path(key), digest_path(key, "json"), digest_path(key, "md")):
+                if os.path.exists(path):
+                    os.remove(path)
+
+            db.delete_target(kind, key)
+            self._send_json(200, {"ok": True, "deleted": key})
 
     class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         daemon_threads = True

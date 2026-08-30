@@ -26,6 +26,7 @@ CHANNEL_LABELS = {
     "youtube": "YouTube",
     "sec_mentions": "SEC filings (third-party mentions)",
     "regulatory": "Regulatory actions (Fed/OCC)",
+    "linkedin_jobs": "LinkedIn job postings",
 }
 
 # What each channel is actually good for. Sent alongside that channel's posts so
@@ -115,6 +116,17 @@ CHANNEL_GUIDANCE = {
         "list this company nearby, a passing reference). Report which case "
         "it is plainly; a live enforcement action is high-priority "
         "material, a passing mention is not."
+    ),
+    "linkedin_jobs": (
+        "Currently open job postings — often the earliest public signal of "
+        "a strategic initiative, before any press release: a 'Blockchain "
+        "Settlement Engineer' or 'Digital Asset Product Manager' req shows "
+        "the company is staffing up for something specific. Extract role "
+        "titles, seniority, and named technologies/platforms from the "
+        "description. Distinguish strategic/technical hiring from routine "
+        "volume hiring (branch tellers, customer service, standard sales "
+        "roles) — only the former is a signal worth reporting. A handful "
+        "of ordinary openings is not evidence of anything; say so plainly."
     ),
 }
 
@@ -297,6 +309,10 @@ a social media team that both cover large financial institutions.
 You will be given recent posts from ONE channel of ONE company, each with a \
 source URL. Report what the company is doing and saying.
 
+You will also be given a reference list of OUR OWN offerings and case \
+studies, below the posts. Use it only to check for genuine matches — never \
+to pad the digest with a pitch that doesn't fit.
+
 METHOD — this matters more than style:
 1. First record only what the posts literally say, each with its source URL. \
 That is `observed`.
@@ -304,11 +320,29 @@ That is `observed`.
 `interpretation` and must be phrased as inference ("suggests", "implies", \
 "likely"), never as fact.
 3. Rate how much weight the channel can bear in `evidence_strength`.
+4. Separately, "double-click" each post that names a specific third-party \
+vendor, technology, product, or infrastructure initiative: does it genuinely \
+match one of OUR offerings in the reference list? If yes, pull a verbatim \
+supporting quote from that post's text and write one `capability_matches` \
+entry. If nothing in this channel's posts maps to a real offering, leave \
+`capability_matches` empty — an empty list is the honest, common case, not a \
+failure.
 
 HARD RULES:
 - Never invent facts, numbers, names, dates or deals. If unsure, omit it.
 - Every `observed` entry and every `notable_post` needs a real source_url copied \
 from the supplied posts. Never construct or guess a URL.
+- `supporting_quote` in `capability_matches` must be copied verbatim from the \
+post's text field — never paraphrased, never invented — and trimmed to the \
+single most relevant sentence or clause, under 300 characters. If you can't \
+find an exact quote worth pulling, omit that capability_matches entry \
+entirely.
+- Only record a `capability_matches` entry when the match is genuine and \
+specific — a shared buzzword (e.g. both mention "digital assets" in passing) \
+is not a match. State the mechanism in `pitch` (why our offering fits this \
+specific development), not a generic "we should reach out".
+- At most 2 `capability_matches` entries — the strongest genuine ones only, \
+not every post that mentions a vendor.
 - If the posts are thin, off-topic, or are navigation pages rather than content, \
 say exactly that and set evidence_strength to "weak". Padding a thin channel is \
 a worse failure than reporting it as thin.
@@ -333,6 +367,14 @@ clear angle from this channel'",
     {"headline": "the post worth opening", "source_url": "https://...", \
 "why": "one clause on why it matters"}
   ],
+  "capability_matches": [
+    {"theme": "the specific vendor/technology/initiative named in the post", \
+"source_url": "https://... — must be one of the supplied posts", \
+"supporting_quote": "verbatim quote copied from that post's text", \
+"offering": "the exact offering name from the reference list", \
+"pitch": "1-2 sentences: the specific mechanism connecting this development \
+to that offering"}
+  ],
   "do_not_say": ["anything here a rep should NOT repeat to the account — \
 unannounced personnel moves, hostile sentiment, internal-only inference — or \
 omit the field if there is nothing"],
@@ -349,8 +391,9 @@ EMAIL_SYSTEM = """You write internal briefing emails for a B2B sales team \
 covering large financial institutions.
 
 You will be given per-channel summaries for ONE account, each with an evidence \
-strength rating, source URLs, and possibly a do-not-say list. Write one email a \
-salesperson reads before a call.
+strength rating, source URLs, possibly a do-not-say list, and possibly a list \
+of capability_matches — places that channel's analyst already found a genuine \
+link between something this account is doing and one of OUR offerings.
 
 METHOD:
 1. Identify the two or three developments that actually changed this period.
@@ -360,16 +403,29 @@ most authoritative source (newsroom or filing over social).
 3. Weight by evidence strength. Lead with "strong"; mention "weak" channels only \
 if they change the picture, and label them as thin when you do.
 4. Carry every do_not_say item through into the email's own do_not_say list.
+5. Roll up every channel's capability_matches into the email's own \
+capability_opportunities list. De-duplicate the same development if it was \
+matched by more than one channel — keep the entry with the stronger \
+supporting_quote. Do not invent new matches beyond what the channels already \
+found; this is a roll-up step, not a new analysis pass.
 
 HARD RULES:
 - Ground everything in the supplied summaries. Never invent facts, numbers, \
 names or deals.
 - Every talking point carries the source URL it came from.
+- Every capability_opportunities entry must reuse a supporting_quote, \
+source_url, and offering that already appeared in a channel's \
+capability_matches — never construct a new one here, and never lengthen a \
+quote beyond what that channel already gave you.
+- At most 4 capability_opportunities entries total — the strongest, \
+de-duplicated ones only.
 - Lead with what changed and why it matters commercially, not with background.
 - Cut anything that would be true of any large bank in any month.
 - No greetings, no "I hope this finds you well". Internal tone, 200-300 words.
 - If the period genuinely contained nothing notable, say so and set priority to \
 "low". A quiet month honestly reported is more useful than a manufactured hook.
+- If no channel produced any capability_matches, return an empty \
+capability_opportunities list — do not force one.
 
 Return ONLY valid JSON:
 {
@@ -379,6 +435,13 @@ section of '- ' bullets",
   "talking_points": [
     {"point": "one thing to say on the call", "source_url": "https://...", \
 "channel": "which channel it came from"}
+  ],
+  "capability_opportunities": [
+    {"theme": "the vendor/technology/initiative", "source_url": "https://...", \
+"supporting_quote": "verbatim quote, copied from the matching channel's \
+capability_matches", "offering": "the exact offering name", \
+"pitch": "1-2 sentences: the specific mechanism connecting this development \
+to that offering"}
   ],
   "priority": "high | medium | low",
   "priority_reason": "one sentence",
