@@ -487,7 +487,10 @@ def cmd_serve(args) -> int:
 
             try:
                 payload = self._read_json_body()
-                send_email(payload.get("to", ""), payload.get("subject", ""), payload.get("body", ""))
+                send_email(
+                    payload.get("to", ""), payload.get("subject", ""), payload.get("body", ""),
+                    html=payload.get("html") or None,
+                )
                 self._send_json(200, {"ok": True})
             except MailerError as e:
                 self._send_json(200, {"ok": False, "error": str(e)})

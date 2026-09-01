@@ -44,8 +44,10 @@ def _connect() -> smtplib.SMTP:
         raise MailerError(f"Could not connect to {SMTP_HOST}:{SMTP_PORT}: {e}") from e
 
 
-def send_email(to: str, subject: str, body: str) -> None:
-    """Send a plain-text email over SMTP with STARTTLS.
+def send_email(to: str, subject: str, body: str, html: str = None) -> None:
+    """Send an email over SMTP with STARTTLS — plain text only, or
+    multipart/alternative (plain text + HTML) when `html` is given, so
+    clients that can't render HTML still get a readable fallback.
 
     Raises MailerError (never smtplib's own exceptions) so callers — the
     CLI here and the /api/send-email handler in main.py — can show a
@@ -61,6 +63,8 @@ def send_email(to: str, subject: str, body: str) -> None:
     message["From"] = SMTP_FROM
     message["To"] = to
     message.set_content(body or "")
+    if html:
+        message.add_alternative(html, subtype="html")
 
     smtp = _connect()
     try:

@@ -1461,7 +1461,15 @@ $(function () {
     var dry = /dry-run|not set/i.test(digest.llm || '') || email.dry_run;
     var isPerson = digest.kind === 'person';
 
-    state.currentEmail = { subject: email.subject || '', body: email.body || '', talking_points: email.talking_points || [] };
+    state.currentEmail = {
+      subject: email.subject || '',
+      body: email.body || '',
+      talking_points: email.talking_points || [],
+      capability_opportunities: email.capability_opportunities || [],
+      priority: email.priority || '',
+      confidence: email.confidence || '',
+      company_name: (state.account && state.account.meta && state.account.meta.name) || ''
+    };
 
     var prioCls = { high: 'pill-danger', medium: 'pill-warning', low: '' }[email.priority] || '';
 
@@ -1617,6 +1625,107 @@ $(function () {
     copyToClipboard(text, $('#copyTalkingPointsStatus'));
   });
 
+  // Builds the HTML version of the sales email — subject/priority header,
+  // body paragraphs, capability opportunities, and talking points — sent
+  // alongside the plain-text body so HTML-capable clients render the full
+  // digest, not just the body paragraph.
+  function buildEmailHtml(email) {
+    // Same palette as the app itself (CHANNEL_META/pill colors above) —
+    // indigo brand, red/amber/green priority, green for capability cards
+    // (matches .capability-card), so the email reads as the same product.
+    var BRAND = '#6366f1';
+    var PRIORITY = {
+      high:   { color: '#dc2626', bg: '#fee2e2' },
+      medium: { color: '#ca8a04', bg: '#fef9c3' },
+      low:    { color: '#16a34a', bg: '#dcfce7' }
+    };
+    var prio = PRIORITY[email.priority] || { color: BRAND, bg: '#e0e7ff' };
+
+    var bodyHtml = esc(email.body || '')
+      .split(/\n\n+/)
+      .map(function (para, i) {
+        var lead = i === 0 ? 'font-size:15.5px;color:#0f172a;' : 'font-size:14.5px;color:#334155;';
+        return '<p style="margin:0 0 16px;line-height:1.65;' + lead + '">' +
+          para.replace(/\n/g, '<br>') + '</p>';
+      })
+      .join('');
+
+    function sectionHeading(emoji, badgeBg, badgeColor, title) {
+      return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 14px;">' +
+        '<tr>' +
+          '<td style="width:26px;height:26px;background:' + badgeBg + ';border-radius:7px;text-align:center;' +
+            'font-size:13px;line-height:26px;">' + emoji + '</td>' +
+          '<td style="padding-left:9px;font-size:14.5px;font-weight:700;color:#0f172a;">' + title + '</td>' +
+        '</tr>' +
+      '</table>';
+    }
+
+    var talkingPointsHtml = '';
+    if (email.talking_points && email.talking_points.length) {
+      var tpItems = email.talking_points.map(function (p, i) {
+        var src = p.source_url
+          ? ' <a href="' + esc(p.source_url) + '" style="color:' + BRAND + ';font-size:12px;font-weight:600;text-decoration:none;">source &#8599;</a>'
+          : '';
+        var ch = p.channel
+          ? '<span style="display:inline-block;margin-right:8px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;">' + esc(p.channel) + '</span>'
+          : '';
+        var border = i === 0 ? '' : 'border-top:1px solid #f1f5f9;';
+        return '<tr><td style="padding:12px 0;' + border + '">' +
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+              '<td valign="top" style="width:20px;color:' + BRAND + ';font-size:15px;font-weight:700;">&#8594;</td>' +
+              '<td style="color:#1e293b;font-size:14px;line-height:1.55;">' + esc(p.point || '') +
+                (ch || src ? '<div style="margin-top:6px;">' + ch + src + '</div>' : '') +
+              '</td>' +
+            '</tr></table>' +
+          '</td></tr>';
+      }).join('');
+      talkingPointsHtml =
+        sectionHeading('&#128172;', '#e0e7ff', BRAND, 'Talking points') +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' + tpItems + '</table>';
+    }
+
+    var capsHtml = '';
+    if (email.capability_opportunities && email.capability_opportunities.length) {
+      var capCards = email.capability_opportunities.map(function (c) {
+        return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" ' +
+            'style="margin-bottom:12px;background:#f0fdf4;border-radius:8px;">' +
+          '<tr><td style="border-left:3px solid #22c55e;padding:14px 16px;border-radius:0 8px 8px 0;">' +
+            '<div style="font-weight:700;color:#15803d;font-size:14px;">' + esc(c.offering || '') + '</div>' +
+            (c.theme ? '<div style="margin-top:3px;"><span style="display:inline-block;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:11px;font-weight:600;">' + esc(c.theme) + '</span></div>' : '') +
+            (c.pitch ? '<div style="margin-top:8px;color:#1e293b;font-size:13.5px;line-height:1.55;">' + esc(c.pitch) + '</div>' : '') +
+            (c.supporting_quote ? '<div style="margin-top:8px;padding-left:10px;border-left:2px solid #bbf7d0;color:#475569;font-size:13px;font-style:italic;line-height:1.5;">&ldquo;' + esc(c.supporting_quote) + '&rdquo;</div>' : '') +
+            (c.source_url ? '<div style="margin-top:8px;"><a href="' + esc(c.source_url) + '" style="color:#16a34a;font-size:12px;font-weight:600;text-decoration:none;">source &#8599;</a></div>' : '') +
+          '</td></tr>' +
+        '</table>';
+      }).join('');
+      capsHtml = sectionHeading('&#127919;', '#dcfce7', '#16a34a', 'Capability opportunities') + capCards;
+    }
+
+    var prioBadge = email.priority
+      ? '<span style="display:inline-block;padding:4px 12px;border-radius:99px;background:' + prio.bg + ';color:' + prio.color + ';font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">' +
+          esc(email.priority) + ' priority' +
+        '</span>' +
+        (email.confidence
+          ? '<span style="margin-left:8px;color:rgba(255,255,255,.75);font-size:12px;">confidence: ' + esc(email.confidence) + '</span>'
+          : '')
+      : '';
+
+    return '' +
+      '<div style="background:#eef2ff;padding:32px 16px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;">' +
+          '<tr><td style="background:' + BRAND + ';padding:28px 32px;">' +
+            '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.65);">Sales AI Agent &middot; Weekly Update</div>' +
+            '<div style="font-size:24px;font-weight:800;color:#ffffff;margin-top:8px;">' + esc(email.company_name || email.subject || '') + '</div>' +
+            (prioBadge ? '<div style="margin-top:14px;">' + prioBadge + '</div>' : '') +
+          '</td></tr>' +
+          '<tr><td style="padding:28px 32px 8px;">' + bodyHtml + talkingPointsHtml + capsHtml + '</td></tr>' +
+          '<tr><td style="padding:20px 32px;margin-top:20px;background:#f8fafc;border-top:1px solid #eef2ff;font-size:11.5px;color:#94a3b8;">' +
+            'Sent from the Account Intelligence Engine.' +
+          '</td></tr>' +
+        '</table>' +
+      '</div>';
+  }
+
   // Send Mail — delegated once, same reasoning as the accordion toggle above.
   $(document).on('click', '#sendMailBtn', function () {
     var $btn = $(this);
@@ -1632,12 +1741,16 @@ $(function () {
     $btn.prop('disabled', true);
     $status.attr('class', 'send-mail-status').text('Sending…');
 
+    // Fixed branded subject line, not the LLM's per-digest subject —
+    // the "Subject:" row in the UI above still shows that one for context.
+    var mailSubject = 'Newsletter Sales AI Agent | Weekly Update | ' + (email.company_name || email.subject || '');
+
     $.ajax({
       url: '/api/send-email',
       method: 'POST',
       contentType: 'application/json',
       headers: apiHeaders(),
-      data: JSON.stringify({ to: to, subject: email.subject, body: email.body })
+      data: JSON.stringify({ to: to, subject: mailSubject, body: email.body, html: buildEmailHtml(email) })
     }).done(function (res) {
       if (res && res.ok) {
         $status.attr('class', 'send-mail-status ok').text('Sent to ' + to);

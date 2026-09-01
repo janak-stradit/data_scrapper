@@ -324,7 +324,7 @@ that already exists (built-in or previously saved) overwrites it.
 
 ## `POST /api/send-email`
 
-Sends a plain-text email via [SMTP with STARTTLS](mailer.py). Requires
+Sends an email via [SMTP with STARTTLS](mailer.py). Requires
 `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in `.env` section 7 —
 verify they work with `python mailer.py --test` (authenticates without
 sending anything) before relying on this endpoint.
@@ -340,9 +340,15 @@ Content-Type: application/json
 {
   "to": "someone@example.com",
   "subject": "Subject line",
-  "body": "Plain-text body."
+  "body": "Plain-text body.",
+  "html": "<div>...</div>"
 }
 ```
+
+`html` is optional — when given, the email is sent as
+`multipart/alternative` (HTML + the plain-text `body` as a fallback for
+clients that can't render HTML); when omitted, it's sent as plain text
+only, same as before.
 
 ### Response — `200 OK`
 
