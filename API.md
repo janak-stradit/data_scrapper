@@ -324,11 +324,10 @@ that already exists (built-in or previously saved) overwrites it.
 
 ## `POST /api/send-email`
 
-Sends a plain-text email as the signed-in Microsoft account, via
-[Microsoft Graph](mailer.py) (`me/sendMail`). Requires a one-time
-interactive sign-in already completed on this machine — see
-`mailer.py`'s docstring and `.env` section 7 — this endpoint never
-triggers that login itself; it fails fast if there's no cached session.
+Sends a plain-text email via [SMTP with STARTTLS](mailer.py). Requires
+`SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in `.env` section 7 —
+verify they work with `python mailer.py --test` (authenticates without
+sending anything) before relying on this endpoint.
 
 ### Request
 
@@ -351,10 +350,11 @@ Content-Type: application/json
 { "ok": true }
 ```
 
-or, on any failure (bad recipient, not signed in, Graph error):
+or, on any failure (bad recipient, SMTP not configured, authentication
+rejected, connection error):
 
 ```json
-{ "ok": false, "error": "Not signed in to Microsoft yet (or the cached session expired). Run `python mailer.py --login` from a terminal once, then Send Mail will work from the app." }
+{ "ok": false, "error": "SMTP authentication failed: (535, b'...')" }
 ```
 
 `error` messages are written to be shown directly to an end user — they
@@ -391,7 +391,7 @@ time it returns.
 2. `APIFY_TOKEN` set in `.env` if you'll scrape linkedin/reddit/twitter/blog.
 3. `ANTHROPIC_API_KEY` (or your chosen `LLM_PROVIDER`'s key) set in `.env`
    if you want real digests instead of dry-run placeholders.
-4. For `/api/send-email`: `GRAPH_CLIENT_ID` set and `python mailer.py --login`
-   already run once on this machine.
+4. For `/api/send-email`: `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in
+   `.env`, verified with `python mailer.py --test`.
 5. Point your app at `POST /api/run`, read `entry.digest.llm` to detect
    dry-run, and `entry.platforms_failed` to detect partial failures.

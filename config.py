@@ -57,12 +57,14 @@ SEC_USER_AGENT = os.getenv(
 # "YouTube Data API v3" under APIs & Services, then Credentials -> API key).
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
-# ─── Outbound mail (Microsoft Graph, OAuth2 device-code login) ───
-# Legacy SMTP AUTH is disabled on many M365 tenants, so mailer.py signs in
-# as a user via Graph instead. Needs an Azure AD app registration (public
-# client, "Mail.Send" delegated permission) — see mailer.py's docstring.
-GRAPH_CLIENT_ID = os.getenv("GRAPH_CLIENT_ID", "")
-GRAPH_TENANT_ID = os.getenv("GRAPH_TENANT_ID", "common")
+# ─── Outbound mail (SMTP, STARTTLS) ──────────────────────────────
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+# The address mail appears From — defaults to the login username, which
+# is also the address most SMTP relays require the From header to match.
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USERNAME)
 
 # ─── Database (optional — Postgres mirror of the JSON output) ────
 # When unset, db.py's writes are no-ops: the JSON files under output/
