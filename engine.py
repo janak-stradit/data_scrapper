@@ -33,6 +33,7 @@ from scrapers import (
     SECFullTextScraper,
     RegulatoryScraper,
     LinkedInJobsScraper,
+    CxoNewsScraper,
 )
 from targets import resolve as resolve_company, COMPANY_TARGETS
 from people_targets import resolve as resolve_person, PEOPLE_TARGETS
@@ -62,6 +63,7 @@ class ApifyScraperEngine:
         self.sec_mentions = SECFullTextScraper()
         self.regulatory = RegulatoryScraper()
         self.linkedin_jobs = LinkedInJobsScraper()
+        self.cxo_news = CxoNewsScraper()
 
     async def scrape_all(
         self,
@@ -87,6 +89,7 @@ class ApifyScraperEngine:
         sec_mentions_query: Optional[str] = None,
         regulatory_query: Optional[str] = None,
         linkedin_jobs_query: Optional[str] = None,
+        cxo_news_query: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Scrape all specified platforms in parallel.
@@ -108,6 +111,9 @@ class ApifyScraperEngine:
                 OCC press/enforcement-action feeds
             linkedin_jobs_query: Company name or LinkedIn company URL to
                 filter open job postings by
+            cxo_news_query: Search query targeting executive-movement
+                news (joins/resigns/appointed/promoted) — distinct from
+                news_query, which is general company coverage
             limit: Number of posts per platform (default: 10)
 
         Returns:
@@ -130,6 +136,7 @@ class ApifyScraperEngine:
                 "sec_mentions_query": sec_mentions_query,
                 "regulatory_query": regulatory_query,
                 "linkedin_jobs_query": linkedin_jobs_query,
+                "cxo_news_query": cxo_news_query,
                 "limit": limit,
                 "requested_at": datetime.utcnow().isoformat() + "Z",
             },
@@ -209,6 +216,10 @@ class ApifyScraperEngine:
         if linkedin_jobs_query:
             tasks.append(self.linkedin_jobs.scrape(linkedin_jobs_query, limit))
             task_map[len(tasks) - 1] = "linkedin_jobs"
+
+        if cxo_news_query:
+            tasks.append(self.cxo_news.scrape(cxo_news_query, limit))
+            task_map[len(tasks) - 1] = "cxo_news"
 
         if not tasks:
             result["success"] = False
@@ -327,6 +338,7 @@ class ApifyScraperEngine:
             sec_mentions_query=target.get("sec_mentions_query") if want("sec_mentions") else None,
             regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
             linkedin_jobs_query=target.get("linkedin_jobs_query") if want("linkedin_jobs") else None,
+            cxo_news_query=target.get("cxo_news_query") if want("cxo_news") else None,
         )
 
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
@@ -559,7 +571,7 @@ async def main():
         "--only",
         help="comma-separated channels to scrape "
         "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,"
-        "youtube,sec_mentions,regulatory,linkedin_jobs)",
+        "youtube,sec_mentions,regulatory,linkedin_jobs,cxo_news)",
     )
     parser.add_argument(
         "--reset-channel",

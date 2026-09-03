@@ -41,6 +41,7 @@ CHANNEL_FIELDS = {
     "sec_mentions": "sec_mentions_query",
     "regulatory": "regulatory_query",
     "linkedin_jobs": "linkedin_jobs_query",
+    "cxo_news": "cxo_news_query",
 }
 
 

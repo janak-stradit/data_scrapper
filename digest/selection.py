@@ -21,7 +21,7 @@ from .prompts import (
 # for short-form chatter cuts off exactly the quotes and named-vendor detail
 # a "double-click" pitch needs. Chatter channels stay short since there's
 # rarely more than a headline's worth of signal in them anyway.
-_LONG_TEXT_CHANNELS = {"newsroom", "blog", "rss", "linkedin_jobs"}
+_LONG_TEXT_CHANNELS = {"newsroom", "blog", "rss", "linkedin_jobs", "cxo_news"}
 
 # Capability matching ("does this map to one of our offerings?") only pays
 # off on channels where a company actually announces vendors, technology, or

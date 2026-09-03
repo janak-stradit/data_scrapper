@@ -27,6 +27,7 @@ CHANNEL_LABELS = {
     "sec_mentions": "SEC filings (third-party mentions)",
     "regulatory": "Regulatory actions (Fed/OCC)",
     "linkedin_jobs": "LinkedIn job postings",
+    "cxo_news": "Executive moves (joins/resigns/appointments)",
 }
 
 # What each channel is actually good for. Sent alongside that channel's posts so
@@ -127,6 +128,22 @@ CHANNEL_GUIDANCE = {
         "volume hiring (branch tellers, customer service, standard sales "
         "roles) — only the former is a signal worth reporting. A handful "
         "of ordinary openings is not evidence of anything; say so plainly."
+    ),
+    "cxo_news": (
+        "Third-party news about executive leadership changes — joins, "
+        "resignations, promotions, retirements. For each hit, extract WHO "
+        "(name and title), WHAT happened (joining/leaving/promoted/retiring), "
+        "and the effective date if the article gives one; note their prior "
+        "role or the company they're coming from/going to when stated. A "
+        "new hire into a role relevant to this engagement (technology, "
+        "operations, risk) is a strong reason to reach out — a departure "
+        "changes who the existing relationship is with. Some posts carry "
+        "the real article text (full_content: true on the post); others "
+        "are headline-only where the publisher blocked extraction — treat "
+        "a headline-only post's text as just the headline, not confirmation "
+        "of every detail. Distinguish this company's own executives from "
+        "unrelated companies' executives who merely mention this company "
+        "(e.g. 'formerly of <this company>') in a bio line."
     ),
 }
 

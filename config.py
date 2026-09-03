@@ -28,6 +28,13 @@ ACTORS = {
 
     # LinkedIn Jobs Scraper - open roles filtered by company, no cookies
     "linkedin_jobs": os.getenv("LINKEDIN_JOBS_ACTOR_ID", "harvestapi/linkedin-job-search"),
+
+    # Google News Scraper (Full Article Bodies) - CXO movement tracking
+    # (executive joins/resigns/appointments). Verified live 2026-09-03:
+    # startInputs takes search-query strings; enrichBody fetches the real
+    # publisher page (best-effort — paywalled/CF-protected sites without
+    # a paid Apify plan return metadata only, no body).
+    "cxo_news": os.getenv("CXO_NEWS_ACTOR_ID", "memo23/google-news-scraper"),
 }
 
 # ─── Timeouts (seconds) ──────────────────────────────────────────
@@ -45,6 +52,10 @@ TIMEOUTS = {
     "rss": 30,
     "youtube": 30,
     "linkedin_jobs": 90,
+    # Confirmed by a live test run (5 items, enrichBody on): ~40s. Left
+    # well above that since maxItems scales the number of publisher
+    # pages it has to fetch.
+    "cxo_news": 180,
 }
 
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
