@@ -306,8 +306,9 @@ hook.
 Return ONLY valid JSON:
 {
   "subject": "specific subject naming the contact and the headline change",
-  "body": "plain text, short paragraphs, ending with a 'Talking points:' \
-section of '- ' bullets",
+  "body": "plain text, short paragraphs — the narrative only. Do not list or \
+repeat the talking points here; they render separately from the \
+talking_points field below.",
   "talking_points": [
     {"point": "one thing to say on the call", "source_url": "https://...", \
 "channel": "which channel it came from"}
@@ -447,8 +448,9 @@ capability_opportunities list — do not force one.
 Return ONLY valid JSON:
 {
   "subject": "specific subject naming the account and the headline change",
-  "body": "plain text, short paragraphs, ending with a 'Talking points:' \
-section of '- ' bullets",
+  "body": "plain text, short paragraphs — the narrative only. Do not list or \
+repeat the talking points here; they render separately from the \
+talking_points field below.",
   "talking_points": [
     {"point": "one thing to say on the call", "source_url": "https://...", \
 "channel": "which channel it came from"}

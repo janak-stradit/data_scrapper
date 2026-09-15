@@ -4,7 +4,7 @@ The digest pipeline only needs one operation — send a prompt, get text back �
 so each provider is a small adapter behind `LLMClient.complete()`. Pick the
 provider with `LLM_PROVIDER` in .env; each reads its own API key.
 
-Supported: anthropic (default), openai, ollama (local, no key), dry-run.
+Supported: anthropic (default), openai, openrouter, ollama (local, no key), dry-run.
 """
 import json
 import os
@@ -29,6 +29,13 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         "key_env": "OPENAI_API_KEY",
         "default_model": "gpt-4o",
     },
+    "openrouter": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "key_env": "OPENROUTER_API_KEY",
+        # OpenRouter mirrors each provider's own model ids under a
+        # "<provider>/" prefix — see https://openrouter.ai/models.
+        "default_model": "anthropic/claude-sonnet-5",
+    },
     "ollama": {
         "url": os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat"),
         "key_env": None,
@@ -44,6 +51,7 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
 _CHEAP_MODELS: Dict[str, str] = {
     "anthropic": "claude-haiku-4-5-20251001",
     "openai": "gpt-4o-mini",
+    "openrouter": "anthropic/claude-haiku-4.5",
 }
 
 
@@ -93,6 +101,13 @@ class LLMClient:
         self.configured = self.provider == "dry-run" or not key_env or bool(self.api_key)
         self.missing_key_env = key_env if (key_env and not self.api_key) else None
 
+        # Running totals across every complete()/complete_json() call made
+        # through this instance — a digest makes several calls per channel
+        # plus one email rollup call, all reusing the same client, so this
+        # is how pipeline.py reads back the whole digest's token spend.
+        self.total_input_tokens = 0
+        self.total_output_tokens = 0
+
     # ── Public API ───────────────────────────────────────────────
 
     def complete(self, system: str, user: str) -> str:
@@ -123,7 +138,28 @@ class LLMClient:
             # run instead of just skipping this one channel.
             raise LLMError(f"{self.provider} timed out after {self.timeout}s") from e
 
-        return self._extract_text(payload)
+        # OpenRouter (routing across upstream providers) sometimes answers
+        # with HTTP 200 and an {"error": ...} body instead of "choices" —
+        # e.g. no upstream provider currently available for a free model.
+        # Left unchecked this raised a raw KeyError from _extract_text,
+        # uncaught by pipeline.py's `except LLMError`, which crashed the
+        # whole `digest` run instead of just this one channel/email call.
+        if isinstance(payload, dict) and payload.get("error"):
+            raise LLMError(f"{self.provider} returned an error: {payload['error']}")
+
+        # Best-effort — an unexpected payload shape here shouldn't break the
+        # actual response, just leave this call's tokens uncounted.
+        try:
+            usage = self._extract_usage(payload)
+            self.total_input_tokens += usage["input_tokens"]
+            self.total_output_tokens += usage["output_tokens"]
+        except Exception:
+            pass
+
+        try:
+            return self._extract_text(payload)
+        except (KeyError, IndexError, TypeError) as e:
+            raise LLMError(f"{self.provider} returned an unexpected response shape: {payload}") from e
 
     def complete_json(self, system: str, user: str) -> Dict[str, Any]:
         """Same as complete(), but parse the reply as JSON."""
@@ -159,7 +195,7 @@ class LLMClient:
                 {"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
             )
 
-        if self.provider == "openai":
+        if self.provider in ("openai", "openrouter"):
             return (
                 {
                     "model": self.model,
@@ -189,9 +225,22 @@ class LLMClient:
         if self.provider == "anthropic":
             blocks = payload.get("content", [])
             return "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
-        if self.provider == "openai":
+        if self.provider in ("openai", "openrouter"):
             return payload["choices"][0]["message"]["content"]
         return payload.get("message", {}).get("content", "")
+
+    def _extract_usage(self, payload: Dict[str, Any]) -> Dict[str, int]:
+        """Token counts this one call reports, in each provider's own
+        response shape — 0/0 for whichever fields a given response omits,
+        never raises (the caller already wraps this best-effort)."""
+        if self.provider == "anthropic":
+            u = payload.get("usage") or {}
+            return {"input_tokens": u.get("input_tokens") or 0, "output_tokens": u.get("output_tokens") or 0}
+        if self.provider in ("openai", "openrouter"):
+            u = payload.get("usage") or {}
+            return {"input_tokens": u.get("prompt_tokens") or 0, "output_tokens": u.get("completion_tokens") or 0}
+        # ollama
+        return {"input_tokens": payload.get("prompt_eval_count") or 0, "output_tokens": payload.get("eval_count") or 0}
 
     # ── Offline fallback ─────────────────────────────────────────
 
@@ -220,9 +269,7 @@ class LLMClient:
                         f"{tag} No API key is configured, so this email was not "
                         "generated by a model.\n\n"
                         "Set LLM_PROVIDER and the matching API key in .env, then "
-                        "re-run digest.py to produce the real briefing.\n\n"
-                        "Talking points:\n"
-                        + "\n".join(f"- {t[:150]}" for t in top[:3])
+                        "re-run digest.py to produce the real briefing."
                     ),
                     "talking_points": [
                         {"point": f"{tag} {t[:120]}", "source_url": "", "channel": "n/a"}

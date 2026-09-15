@@ -146,6 +146,7 @@ class ApifyScraperEngine:
                 "platforms_scraped": [],
                 "platforms_failed": [],
                 "execution_time_ms": 0,
+                "total_cost_usd": 0.0,
             },
         }
 
@@ -260,6 +261,15 @@ class ApifyScraperEngine:
                 result["metadata"]["total_posts"] += len(posts)
 
         result["metadata"]["execution_time_ms"] = int((time.time() - start_time) * 1000)
+        # Each platform's scraper instance recorded its own actor call's cost
+        # on itself (see BaseScraper._run_actor) — sum only the platforms
+        # actually attempted this run, since last_cost_usd on an untouched
+        # scraper instance is just its constructor default (0.0), not
+        # necessarily this run's cost, and platforms not attempted aren't
+        # in task_map at all.
+        result["metadata"]["total_cost_usd"] = sum(
+            getattr(self, platform).last_cost_usd for platform in task_map.values()
+        )
         result["success"] = len(result["metadata"]["platforms_failed"]) == 0
 
         return result

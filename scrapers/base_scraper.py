@@ -9,6 +9,11 @@ class BaseScraper(ABC):
 
     def __init__(self, platform: str):
         self.platform = platform
+        # Set by _run_actor() from the actor run's own reported cost —
+        # read back by engine.py after each scrape() call to total up
+        # what a whole pipeline run actually cost. Stays 0.0 for scrapers
+        # that never call _run_actor (the free HTTP-only channels).
+        self.last_cost_usd = 0.0
 
     @abstractmethod
     async def scrape(self, identifier: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -42,6 +47,13 @@ class BaseScraper(ABC):
 
         if run is None:
             raise RuntimeError(f"Actor {actor_id} did not finish within {timeout_secs}s")
+
+        cost = (
+            run.get("usageTotalUsd")
+            if isinstance(run, dict)
+            else getattr(run, "usage_total_usd", None)
+        )
+        self.last_cost_usd = float(cost) if cost is not None else 0.0
 
         dataset_id = (
             run.get("defaultDatasetId")

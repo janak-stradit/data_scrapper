@@ -157,6 +157,7 @@ Content-Type: application/json
 | `kind` | `"company"` \| `"person"` | `"company"` | `"person"` skips blog/newsroom (those don't apply to an individual) and enables `patents_query` |
 | `limit` | integer | `10` | posts fetched per channel |
 | `generate_digest` | boolean | `true` | run the LLM digest after scraping; `false` to scrape only |
+| `only` | array of strings | — | restrict the run to these channels only (e.g. `["linkedin"]`) — used by the frontend's per-channel retry button; omit to scrape every channel the target has configured |
 | `target` | object | — | **required**. Must include a non-empty `key` |
 
 #### `target` fields (all optional except `key`)
@@ -268,6 +269,71 @@ store's incremental fetch windows already do (see `store.py`).
 
 ---
 
+## `POST /api/digest`
+
+Generates a digest from whatever is **already in the target's store** —
+no scraping happens. Pairs with `POST /api/run` called with
+`generate_digest: false`: run that first to fetch posts, then this
+whenever you want a (re)generated digest without paying for another
+scrape. This is what the frontend's **Pipeline** page uses for its two
+independent stage buttons (① Fetch, ② Create digest).
+
+### Request
+
+```
+POST /api/digest
+Content-Type: application/json
+```
+
+```json
+{
+  "kind": "company",
+  "since_days": 14,
+  "max_posts": 25,
+  "all_posts": false,
+  "target": { "key": "example_co", "display_name": "Example Co" }
+}
+```
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `kind` | `"company"` \| `"person"` | `"company"` | same meaning as `/api/run` |
+| `target` | object | — | **required**. Must include a non-empty `key` matching a target that already has a store file (`output/stores/<key>_output.json`) — see `GET /api/accounts/<key>` / `GET /api/people/<key>` to fetch the full target config first |
+| `since_days` | integer | `14` | recency window passed to the digest pipeline |
+| `max_posts` | integer | `25` | posts per channel considered |
+| `all_posts` | boolean | `false` | `true` summarises everything in the window; `false` (default) summarises only posts added by the most recent scrape |
+
+### Response — `200 OK`
+
+```json
+{
+  "ok": true,
+  "entry": {
+    "recorded_at": "2026-09-12T09:00:00.000000Z",
+    "kind": "company",
+    "key": "example_co",
+    "display_name": "Example Co",
+    "digest": { "llm": "anthropic/claude-sonnet-5", "posts_considered": 12 },
+    "success": true,
+    "duration_ms": 4310
+  }
+}
+```
+
+`entry.digest.error` (with `ok: false`) appears instead if digest
+generation failed — most commonly `"No store at ... Run: python main.py
+scrape <key> ..."` when nothing has been scraped for this target yet, or
+`"Nothing to summarise — no posts in scope"` when `since_days`/`all_posts`
+narrows the window to zero posts.
+
+### Response — `400 Bad Request`
+
+```json
+{ "ok": false, "error": "target must be a JSON object with a non-empty \"key\"" }
+```
+
+---
+
 ## `POST /api/save-target`
 
 Registers a target permanently, so it shows up in the regular
@@ -338,12 +404,15 @@ Content-Type: application/json
 
 ```json
 {
-  "to": "someone@example.com",
+  "to": "someone@example.com, someone.else@example.com",
   "subject": "Subject line",
   "body": "Plain-text body.",
   "html": "<div>...</div>"
 }
 ```
+
+`to` accepts one address or several separated by commas/semicolons —
+every one of them receives the mail.
 
 `html` is optional — when given, the email is sent as
 `multipart/alternative` (HTML + the plain-text `body` as a fallback for

@@ -516,6 +516,45 @@ def get_summary(target_key: str):
         conn.close()
 
 
+def list_personas() -> list:
+    """Every person in the `personas` table — the sales_agent-ai CRM's
+    contact list, shared via this same Neon database but otherwise
+    unrelated to this app's own `targets` (kind=person) registry (163
+    CRM contacts vs. a handful of people this scraper is actually asked
+    to run LinkedIn/Reddit/SEC/news collection against).
+
+    Read-only and best-effort like every other function here: used only
+    so `main.py list --person` can surface CRM contacts that aren't yet
+    registered as scrape targets, for discovery. Never wired into
+    resolve()/scrape/digest — a persona isn't a scrape target until it's
+    added to people_targets.py (or saved via /api/save-target).
+    """
+    conn = _connect()
+    if conn is None:
+        return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT p.key, p.display_name, p.title, a.display_name AS company,
+                       p.linkedin_url, p.twitter_handle, p.reddit_query,
+                       p.sec_cik, p.news_query, p.patents_query
+                FROM personas p
+                LEFT JOIN accounts a ON a.id = p.account_id
+                WHERE p.key IS NOT NULL
+                ORDER BY p.key
+                """
+            )
+            cols = [d.name for d in cur.description]
+            rows = cur.fetchall()
+        return [dict(zip(cols, row)) for row in rows]
+    except Exception as e:
+        print(f"⚠️  [DB] Could not list personas ({e})")
+        return []
+    finally:
+        conn.close()
+
+
 def has_digest(target_key: str) -> bool:
     conn = _connect()
     if conn is None:

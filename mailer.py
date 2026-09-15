@@ -44,31 +44,51 @@ def _connect() -> smtplib.SMTP:
         raise MailerError(f"Could not connect to {SMTP_HOST}:{SMTP_PORT}: {e}") from e
 
 
+def _parse_recipients(to: str) -> list:
+    """Splits a comma- or semicolon-separated recipient string into a
+    deduplicated list, preserving order. Accepts a single address too."""
+    import re
+
+    parts = [p.strip() for p in re.split(r"[,;]", to or "") if p.strip()]
+    seen, recipients = set(), []
+    for p in parts:
+        if p.lower() not in seen:
+            seen.add(p.lower())
+            recipients.append(p)
+    return recipients
+
+
 def send_email(to: str, subject: str, body: str, html: str = None) -> None:
     """Send an email over SMTP with STARTTLS — plain text only, or
     multipart/alternative (plain text + HTML) when `html` is given, so
     clients that can't render HTML still get a readable fallback.
 
+    `to` accepts one address or several separated by commas/semicolons
+    (e.g. "a@x.com, b@y.com") — every one of them receives the mail.
+
     Raises MailerError (never smtplib's own exceptions) so callers — the
     CLI here and the /api/send-email handler in main.py — can show a
     readable message without knowing SMTP internals.
     """
-    to = (to or "").strip()
-    if not to:
-        raise MailerError("Recipient email is required")
+    recipients = _parse_recipients(to)
+    if not recipients:
+        raise MailerError("At least one recipient email is required")
     _require_configured()
 
     message = EmailMessage()
     message["Subject"] = subject or "(no subject)"
     message["From"] = SMTP_FROM
-    message["To"] = to
+    message["To"] = ", ".join(recipients)
     message.set_content(body or "")
     if html:
         message.add_alternative(html, subtype="html")
 
     smtp = _connect()
     try:
-        smtp.send_message(message)
+        # Explicit to_addrs rather than relying on send_message's own
+        # header-parsing fallback — guarantees every listed recipient
+        # gets an RCPT TO regardless of header-quoting edge cases.
+        smtp.send_message(message, to_addrs=recipients)
     except smtplib.SMTPException as e:
         raise MailerError(f"Send failed: {e}") from e
     finally:

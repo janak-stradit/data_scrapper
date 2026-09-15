@@ -132,6 +132,8 @@ def run(
         },
         "llm": describe_config(),
         "posts_considered": considered,
+        "input_tokens": channel_client.total_input_tokens + email_client.total_input_tokens,
+        "output_tokens": channel_client.total_output_tokens + email_client.total_output_tokens,
         "email": email,
         "channels": channels,
     }
