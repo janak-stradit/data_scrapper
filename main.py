@@ -18,7 +18,7 @@ import os
 import sys
 
 from engine import scrape_and_store
-from paths import DIGEST_DIR, store_path as _resolved_store_path
+from paths import DIGEST_DIR, OUTPUT_DIR, PROJECT_ROOT, store_path as _resolved_store_path
 from targets import COMPANY_TARGETS, resolve as resolve_company
 from people_targets import PEOPLE_TARGETS, resolve as resolve_person
 
@@ -41,6 +41,7 @@ CHANNEL_FIELDS = {
     "sec_mentions": "sec_mentions_query",
     "regulatory": "regulatory_query",
     "linkedin_jobs": "linkedin_jobs_query",
+    "cxo_news": "cxo_news_query",
 }
 
 
@@ -53,7 +54,23 @@ def _table(args) -> dict:
 
 
 def _resolve(args, key: str) -> dict:
-    return resolve_person(key) if getattr(args, "person", False) else resolve_company(key)
+    """Look up a target by key, same as resolve_person()/resolve_company()
+    but falling back to Postgres for a target that only got there via an
+    ad-hoc /api/run (mirrored by db.upsert_target, never saved into
+    targets.py/people_targets.py/custom_targets.json) — otherwise every
+    subcommand but list/status would 500 on exactly the keys those two
+    are happy to show.
+    """
+    kind = "person" if getattr(args, "person", False) else "company"
+    resolve_fn = resolve_person if kind == "person" else resolve_company
+    try:
+        return resolve_fn(key)
+    except KeyError:
+        import db
+        for row in db.list_targets(kind):
+            if row["key"] == key:
+                return {"key": key, **row["config"]}
+        raise
 
 
 def _companies(args) -> list:
@@ -90,7 +107,6 @@ async def cmd_scrape(args) -> int:
         _banner(f"SCRAPE · {target['display_name']}")
         try:
             await scrape_and_store(
-                company,
                 limit=args.limit,
                 only=_split(args.only),
                 include_newsroom=not args.no_newsroom,
@@ -98,6 +114,7 @@ async def cmd_scrape(args) -> int:
                 reset_channels=_split(args.reset_channel),
                 use_store=not args.no_store,
                 kind=kind,
+                target=target,
             )
         except Exception as e:
             print(f"❌  {target['display_name']}: {type(e).__name__}: {e}")
@@ -118,13 +135,13 @@ def cmd_digest(args) -> int:
         _banner(f"DIGEST · {target['display_name']}")
         try:
             run_digest(
-                company,
                 new_only=not args.all_posts,
                 since_days=args.since_days,
                 cap=args.max_posts,
                 out_dir=args.out_dir,
                 store_path_override=_store_path(args, company),
                 kind=kind,
+                target=target,
             )
         except (FileNotFoundError, RuntimeError, LLMError) as e:
             print(f"❌  {target['display_name']}: {e}")
@@ -152,10 +169,14 @@ def cmd_status(args) -> int:
     print(header)
     print("  " + "─" * (len(header) - 2))
 
-    table = _table(args)
+    kind = "person" if getattr(args, "person", False) else "company"
+    table = _merged_table(kind, _table(args))
     for company in sorted(table):
-        target = _resolve(args, company)
-        path = _store_path(args, company)
+        try:
+            target = _resolve(args, company)
+        except KeyError:
+            target = {"key": company, **table[company]}
+        path = _resolved_store_path(company)
         if not os.path.exists(path):
             print(f"  {target['display_name'][:23]:<24}{'—':>6}{'—':>5}{'—':>4}   not scraped yet")
             continue
@@ -181,7 +202,7 @@ def cmd_status(args) -> int:
 
     print("\n  Channels per account:")
     for company in sorted(table):
-        path = _store_path(args, company)
+        path = _resolved_store_path(company)
         if not os.path.exists(path):
             continue
         with open(path, encoding="utf-8") as fh:
@@ -191,7 +212,7 @@ def cmd_status(args) -> int:
             for ch, blk in sorted(doc.get("data", {}).items())
             if isinstance(blk, dict)
         )
-        print(f"    {_resolve(args, company)['key']:<16}{counts}")
+        print(f"    {company:<16}{counts}")
     print()
     return 0
 
@@ -246,7 +267,7 @@ def cmd_db_backfill(args) -> int:
 
             print(f"  {target['display_name']:<40}{posts_here:>5} posts   digest: {'yes' if has_digest else 'no'}")
 
-    history_file = os.path.join("output", "run_history.json")
+    history_file = os.path.join(OUTPUT_DIR, "run_history.json")
     history_count = 0
     if os.path.exists(history_file):
         with open(history_file, encoding="utf-8") as fh:
@@ -271,7 +292,7 @@ def _upsert_manifest_entry(kind: str, target: dict) -> None:
     from the Run Pipeline page shows up in the sidebar's Accounts/People
     list immediately, not just in the CLI's target registry.
     """
-    manifest_path = os.path.join("frontend", "manifest.json")
+    manifest_path = os.path.join(PROJECT_ROOT, "frontend", "manifest.json")
     try:
         with open(manifest_path, encoding="utf-8") as fh:
             manifest = json.load(fh)
@@ -477,6 +498,8 @@ def cmd_serve(args) -> int:
                 self._handle_send_email()
             elif self.path == "/api/run":
                 self._handle_run()
+            elif self.path == "/api/digest":
+                self._handle_digest()
             elif self.path == "/api/save-target":
                 self._handle_save_target()
             else:
@@ -487,7 +510,15 @@ def cmd_serve(args) -> int:
 
             try:
                 payload = self._read_json_body()
-                send_email(payload.get("to", ""), payload.get("subject", ""), payload.get("body", ""))
+            except json.JSONDecodeError:
+                self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
+                return
+
+            try:
+                send_email(
+                    payload.get("to", ""), payload.get("subject", ""), payload.get("body", ""),
+                    html=payload.get("html") or None,
+                )
                 self._send_json(200, {"ok": True})
             except MailerError as e:
                 self._send_json(200, {"ok": False, "error": str(e)})
@@ -511,6 +542,7 @@ def cmd_serve(args) -> int:
             kind = "person" if payload.get("kind") == "person" else "company"
             target = payload.get("target")
             generate_digest = payload.get("generate_digest", True)
+            only = payload.get("only")  # e.g. ["linkedin"] to retry a single failed channel
 
             if not isinstance(target, dict) or not (target.get("key") or "").strip():
                 self._send_json(400, {"ok": False, "error": "target must be a JSON object with a non-empty \"key\""})
@@ -518,6 +550,10 @@ def cmd_serve(args) -> int:
             target = dict(target)
             target["key"] = target["key"].strip()
             target.setdefault("display_name", target["key"])
+
+            if only is not None and (not isinstance(only, list) or not all(isinstance(c, str) for c in only)):
+                self._send_json(400, {"ok": False, "error": "only must be a list of channel name strings"})
+                return
 
             try:
                 limit = int(payload.get("limit") or 10)
@@ -532,15 +568,18 @@ def cmd_serve(args) -> int:
                 "display_name": target["display_name"],
                 "limit": limit,
             }
+            if only:
+                entry["only"] = only
             try:
                 stored = _asyncio.run(
-                    scrape_and_store(limit=limit, kind=kind, target=target)
+                    scrape_and_store(limit=limit, kind=kind, target=target, only=only)
                 )
                 meta = stored.get("metadata", {})
                 entry["new_posts"] = meta.get("new_last_run")
                 entry["total_posts"] = meta.get("total_posts")
                 entry["platforms_scraped"] = meta.get("platforms_scraped", [])
                 entry["platforms_failed"] = meta.get("platforms_failed", [])
+                entry["cost_usd"] = meta.get("total_cost_usd", 0.0)
 
                 if generate_digest:
                     try:
@@ -548,12 +587,74 @@ def cmd_serve(args) -> int:
                         entry["digest"] = {
                             "llm": digest.get("llm"),
                             "posts_considered": digest.get("posts_considered"),
+                            "input_tokens": digest.get("input_tokens", 0),
+                            "output_tokens": digest.get("output_tokens", 0),
                         }
                     except (LLMError, RuntimeError, FileNotFoundError) as e:
                         entry["digest"] = {"error": str(e)}
 
                 entry["success"] = True
             except Exception as e:
+                entry["success"] = False
+                entry["error"] = str(e)
+
+            entry["duration_ms"] = int((time.time() - started) * 1000)
+            saved = history.record(entry)
+            self._send_json(200, {"ok": entry["success"], "entry": saved})
+
+        def _handle_digest(self):
+            """Digest-only: summarise whatever is already in this target's
+            store, without scraping first. The frontend's Pipeline page
+            uses this for its "② Create digest" stage, kept independent of
+            "① Fetch" (POST /api/run with generate_digest:false) so either
+            stage can be run/re-run on its own.
+            """
+            from digest.pipeline import run as run_digest
+            from digest.llm_client import LLMError
+            import history
+
+            try:
+                payload = self._read_json_body()
+            except json.JSONDecodeError:
+                self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
+                return
+
+            kind = "person" if payload.get("kind") == "person" else "company"
+            target = payload.get("target")
+            if not isinstance(target, dict) or not (target.get("key") or "").strip():
+                self._send_json(400, {"ok": False, "error": "target must be a JSON object with a non-empty \"key\""})
+                return
+            target = dict(target)
+            target["key"] = target["key"].strip()
+            target.setdefault("display_name", target["key"])
+
+            try:
+                since_days = int(payload.get("since_days") or 14)
+                cap = int(payload.get("max_posts") or 25)
+            except (TypeError, ValueError):
+                self._send_json(400, {"ok": False, "error": "since_days and max_posts must be numbers"})
+                return
+            new_only = not payload.get("all_posts", False)
+
+            started = time.time()
+            entry = {
+                "kind": kind,
+                "key": target["key"],
+                "display_name": target["display_name"],
+            }
+            try:
+                digest = run_digest(
+                    kind=kind, target=target, new_only=new_only, since_days=since_days, cap=cap
+                )
+                entry["digest"] = {
+                    "llm": digest.get("llm"),
+                    "posts_considered": digest.get("posts_considered"),
+                    "input_tokens": digest.get("input_tokens", 0),
+                    "output_tokens": digest.get("output_tokens", 0),
+                }
+                entry["success"] = True
+            except (LLMError, RuntimeError, FileNotFoundError) as e:
+                entry["digest"] = {"error": str(e)}
                 entry["success"] = False
                 entry["error"] = str(e)
 
@@ -662,8 +763,14 @@ def cmd_serve(args) -> int:
     port = int(os.getenv("PORT", args.port))
 
     from config import API_KEY
+    import functools
+    # Anchored to PROJECT_ROOT, not cwd — otherwise running `serve` from
+    # outside this project's directory (e.g. a monorepo root one level up)
+    # would serve whatever frontend/output happens to sit at that cwd
+    # instead of this project's own.
+    ServeHandler = functools.partial(Handler, directory=PROJECT_ROOT)
     try:
-        with Server((host, port), Handler) as httpd:
+        with Server((host, port), ServeHandler) as httpd:
             _banner("SERVE")
             shown_host = "127.0.0.1" if host == "0.0.0.0" else host
             print(f"  Frontend:  http://{shown_host}:{port}/frontend/")
@@ -684,12 +791,31 @@ def cmd_serve(args) -> int:
 
 # ── list ─────────────────────────────────────────────────────────
 
+def _merged_table(kind: str, table: dict) -> dict:
+    """`table` (PEOPLE_TARGETS/COMPANY_TARGETS) plus anything Postgres knows
+    about that isn't in it — targets scraped ad-hoc via /api/run and never
+    explicitly saved via /api/save-target only live in the database, so
+    `list`/`status` would otherwise silently omit them.
+    """
+    import db
+
+    merged = dict(table)
+    for row in db.list_targets(kind):
+        merged.setdefault(row["key"], row["config"])
+    return merged
+
+
 def cmd_list(args) -> int:
     if args.person:
+        table = _merged_table("person", PEOPLE_TARGETS)
         _banner("CONFIGURED PEOPLE")
-        for key in sorted(PEOPLE_TARGETS):
-            t = resolve_person(key)
-            print(f"\n  {t['display_name']}")
+        for key in sorted(table):
+            try:
+                t = resolve_person(key)
+            except KeyError:
+                t = {"key": key, **table[key]}
+            tag = "" if key in PEOPLE_TARGETS else "  [db only]"
+            print(f"\n  {t.get('display_name', key)}{tag}")
             print(f"    key        {key}")
             print(f"    linkedin   {t.get('linkedin_url') or '—'}")
             print(f"    twitter    {t.get('twitter_handle') or '—'}")
@@ -697,20 +823,47 @@ def cmd_list(args) -> int:
             print(f"    sec cik    {t.get('sec_cik') or '—'}")
             print(f"    news query {t.get('news_query') or '—'}")
             print(f"    patents    {t.get('patents_query') or '—'}")
-        print("\n  Add or edit people in people_targets.py\n")
+        print(
+            "\n  Add or edit people in people_targets.py — [db only] entries were "
+            "scraped ad-hoc (e.g. via /api/run) and exist in Postgres but not yet "
+            "in that file."
+        )
+
+        import db
+        personas = [p for p in db.list_personas() if p["key"] not in table]
+        if personas:
+            _banner(f"CRM PERSONAS (sales_agent-ai) — {len(personas)}")
+            print("  Visibility only — not scrape targets until added to people_targets.py.\n")
+            header = f"  {'KEY':<28}{'NAME':<40}{'COMPANY':<24}TITLE"
+            print(header)
+            print("  " + "─" * (len(header) - 2))
+            for p in personas:
+                print(
+                    f"  {p['key'][:27]:<28}{(p.get('display_name') or '—')[:39]:<40}"
+                    f"{(p.get('company') or '—')[:23]:<24}{p.get('title') or '—'}"
+                )
+            print()
         return 0
 
+    table = _merged_table("company", COMPANY_TARGETS)
     _banner("CONFIGURED ACCOUNTS")
-    for key in sorted(COMPANY_TARGETS):
-        t = resolve_company(key)
-        print(f"\n  {t['display_name']}  ({t.get('ticker') or 'private'})")
+    for key in sorted(table):
+        try:
+            t = resolve_company(key)
+        except KeyError:
+            t = {"key": key, **table[key]}
+        tag = "" if key in COMPANY_TARGETS else "  [db only]"
+        print(f"\n  {t.get('display_name', key)}  ({t.get('ticker') or 'private'}){tag}")
         print(f"    key        {key}")
-        print(f"    linkedin   {t['linkedin_url']}")
-        print(f"    twitter    {t['twitter_handle']}")
+        print(f"    linkedin   {t.get('linkedin_url') or '—'}")
+        print(f"    twitter    {t.get('twitter_handle') or '—'}")
         print(f"    sec cik    {t.get('sec_cik')}")
-        print(f"    blog       {t['blog_url'][:76]}")
+        print(f"    blog       {(t.get('blog_url') or '—')[:76]}")
         print(f"    newsroom   {(t.get('newsroom_url') or '—')[:76]}")
-    print("\n  Add or edit accounts in targets.py\n")
+    print(
+        "\n  Add or edit accounts in targets.py — [db only] entries were scraped "
+        "ad-hoc (e.g. via /api/run) and exist in Postgres but not yet in that file.\n"
+    )
     return 0
 
 

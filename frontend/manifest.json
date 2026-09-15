@@ -1,11 +1,11 @@
 {
   "accounts": [
     {
-      "key": "bny",
+      "key": "bank_of_new_york_mellon_corporation",
       "name": "BNY (Bank of New York Mellon)",
       "ticker": "BK",
-      "file": "../output/stores/bny_output.json",
-      "digest": "../output/digests/bny_digest.json"
+      "file": "../output/stores/bank_of_new_york_mellon_corporation_output.json",
+      "digest": "../output/digests/bank_of_new_york_mellon_corporation_digest.json"
     },
     {
       "key": "northern_trust",

@@ -28,6 +28,13 @@ ACTORS = {
 
     # LinkedIn Jobs Scraper - open roles filtered by company, no cookies
     "linkedin_jobs": os.getenv("LINKEDIN_JOBS_ACTOR_ID", "harvestapi/linkedin-job-search"),
+
+    # Google News Scraper (Full Article Bodies) - CXO movement tracking
+    # (executive joins/resigns/appointments). Verified live 2026-09-03:
+    # startInputs takes search-query strings; enrichBody fetches the real
+    # publisher page (best-effort — paywalled/CF-protected sites without
+    # a paid Apify plan return metadata only, no body).
+    "cxo_news": os.getenv("CXO_NEWS_ACTOR_ID", "memo23/google-news-scraper"),
 }
 
 # ─── Timeouts (seconds) ──────────────────────────────────────────
@@ -45,6 +52,10 @@ TIMEOUTS = {
     "rss": 30,
     "youtube": 30,
     "linkedin_jobs": 90,
+    # Confirmed by a live test run (5 items, enrichBody on): ~40s. Left
+    # well above that since maxItems scales the number of publisher
+    # pages it has to fetch.
+    "cxo_news": 180,
 }
 
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
@@ -57,17 +68,32 @@ SEC_USER_AGENT = os.getenv(
 # "YouTube Data API v3" under APIs & Services, then Credentials -> API key).
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
-# ─── Outbound mail (Microsoft Graph, OAuth2 device-code login) ───
-# Legacy SMTP AUTH is disabled on many M365 tenants, so mailer.py signs in
-# as a user via Graph instead. Needs an Azure AD app registration (public
-# client, "Mail.Send" delegated permission) — see mailer.py's docstring.
-GRAPH_CLIENT_ID = os.getenv("GRAPH_CLIENT_ID", "")
-GRAPH_TENANT_ID = os.getenv("GRAPH_TENANT_ID", "common")
+# ─── Outbound mail (SMTP, STARTTLS) ──────────────────────────────
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+# The address mail appears From — defaults to the login username, which
+# is also the address most SMTP relays require the From header to match.
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USERNAME)
 
 # ─── Database (optional — Postgres mirror of the JSON output) ────
 # When unset, db.py's writes are no-ops: the JSON files under output/
 # stay fully functional on their own either way.
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+#
+# Two named connections so this can point at either Postgres without
+# losing the other:
+#   - NEON:  the cloud DB this repo has always written to (default).
+#   - LOCAL: sales_agent-ai's dev Postgres (localhost:5432/sales_ai),
+#            for testing against the same DB that repo's dashboard reads.
+# DATABASE_URL_NEON falls back to the old DATABASE_URL var so existing
+# .env files keep working unchanged. Flip DB_USE_LOCAL=true to switch —
+# see MERGE_PLAN.md Phase 1 before pointing this at local Postgres, the
+# sales_agent-ai `posts` table needs its UNIQUE constraint fixed first.
+DATABASE_URL_NEON = os.getenv("DATABASE_URL_NEON", os.getenv("DATABASE_URL", ""))
+DATABASE_URL_LOCAL = os.getenv("DATABASE_URL_LOCAL", "")
+DB_USE_LOCAL = os.getenv("DB_USE_LOCAL", "false").strip().lower() in ("1", "true", "yes")
+DATABASE_URL = DATABASE_URL_LOCAL if DB_USE_LOCAL else DATABASE_URL_NEON
 
 # ─── API key (required only once this is reachable off localhost) ─
 # When set, every /api/* request (GET and POST) must send a matching

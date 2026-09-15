@@ -10,8 +10,13 @@ without duplicates, and turns them into a sourced sales briefing.
 pip install -r requirements.txt
 cp .env .env.local   # or edit .env directly — it holds APIFY_TOKEN and the LLM key
 
-python main.py list                    # what is configured
+python main.py list                    # what accounts are configured
+python main.py list --person           # what people are configured
+
 python main.py run --all --limit 20    # scrape, then digest, every account
+python main.py run bny --limit 20      # scrape, then digest, one account only
+python main.py run robin_vince --person --limit 20   # same, for one person
+
 python main.py status                  # what is stored and how fresh it is
 python main.py serve                   # http://127.0.0.1:8001/frontend/
 ```
@@ -38,6 +43,20 @@ python main.py run --all --limit 20
 python main.py serve --port 8001
 ```
 
+Every one of these takes a single company key (e.g. `bny`) instead of
+`--all` to run against just that account, and `--person` to run against a
+person from `people_targets.py` instead of a company:
+
+```bash
+python main.py scrape bny --limit 20                     # one account
+python main.py digest bny                                 # one account
+python main.py run bny --limit 20                          # one account, scrape + digest
+
+python main.py scrape robin_vince --person --limit 20     # one person
+python main.py digest robin_vince --person                 # one person
+python main.py run robin_vince --person --limit 20         # one person, scrape + digest
+```
+
 Scrape flags: `--limit N`, `--only a,b`, `--reset-channel news`,
 `--no-newsroom`, `--no-store`.
 Digest flags: `--all-posts`, `--since-days N`, `--max-posts N`, `--out-dir DIR`.
@@ -48,11 +67,34 @@ API tokens, and the default bind would expose it to the whole network.
 `engine.py` keeps its own CLI for direct scraping, but `main.py` is the
 supported path.
 
-## 🏢 Accounts
+## 🏢 Accounts & 🧑 People
 
 Companies live in `targets.py` (LinkedIn page, X handle, Reddit query, insights
 blog, newsroom, SEC CIK, news query). Currently configured: `bny`,
 `northern_trust`, `blackrock`, `vanguard`.
+
+People live in `people_targets.py` (LinkedIn, Reddit/news mention search,
+X handle, SEC CIK if they file as a corporate insider, patents). Currently
+configured: `ranjit_samra`, `robin_vince`. Every subcommand that takes a
+company key also accepts a person key with `--person`:
+
+```bash
+python main.py list --person
+python main.py run robin_vince --person --limit 20
+```
+
+`list` and `status` also show targets that only exist in Postgres (tagged
+`[db only]`) — anything scraped ad-hoc via `POST /api/run` gets mirrored to
+the database (see `db.py`) even if it was never explicitly saved into
+`targets.py`/`people_targets.py`/`custom_targets.json`.
+
+`list --person` additionally lists **CRM personas** — contacts from the
+`personas` table in the same Neon database, owned by the sibling
+`sales_agent-ai` app this repo is subtree-merged into (see `MERGE_PLAN.md`).
+These are shown for discovery only (visibility, not scraping): a persona
+isn't a scrape target until it's added to `people_targets.py` (or saved via
+`/api/save-target`), since scraping all of them would be far more Apify
+usage than the handful of people this pipeline is meant to track closely.
 
 ## 📂 Where output goes
 

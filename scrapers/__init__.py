@@ -11,6 +11,7 @@ from .youtube_scraper import YouTubeScraper
 from .sec_fulltext_scraper import SECFullTextScraper
 from .regulatory_scraper import RegulatoryScraper
 from .linkedin_jobs_scraper import LinkedInJobsScraper
+from .cxo_news_scraper import CxoNewsScraper
 
 __all__ = [
     "LinkedInScraper",
@@ -25,4 +26,5 @@ __all__ = [
     "SECFullTextScraper",
     "RegulatoryScraper",
     "LinkedInJobsScraper",
+    "CxoNewsScraper",
 ]

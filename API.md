@@ -157,6 +157,7 @@ Content-Type: application/json
 | `kind` | `"company"` \| `"person"` | `"company"` | `"person"` skips blog/newsroom (those don't apply to an individual) and enables `patents_query` |
 | `limit` | integer | `10` | posts fetched per channel |
 | `generate_digest` | boolean | `true` | run the LLM digest after scraping; `false` to scrape only |
+| `only` | array of strings | — | restrict the run to these channels only (e.g. `["linkedin"]`) — used by the frontend's per-channel retry button; omit to scrape every channel the target has configured |
 | `target` | object | — | **required**. Must include a non-empty `key` |
 
 #### `target` fields (all optional except `key`)
@@ -268,6 +269,71 @@ store's incremental fetch windows already do (see `store.py`).
 
 ---
 
+## `POST /api/digest`
+
+Generates a digest from whatever is **already in the target's store** —
+no scraping happens. Pairs with `POST /api/run` called with
+`generate_digest: false`: run that first to fetch posts, then this
+whenever you want a (re)generated digest without paying for another
+scrape. This is what the frontend's **Pipeline** page uses for its two
+independent stage buttons (① Fetch, ② Create digest).
+
+### Request
+
+```
+POST /api/digest
+Content-Type: application/json
+```
+
+```json
+{
+  "kind": "company",
+  "since_days": 14,
+  "max_posts": 25,
+  "all_posts": false,
+  "target": { "key": "example_co", "display_name": "Example Co" }
+}
+```
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `kind` | `"company"` \| `"person"` | `"company"` | same meaning as `/api/run` |
+| `target` | object | — | **required**. Must include a non-empty `key` matching a target that already has a store file (`output/stores/<key>_output.json`) — see `GET /api/accounts/<key>` / `GET /api/people/<key>` to fetch the full target config first |
+| `since_days` | integer | `14` | recency window passed to the digest pipeline |
+| `max_posts` | integer | `25` | posts per channel considered |
+| `all_posts` | boolean | `false` | `true` summarises everything in the window; `false` (default) summarises only posts added by the most recent scrape |
+
+### Response — `200 OK`
+
+```json
+{
+  "ok": true,
+  "entry": {
+    "recorded_at": "2026-09-12T09:00:00.000000Z",
+    "kind": "company",
+    "key": "example_co",
+    "display_name": "Example Co",
+    "digest": { "llm": "anthropic/claude-sonnet-5", "posts_considered": 12 },
+    "success": true,
+    "duration_ms": 4310
+  }
+}
+```
+
+`entry.digest.error` (with `ok: false`) appears instead if digest
+generation failed — most commonly `"No store at ... Run: python main.py
+scrape <key> ..."` when nothing has been scraped for this target yet, or
+`"Nothing to summarise — no posts in scope"` when `since_days`/`all_posts`
+narrows the window to zero posts.
+
+### Response — `400 Bad Request`
+
+```json
+{ "ok": false, "error": "target must be a JSON object with a non-empty \"key\"" }
+```
+
+---
+
 ## `POST /api/save-target`
 
 Registers a target permanently, so it shows up in the regular
@@ -324,11 +390,10 @@ that already exists (built-in or previously saved) overwrites it.
 
 ## `POST /api/send-email`
 
-Sends a plain-text email as the signed-in Microsoft account, via
-[Microsoft Graph](mailer.py) (`me/sendMail`). Requires a one-time
-interactive sign-in already completed on this machine — see
-`mailer.py`'s docstring and `.env` section 7 — this endpoint never
-triggers that login itself; it fails fast if there's no cached session.
+Sends an email via [SMTP with STARTTLS](mailer.py). Requires
+`SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in `.env` section 7 —
+verify they work with `python mailer.py --test` (authenticates without
+sending anything) before relying on this endpoint.
 
 ### Request
 
@@ -339,11 +404,20 @@ Content-Type: application/json
 
 ```json
 {
-  "to": "someone@example.com",
+  "to": "someone@example.com, someone.else@example.com",
   "subject": "Subject line",
-  "body": "Plain-text body."
+  "body": "Plain-text body.",
+  "html": "<div>...</div>"
 }
 ```
+
+`to` accepts one address or several separated by commas/semicolons —
+every one of them receives the mail.
+
+`html` is optional — when given, the email is sent as
+`multipart/alternative` (HTML + the plain-text `body` as a fallback for
+clients that can't render HTML); when omitted, it's sent as plain text
+only, same as before.
 
 ### Response — `200 OK`
 
@@ -351,10 +425,11 @@ Content-Type: application/json
 { "ok": true }
 ```
 
-or, on any failure (bad recipient, not signed in, Graph error):
+or, on any failure (bad recipient, SMTP not configured, authentication
+rejected, connection error):
 
 ```json
-{ "ok": false, "error": "Not signed in to Microsoft yet (or the cached session expired). Run `python mailer.py --login` from a terminal once, then Send Mail will work from the app." }
+{ "ok": false, "error": "SMTP authentication failed: (535, b'...')" }
 ```
 
 `error` messages are written to be shown directly to an end user — they
@@ -391,7 +466,7 @@ time it returns.
 2. `APIFY_TOKEN` set in `.env` if you'll scrape linkedin/reddit/twitter/blog.
 3. `ANTHROPIC_API_KEY` (or your chosen `LLM_PROVIDER`'s key) set in `.env`
    if you want real digests instead of dry-run placeholders.
-4. For `/api/send-email`: `GRAPH_CLIENT_ID` set and `python mailer.py --login`
-   already run once on this machine.
+4. For `/api/send-email`: `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in
+   `.env`, verified with `python mailer.py --test`.
 5. Point your app at `POST /api/run`, read `entry.digest.llm` to detect
    dry-run, and `entry.platforms_failed` to detect partial failures.

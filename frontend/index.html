@@ -382,7 +382,22 @@
     }
     .channel-card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
     .channel-card.active::after { opacity: 1; }
-    .channel-card.failed { opacity: .55; }
+    .channel-card.failed { opacity: .8; }
+
+    .channel-retry-btn {
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .channel-retry-btn:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+    .channel-retry-btn:disabled { cursor: default; opacity: .6; }
 
     .ch-icon {
       width: 38px; height: 38px;
@@ -405,6 +420,7 @@
     .ch-secmentions { background: #eef2ff; color: #4338ca; }
     .ch-regulatory  { background: #f7fee7; color: #4d7c0f; }
     .ch-jobs        { background: #fdf2f8; color: #be185d; }
+    .ch-cxonews     { background: #f8fafc; color: #334155; }
     .ch-digest   { background: #f0fdfa; color: #0f766e; }
 
     [data-theme="dark"] .ch-linkedin { background: #172554; color: #60a5fa; }
@@ -420,6 +436,7 @@
     [data-theme="dark"] .ch-secmentions { background: #1e1b4b; color: #818cf8; }
     [data-theme="dark"] .ch-regulatory  { background: #1a2e05; color: #a3e635; }
     [data-theme="dark"] .ch-jobs        { background: #500724; color: #f472b6; }
+    [data-theme="dark"] .ch-cxonews     { background: #1e293b; color: #cbd5e1; }
     [data-theme="dark"] .ch-digest   { background: #042f2e; color: #2dd4bf; }
 
     .ch-name { font-weight: 600; font-size: .88rem; color: var(--text-primary); margin-bottom: 2px; }
@@ -715,6 +732,64 @@
     }
     .run-history-table tr:last-child td { border-bottom: none; }
 
+    /* ── Pipeline (staged run for existing accounts) ──────────────── */
+    .pipeline-panel { padding: 26px 28px; }
+    .pipeline-field-block { margin-bottom: 22px; }
+    .pipeline-kind-btn {
+      display: inline-flex; align-items: center;
+      padding: 8px 18px;
+      font-size: .84rem; font-weight: 600; font-family: inherit;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      background: var(--input-bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .pipeline-kind-btn:hover { border-color: var(--brand); color: var(--brand); }
+    .pipeline-kind-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .pipeline-kind-btn.active:hover { color: #fff; }
+
+    .pipeline-select {
+      width: 100%; max-width: 420px;
+      padding: 10px 12px;
+      font-family: inherit; font-size: .85rem;
+      border: 1px solid var(--border-color); border-radius: var(--radius-md);
+      background: var(--input-bg); color: var(--text-primary);
+      cursor: pointer;
+    }
+    .pipeline-select:focus { outline: none; border-color: var(--brand); }
+    .pipeline-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; min-height: 1.4em; }
+    .pipeline-meta:empty { margin-top: 0; }
+    .pipeline-meta .pill-muted { background: var(--input-bg); color: var(--text-muted); border: 1px solid var(--border-color); }
+
+    .pipeline-stage {
+      border-top: 1px solid var(--border-color);
+      padding-top: 20px; margin-top: 4px;
+    }
+    .pipeline-stage + .pipeline-stage { margin-top: 20px; }
+    .pipeline-stage-header {
+      display: flex; align-items: center; gap: 10px;
+      font-size: .94rem; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .pipeline-step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; flex: none;
+      border-radius: 50%;
+      background: var(--brand); color: #fff;
+      font-size: .72rem; font-weight: 700;
+    }
+    .pipeline-stage-desc { font-size: .78rem; color: var(--text-muted); margin: 0 0 14px 32px; }
+    .pipeline-stage-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-left: 32px; }
+    .pipeline-stage .run-status { margin-left: 32px; }
+
+    .pipeline-history-header {
+      margin-top: 28px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .pipeline-history-header .run-checkbox { font-weight: 500; }
+
     /* ── API Docs (rendered markdown) ───────────────────────────── */
     .md-panel {
       background: var(--card-bg);
@@ -980,6 +1055,7 @@
       <input type="text" id="accountSearch" name="scraper-account-filter" placeholder="🔍 Filter by name (optional — leave empty to see all)" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true">
     </div>
 
+    <button type="button" class="run-pipeline-nav" id="pipelineNav">🧩&nbsp;&nbsp;Pipeline</button>
     <button type="button" class="run-pipeline-nav" id="runPipelineNav">▶&nbsp;&nbsp;Run Pipeline</button>
     <button type="button" class="run-pipeline-nav api-docs-nav" id="apiDocsNav">📖&nbsp;&nbsp;API Docs</button>
 
@@ -1048,6 +1124,67 @@
         <div id="postList"></div>
       </div>
 
+      <!-- Pipeline section (pick an existing account/person, run staged) -->
+      <div id="stagedPipelineSection" class="d-none">
+        <div class="section-header">Pipeline</div>
+        <div class="run-panel pipeline-panel">
+          <div class="pipeline-field-block">
+            <label class="run-field-label">Target type</label>
+            <div class="run-kind-toggle">
+              <button type="button" class="pipeline-kind-btn active" data-kind="company">🏢&nbsp; Company</button>
+              <button type="button" class="pipeline-kind-btn" data-kind="person">🧑&nbsp; Person</button>
+            </div>
+          </div>
+
+          <div class="pipeline-field-block">
+            <label class="run-field-label" for="pipelineAccountSelect">Account</label>
+            <select id="pipelineAccountSelect" class="pipeline-select"></select>
+            <div class="pipeline-meta" id="pipelineAccountMeta"></div>
+          </div>
+
+          <div class="pipeline-stage">
+            <div class="pipeline-stage-header">
+              <span class="pipeline-step-badge">1</span> Fetch social media
+            </div>
+            <div class="pipeline-stage-desc">Scrapes every channel this account has configured (LinkedIn, Reddit, News, SEC, …) and merges new posts into its store.</div>
+            <div class="pipeline-stage-row">
+              <label class="run-limit-label">Posts per channel
+                <input type="number" id="pipelineFetchLimit" class="run-limit-input" value="20" min="1" max="200">
+              </label>
+              <button type="button" class="send-mail-btn" id="pipelineFetchBtn" disabled>▶&nbsp; Fetch</button>
+            </div>
+            <div class="run-status" id="pipelineFetchStatus"></div>
+          </div>
+
+          <div class="pipeline-stage">
+            <div class="pipeline-stage-header">
+              <span class="pipeline-step-badge">2</span> Create digest
+            </div>
+            <div class="pipeline-stage-desc">Summarises whatever is already stored for this account into a sales email + channel storylines — no re-scraping.</div>
+            <div class="pipeline-stage-row">
+              <label class="run-checkbox">
+                <input type="checkbox" id="pipelineAllPosts">
+                Use every stored post, not just newly fetched ones
+              </label>
+              <label class="run-limit-label">Since days
+                <input type="number" id="pipelineSinceDays" class="run-limit-input" value="14" min="1" max="365">
+              </label>
+              <button type="button" class="send-mail-btn" id="pipelineDigestBtn" disabled>▶&nbsp; Create digest</button>
+            </div>
+            <div class="run-status" id="pipelineDigestStatus"></div>
+          </div>
+        </div>
+
+        <div class="section-header pipeline-history-header">
+          <span>Run History</span>
+          <label class="run-checkbox">
+            <input type="checkbox" id="pipelineHistoryFilter" checked>
+            Only this account
+          </label>
+        </div>
+        <div id="pipelineRunHistory"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+      </div>
+
       <!-- Run Pipeline section -->
       <div id="runSection" class="d-none">
         <div class="section-header">Run Pipeline</div>
@@ -1108,6 +1245,14 @@
 <script>
 $(function () {
 
+  /* ─── Cross-app link back to sales_agent-ai's dashboard ───
+     Phase 3 of MERGE_PLAN.md: lets sales_agent-ai deep-link into this
+     app (?account=<key>) and lets this app link back to it. Override the
+     default local-dev port with ?dashboard=<url> or window.SALES_DASHBOARD_URL
+     set before this script runs (e.g. for a non-default deployment). */
+  var SALES_DASHBOARD_URL = new URLSearchParams(location.search).get('dashboard') ||
+    window.SALES_DASHBOARD_URL || 'http://127.0.0.1:8000';
+
   /* ─── Channel metadata ─────────────────────────────────── */
   var CHANNEL_META = {
     linkedin: { label: 'LinkedIn',    icon: 'in', cls: 'ch-linkedin' },
@@ -1122,7 +1267,8 @@ $(function () {
     youtube:  { label: 'YouTube',     icon: '▶️', cls: 'ch-youtube'  },
     sec_mentions: { label: 'SEC mentions',  icon: '🔎', cls: 'ch-secmentions' },
     regulatory:   { label: 'Regulatory',    icon: '🏦', cls: 'ch-regulatory'  },
-    linkedin_jobs: { label: 'Job postings', icon: '💼', cls: 'ch-jobs' }
+    linkedin_jobs: { label: 'Job postings', icon: '💼', cls: 'ch-jobs' },
+    cxo_news: { label: 'Executive moves',   icon: '🧑‍💼', cls: 'ch-cxonews' }
   };
 
   var DIGEST_META = { label: 'Digest', icon: '📋', cls: 'ch-digest' };
@@ -1155,7 +1301,7 @@ $(function () {
     }
   };
 
-  var state = { accounts: [], people: [], data: {}, digestData: {}, account: null, channel: null, posts: [], currentEmail: null, runKind: 'company', apiDocsHtml: null };
+  var state = { accounts: [], people: [], data: {}, digestData: {}, targetData: {}, account: null, channel: null, posts: [], currentEmail: null, runKind: 'company', apiDocsHtml: null };
 
   /* ─── Helpers ──────────────────────────────────────────── */
   function esc(s) { return $('<div>').text(s == null ? '' : s).html(); }
@@ -1210,7 +1356,18 @@ $(function () {
   // non-empty value here silently filters every account/person out of
   // the sidebar with no visible error, which is a confusing dead end.
   $('#accountSearch').val('');
-  loadManifest();
+  loadManifest().done(function () {
+    // Deep link from sales_agent-ai's dashboard: ?account=<key> selects
+    // that account the same way clicking it in the sidebar would.
+    var deepLinkKey = new URLSearchParams(location.search).get('account');
+    if (!deepLinkKey) return;
+    $('#accountList .account-item').each(function () {
+      if ($(this).data('key') === deepLinkKey) {
+        $(this).trigger('click');
+        return false;
+      }
+    });
+  });
 
   /* ─── Render account list ──────────────────────────────── */
   function renderGroup($l, items, filter) {
@@ -1273,6 +1430,7 @@ $(function () {
     $('#postSection').addClass('d-none');
     $('#digestSection').addClass('d-none');
     $('#runSection').addClass('d-none');
+    $('#stagedPipelineSection').addClass('d-none');
     $('#apiDocsSection').addClass('d-none');
     $('#channelSection').removeClass('d-none');
     $('#channelGrid').html('<div class="spinner-wrap"><div class="spinner"></div><span>Loading channels…</span></div>');
@@ -1298,6 +1456,7 @@ $(function () {
         }
         state.data[key] = res.store;
         state.digestData[key] = res.digest;
+        state.targetData[key] = res.target;
         showAccount(acct, res.store, res.digest);
       })
       .fail(function (xhr) {
@@ -1352,7 +1511,9 @@ $(function () {
           '<div class="ch-meta' + (ok ? '' : ' text-danger') + '">' +
             (ok ? cnt.toLocaleString() + ' posts' : 'Scrape failed') +
           '</div>' +
-          (ok ? '<div class="ch-progress"><div class="ch-progress-fill" style="width:' + pct + '%"></div></div>' : '') +
+          (ok
+            ? '<div class="ch-progress"><div class="ch-progress-fill" style="width:' + pct + '%"></div></div>'
+            : '<button type="button" class="channel-retry-btn" data-channel="' + esc(ch) + '">↻ Retry</button>') +
         '</div>'
       );
     });
@@ -1442,9 +1603,29 @@ $(function () {
     var dry = /dry-run|not set/i.test(digest.llm || '') || email.dry_run;
     var isPerson = digest.kind === 'person';
 
-    state.currentEmail = { subject: email.subject || '', body: email.body || '', talking_points: email.talking_points || [] };
+    state.currentEmail = {
+      subject: email.subject || '',
+      body: email.body || '',
+      talking_points: email.talking_points || [],
+      capability_opportunities: email.capability_opportunities || [],
+      priority: email.priority || '',
+      confidence: email.confidence || '',
+      company_name: (state.account && state.account.meta && state.account.meta.name) || ''
+    };
 
     var prioCls = { high: 'pill-danger', medium: 'pill-warning', low: '' }[email.priority] || '';
+
+    // Back-link to sales_agent-ai's account view (Phase 3 cross-link) —
+    // company accounts only, since that dashboard is keyed by company,
+    // not by individual contact/person.
+    var backLinkHtml = '';
+    if (!isPerson && state.account && state.account.meta && state.account.meta.key) {
+      // sales_agent-ai's dashboard is mounted at its root ("/"), not
+      // "/frontend/" — unlike this app, which serves its own frontend
+      // under a "/frontend/" prefix (see main.py's serve command).
+      var dashboardUrl = SALES_DASHBOARD_URL + '/?account_key=' + encodeURIComponent(state.account.meta.key);
+      backLinkHtml = '<a href="' + esc(dashboardUrl) + '" target="_blank" rel="noopener" class="pill" style="text-decoration:none;">← Sales Dashboard</a>';
+    }
 
     var html =
       '<div class="digest-email-card fade-in">' +
@@ -1455,10 +1636,11 @@ $(function () {
           (email.confidence ? '<span class="pill">confidence: ' + esc(email.confidence) + '</span>' : '') +
           '<span class="pill">' + esc(digest.posts_considered || 0) + ' posts</span>' +
           (dry ? '<span class="pill pill-warning">dry run — no LLM key</span>' : '') +
+          backLinkHtml +
         '</div>' +
         '<div class="send-mail-bar">' +
-          '<input type="email" class="send-mail-input" id="sendMailTo" placeholder="recipient@example.com">' +
-          '<button type="button" class="send-mail-btn" id="sendMailBtn">Send Mail</button>' +
+          '<input type="email" multiple class="send-mail-input" id="sendMailTo" placeholder="recipient@example.com, another@example.com">' +
+          '<button type="button" class="send-mail-btn" id="sendMailBtn"' + (dry ? ' title="This is dry-run placeholder content — sends anyway"' : '') + '>Send Mail</button>' +
           '<button type="button" class="copy-btn" id="copyEmailBtn">📋 Copy Email</button>' +
           '<span class="send-mail-status" id="sendMailStatus"></span>' +
           '<span class="copy-status" id="copyEmailStatus"></span>' +
@@ -1585,6 +1767,107 @@ $(function () {
     copyToClipboard(text, $('#copyTalkingPointsStatus'));
   });
 
+  // Builds the HTML version of the sales email — subject/priority header,
+  // body paragraphs, capability opportunities, and talking points — sent
+  // alongside the plain-text body so HTML-capable clients render the full
+  // digest, not just the body paragraph.
+  function buildEmailHtml(email) {
+    // Same palette as the app itself (CHANNEL_META/pill colors above) —
+    // indigo brand, red/amber/green priority, green for capability cards
+    // (matches .capability-card), so the email reads as the same product.
+    var BRAND = '#6366f1';
+    var PRIORITY = {
+      high:   { color: '#dc2626', bg: '#fee2e2' },
+      medium: { color: '#ca8a04', bg: '#fef9c3' },
+      low:    { color: '#16a34a', bg: '#dcfce7' }
+    };
+    var prio = PRIORITY[email.priority] || { color: BRAND, bg: '#e0e7ff' };
+
+    var bodyHtml = esc(email.body || '')
+      .split(/\n\n+/)
+      .map(function (para, i) {
+        var lead = i === 0 ? 'font-size:15.5px;color:#0f172a;' : 'font-size:14.5px;color:#334155;';
+        return '<p style="margin:0 0 16px;line-height:1.65;' + lead + '">' +
+          para.replace(/\n/g, '<br>') + '</p>';
+      })
+      .join('');
+
+    function sectionHeading(emoji, badgeBg, badgeColor, title) {
+      return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 14px;">' +
+        '<tr>' +
+          '<td style="width:26px;height:26px;background:' + badgeBg + ';border-radius:7px;text-align:center;' +
+            'font-size:13px;line-height:26px;">' + emoji + '</td>' +
+          '<td style="padding-left:9px;font-size:14.5px;font-weight:700;color:#0f172a;">' + title + '</td>' +
+        '</tr>' +
+      '</table>';
+    }
+
+    var talkingPointsHtml = '';
+    if (email.talking_points && email.talking_points.length) {
+      var tpItems = email.talking_points.map(function (p, i) {
+        var src = p.source_url
+          ? ' <a href="' + esc(p.source_url) + '" style="color:' + BRAND + ';font-size:12px;font-weight:600;text-decoration:none;">source &#8599;</a>'
+          : '';
+        var ch = p.channel
+          ? '<span style="display:inline-block;margin-right:8px;padding:2px 8px;border-radius:99px;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;">' + esc(p.channel) + '</span>'
+          : '';
+        var border = i === 0 ? '' : 'border-top:1px solid #f1f5f9;';
+        return '<tr><td style="padding:12px 0;' + border + '">' +
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>' +
+              '<td valign="top" style="width:20px;color:' + BRAND + ';font-size:15px;font-weight:700;">&#8594;</td>' +
+              '<td style="color:#1e293b;font-size:14px;line-height:1.55;">' + esc(p.point || '') +
+                (ch || src ? '<div style="margin-top:6px;">' + ch + src + '</div>' : '') +
+              '</td>' +
+            '</tr></table>' +
+          '</td></tr>';
+      }).join('');
+      talkingPointsHtml =
+        sectionHeading('&#128172;', '#e0e7ff', BRAND, 'Talking points') +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">' + tpItems + '</table>';
+    }
+
+    var capsHtml = '';
+    if (email.capability_opportunities && email.capability_opportunities.length) {
+      var capCards = email.capability_opportunities.map(function (c) {
+        return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" ' +
+            'style="margin-bottom:12px;background:#f0fdf4;border-radius:8px;">' +
+          '<tr><td style="border-left:3px solid #22c55e;padding:14px 16px;border-radius:0 8px 8px 0;">' +
+            '<div style="font-weight:700;color:#15803d;font-size:14px;">' + esc(c.offering || '') + '</div>' +
+            (c.theme ? '<div style="margin-top:3px;"><span style="display:inline-block;padding:2px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:11px;font-weight:600;">' + esc(c.theme) + '</span></div>' : '') +
+            (c.pitch ? '<div style="margin-top:8px;color:#1e293b;font-size:13.5px;line-height:1.55;">' + esc(c.pitch) + '</div>' : '') +
+            (c.supporting_quote ? '<div style="margin-top:8px;padding-left:10px;border-left:2px solid #bbf7d0;color:#475569;font-size:13px;font-style:italic;line-height:1.5;">&ldquo;' + esc(c.supporting_quote) + '&rdquo;</div>' : '') +
+            (c.source_url ? '<div style="margin-top:8px;"><a href="' + esc(c.source_url) + '" style="color:#16a34a;font-size:12px;font-weight:600;text-decoration:none;">source &#8599;</a></div>' : '') +
+          '</td></tr>' +
+        '</table>';
+      }).join('');
+      capsHtml = sectionHeading('&#127919;', '#dcfce7', '#16a34a', 'Capability opportunities') + capCards;
+    }
+
+    var prioBadge = email.priority
+      ? '<span style="display:inline-block;padding:4px 12px;border-radius:99px;background:' + prio.bg + ';color:' + prio.color + ';font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;">' +
+          esc(email.priority) + ' priority' +
+        '</span>' +
+        (email.confidence
+          ? '<span style="margin-left:8px;color:rgba(255,255,255,.75);font-size:12px;">confidence: ' + esc(email.confidence) + '</span>'
+          : '')
+      : '';
+
+    return '' +
+      '<div style="background:#eef2ff;padding:32px 16px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;">' +
+          '<tr><td style="background:' + BRAND + ';padding:28px 32px;">' +
+            '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.65);">Sales AI Agent &middot; Weekly Update</div>' +
+            '<div style="font-size:24px;font-weight:800;color:#ffffff;margin-top:8px;">' + esc(email.company_name || email.subject || '') + '</div>' +
+            (prioBadge ? '<div style="margin-top:14px;">' + prioBadge + '</div>' : '') +
+          '</td></tr>' +
+          '<tr><td style="padding:28px 32px 8px;">' + bodyHtml + talkingPointsHtml + capsHtml + '</td></tr>' +
+          '<tr><td style="padding:20px 32px;margin-top:20px;background:#f8fafc;border-top:1px solid #eef2ff;font-size:11.5px;color:#94a3b8;">' +
+            'Sent from the Account Intelligence Engine.' +
+          '</td></tr>' +
+        '</table>' +
+      '</div>';
+  }
+
   // Send Mail — delegated once, same reasoning as the accordion toggle above.
   $(document).on('click', '#sendMailBtn', function () {
     var $btn = $(this);
@@ -1600,12 +1883,16 @@ $(function () {
     $btn.prop('disabled', true);
     $status.attr('class', 'send-mail-status').text('Sending…');
 
+    // Fixed branded subject line, not the LLM's per-digest subject —
+    // the "Subject:" row in the UI above still shows that one for context.
+    var mailSubject = 'Newsletter Sales AI Agent | Weekly Update | ' + (email.company_name || email.subject || '');
+
     $.ajax({
       url: '/api/send-email',
       method: 'POST',
       contentType: 'application/json',
       headers: apiHeaders(),
-      data: JSON.stringify({ to: to, subject: email.subject, body: email.body })
+      data: JSON.stringify({ to: to, subject: mailSubject, body: email.body, html: buildEmailHtml(email) })
     }).done(function (res) {
       if (res && res.ok) {
         $status.attr('class', 'send-mail-status ok').text('Sent to ' + to);
@@ -1632,6 +1919,7 @@ $(function () {
     $('#digestSection').addClass('d-none');
     $('#postSection').addClass('d-none');
     $('#apiDocsSection').addClass('d-none');
+    $('#stagedPipelineSection').addClass('d-none');
     $('#runSection').removeClass('d-none');
     $('#crumbs').html('<li class="breadcrumb-item active">Run Pipeline</li>');
 
@@ -1642,6 +1930,177 @@ $(function () {
   }
 
   $('#runPipelineNav').on('click', showRunSection);
+
+  /* ─── Pipeline (staged run for existing accounts) ─────────
+     Unlike "Run Pipeline" above (raw JSON, for ad-hoc/new targets),
+     this picks an already-registered account/person from a dropdown
+     and runs Fetch (scrape) and Create digest as two independent
+     stages/buttons — Fetch never generates a digest, and Create digest
+     never re-scrapes (POST /api/digest below), so either can be run
+     alone or re-run without repeating the other. */
+  var pipelineState = { kind: 'company', target: null };
+
+  function populatePipelineAccountSelect() {
+    var list = pipelineState.kind === 'person' ? state.people : state.accounts;
+    var $sel = $('#pipelineAccountSelect').empty();
+    pipelineState.target = null;
+    $('#pipelineFetchBtn, #pipelineDigestBtn').prop('disabled', true);
+    $('#pipelineFetchStatus, #pipelineDigestStatus').attr('class', 'run-status').text('');
+    $('#pipelineAccountMeta').text('');
+
+    if (!list.length) {
+      $sel.append('<option value="">No ' + (pipelineState.kind === 'person' ? 'people' : 'accounts') + ' configured yet</option>');
+      renderAllRunHistory();
+      return;
+    }
+    $sel.append('<option value="">Select…</option>');
+    $.each(list, function (_, a) {
+      $sel.append('<option value="' + esc(a.key) + '">' + esc(a.name) + '</option>');
+    });
+    renderAllRunHistory();
+  }
+
+  function showStagedPipelineSection() {
+    $('.account-item').removeClass('active');
+    closeSidebar();
+    state.account = null;
+
+    $('#emptyState').addClass('d-none');
+    $('#accountHeader').addClass('d-none');
+    $('#channelSection').addClass('d-none');
+    $('#digestSection').addClass('d-none');
+    $('#postSection').addClass('d-none');
+    $('#apiDocsSection').addClass('d-none');
+    $('#runSection').addClass('d-none');
+    $('#stagedPipelineSection').removeClass('d-none');
+    $('#crumbs').html('<li class="breadcrumb-item active">Pipeline</li>');
+
+    populatePipelineAccountSelect();
+    loadRunHistory();
+  }
+
+  $('#pipelineNav').on('click', showStagedPipelineSection);
+
+  $(document).on('click', '.pipeline-kind-btn', function () {
+    $('.pipeline-kind-btn').removeClass('active');
+    $(this).addClass('active');
+    pipelineState.kind = $(this).data('kind');
+    populatePipelineAccountSelect();
+  });
+
+  $('#pipelineAccountSelect').on('change', function () {
+    var key = $(this).val();
+    pipelineState.target = null;
+    $('#pipelineFetchStatus, #pipelineDigestStatus').attr('class', 'run-status').text('');
+    $('#pipelineFetchBtn, #pipelineDigestBtn').prop('disabled', true);
+
+    if (!key) {
+      $('#pipelineAccountMeta').empty();
+      renderAllRunHistory();
+      return;
+    }
+    var apiPath = (pipelineState.kind === 'person' ? '/api/people/' : '/api/accounts/') + encodeURIComponent(key);
+    $('#pipelineAccountMeta').html('<span class="pill pill-muted">Loading…</span>');
+    $.ajax({ url: apiPath, headers: apiHeaders() })
+      .done(function (res) {
+        pipelineState.target = res.target;
+        var totalPosts = (res.store && res.store.metadata && res.store.metadata.total_posts) || 0;
+        var lastRun = res.store && res.store.store && res.store.store.last_run;
+        $('#pipelineAccountMeta').html(
+          '<span class="pill pill-brand">' + totalPosts + ' post' + (totalPosts === 1 ? '' : 's') + ' stored</span>' +
+          '<span class="pill ' + (res.digest ? 'pill-success' : 'pill-muted') + '">' + (res.digest ? 'digest ready' : 'no digest yet') + '</span>' +
+          (lastRun ? '<span class="pill pill-muted">last fetched ' + esc(fmtDate(lastRun)) + '</span>' : '')
+        );
+        $('#pipelineFetchBtn, #pipelineDigestBtn').prop('disabled', false);
+        renderAllRunHistory();
+      })
+      .fail(function (xhr) {
+        var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Could not load this target.';
+        $('#pipelineAccountMeta').text(msg);
+      });
+  });
+
+  $('#pipelineFetchBtn').on('click', function () {
+    var $btn = $(this);
+    var $status = $('#pipelineFetchStatus');
+    if (!pipelineState.target) return;
+    var limit = parseInt($('#pipelineFetchLimit').val(), 10) || 20;
+    var label = pipelineState.target.display_name || pipelineState.target.key;
+
+    $btn.prop('disabled', true);
+    $status.attr('class', 'run-status').text('Fetching social/news posts for ' + label + '… this can take a few minutes for social channels.');
+
+    $.ajax({
+      url: '/api/run',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: apiHeaders(),
+      data: JSON.stringify({
+        kind: pipelineState.kind,
+        target: pipelineState.target,
+        limit: limit,
+        generate_digest: false
+      })
+    }).done(function (res) {
+      var entry = res && res.entry;
+      if (res && res.ok && entry) {
+        $status.attr('class', 'run-status ok').text(
+          'Done — ' + (entry.new_posts || 0) + ' new posts, ' + (entry.total_posts || 0) + ' total.' +
+          (entry.platforms_failed && entry.platforms_failed.length ? ' Failed: ' + entry.platforms_failed.join(', ') + '.' : '')
+        );
+      } else {
+        $status.attr('class', 'run-status err').text((entry && entry.error) || (res && res.error) || 'Fetch failed.');
+      }
+      loadRunHistory();
+    }).fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Request failed — is the server running via `python main.py serve`?';
+      $status.attr('class', 'run-status err').text(msg);
+    }).always(function () {
+      $btn.prop('disabled', false);
+    });
+  });
+
+  $('#pipelineDigestBtn').on('click', function () {
+    var $btn = $(this);
+    var $status = $('#pipelineDigestStatus');
+    if (!pipelineState.target) return;
+    var label = pipelineState.target.display_name || pipelineState.target.key;
+
+    $btn.prop('disabled', true);
+    $status.attr('class', 'run-status').text('Generating digest for ' + label + '…');
+
+    $.ajax({
+      url: '/api/digest',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: apiHeaders(),
+      data: JSON.stringify({
+        kind: pipelineState.kind,
+        target: pipelineState.target,
+        all_posts: $('#pipelineAllPosts').is(':checked'),
+        since_days: parseInt($('#pipelineSinceDays').val(), 10) || 14
+      })
+    }).done(function (res) {
+      var entry = res && res.entry;
+      var digest = entry && entry.digest;
+      if (res && res.ok && digest && !digest.error) {
+        $status.attr('class', 'run-status ok').text(
+          'Digest generated — ' + (digest.posts_considered || 0) + ' posts considered' +
+          (digest.llm ? ' (' + digest.llm + ')' : '') + '.'
+        );
+      } else {
+        $status.attr('class', 'run-status err').text(
+          (digest && digest.error) || (entry && entry.error) || (res && res.error) || 'Digest failed.'
+        );
+      }
+      loadRunHistory();
+    }).fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Request failed — is the server running via `python main.py serve`?';
+      $status.attr('class', 'run-status err').text(msg);
+    }).always(function () {
+      $btn.prop('disabled', false);
+    });
+  });
 
   /* ─── API Docs ─────────────────────────────────────────── */
   function showApiDocsSection() {
@@ -1655,6 +2114,7 @@ $(function () {
     $('#digestSection').addClass('d-none');
     $('#postSection').addClass('d-none');
     $('#runSection').addClass('d-none');
+    $('#stagedPipelineSection').addClass('d-none');
     $('#apiDocsSection').removeClass('d-none');
     $('#crumbs').html('<li class="breadcrumb-item active">API Docs</li>');
 
@@ -1692,18 +2152,58 @@ $(function () {
     }
   });
 
+  // Fetched once and cached, then rendered into every history container
+  // currently on the page (the plain "Run Pipeline" table and/or the
+  // "Pipeline" page's account-filterable one) — both read from the same
+  // output/run_history.json, they just render it differently.
   function loadRunHistory() {
-    $.getJSON('../output/run_history.json')
-      .done(function (entries) { renderRunHistory(entries || []); })
-      .fail(function () { renderRunHistory([]); });
+    return $.getJSON('../output/run_history.json')
+      .done(function (entries) {
+        state.runHistoryEntries = entries || [];
+        renderAllRunHistory();
+      })
+      .fail(function () {
+        state.runHistoryEntries = [];
+        renderAllRunHistory();
+      });
   }
 
-  function renderRunHistory(entries) {
-    var $h = $('#runHistory');
+  function renderAllRunHistory() {
+    var entries = state.runHistoryEntries || [];
+    if ($('#runHistory').length) {
+      renderRunHistoryTable($('#runHistory'), entries, 'No runs yet.');
+    }
+    if ($('#pipelineRunHistory').length) {
+      var target = pipelineState.target;
+      var onlyThis = target && $('#pipelineHistoryFilter').is(':checked');
+      var filtered = onlyThis ? entries.filter(function (e) { return e.key === target.key; }) : entries;
+      var emptyHint = !entries.length
+        ? 'No runs yet.'
+        : (onlyThis ? 'No runs yet for ' + esc(target.display_name || target.key) + '.' : 'No runs yet.');
+      renderRunHistoryTable($('#pipelineRunHistory'), filtered, emptyHint);
+    }
+  }
+
+  // $0.0000 for tiny Apify costs, $1.23 once it's not tiny, "free" for an
+  // exact 0 (every channel this run was free — sec/patents/rss/youtube/
+  // headline-only news), "—" when the run predates cost tracking.
+  function fmtCost(usd) {
+    if (usd == null) return '—';
+    if (usd === 0) return 'free';
+    return '$' + usd.toFixed(usd < 0.01 ? 4 : 2);
+  }
+  function fmtTokenCount(n) {
+    if (n == null) return '—';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
+
+  function renderRunHistoryTable($h, entries, emptyText) {
     if (!entries.length) {
-      $h.html('<div style="font-size:.83rem;color:var(--text-muted);padding:4px 0;">No runs yet.</div>');
+      $h.html('<div style="font-size:.83rem;color:var(--text-muted);padding:4px 0;">' + (emptyText || 'No runs yet.') + '</div>');
       return;
     }
+    var totalCost = 0, hasCost = false, totalIn = 0, totalOut = 0, hasTokens = false;
     var rows = entries.map(function (e) {
       var badge = e.success
         ? '<span class="pill pill-success">ok</span>'
@@ -1715,26 +2215,50 @@ $(function () {
       var channels = (e.platforms_scraped && e.platforms_scraped.length) ? e.platforms_scraped.join(', ') : '—';
       var counts = (e.new_posts != null ? e.new_posts : '—') + ' / ' + (e.total_posts != null ? e.total_posts : '—');
       var duration = e.duration_ms != null ? (e.duration_ms / 1000).toFixed(1) + 's' : '—';
+
+      if (e.cost_usd != null) { totalCost += e.cost_usd; hasCost = true; }
+      var tokens = '—';
+      if (e.digest && (e.digest.input_tokens || e.digest.output_tokens)) {
+        totalIn += e.digest.input_tokens || 0;
+        totalOut += e.digest.output_tokens || 0;
+        hasTokens = true;
+        tokens = fmtTokenCount(e.digest.input_tokens) + ' in / ' + fmtTokenCount(e.digest.output_tokens) + ' out';
+      }
+
       return '<tr>' +
-        '<td>' + esc(fmtDate(e.recorded_at)) + '</td>' +
+        '<td title="' + esc(e.recorded_at || '') + '">' + esc(fmtDate(e.recorded_at)) + '</td>' +
         '<td>' + esc(e.kind || '') + '</td>' +
         '<td>' + esc(e.display_name || e.key || '') + '</td>' +
         '<td>' + esc(channels) + '</td>' +
         '<td>' + esc(counts) + '</td>' +
+        '<td>' + esc(fmtCost(e.cost_usd)) + '</td>' +
         '<td>' + esc(digestLabel) + '</td>' +
+        '<td>' + esc(tokens) + '</td>' +
         '<td>' + badge + (e.error ? '<div style="color:var(--text-muted);font-size:.73rem;margin-top:3px;">' + esc(e.error) + '</div>' : '') + '</td>' +
         '<td>' + esc(duration) + '</td>' +
       '</tr>';
     }).join('');
-    $h.html(
+
+    var summaryBits = [];
+    if (hasCost) summaryBits.push('<strong>' + esc(fmtCost(totalCost)) + '</strong> Apify cost');
+    if (hasTokens) summaryBits.push('<strong>' + esc(fmtTokenCount(totalIn)) + ' in / ' + esc(fmtTokenCount(totalOut)) + ' out</strong> LLM tokens');
+    var summary = summaryBits.length
+      ? '<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">' +
+          summaryBits.join(' &nbsp;·&nbsp; ') + ' across ' + entries.length + ' run' + (entries.length === 1 ? '' : 's') + ' shown' +
+        '</div>'
+      : '';
+
+    $h.html(summary +
       '<div style="overflow-x:auto;">' +
         '<table class="run-history-table">' +
-          '<thead><tr><th>When</th><th>Kind</th><th>Target</th><th>Channels</th><th>New / Total</th><th>Digest</th><th>Status</th><th>Duration</th></tr></thead>' +
+          '<thead><tr><th>When</th><th>Kind</th><th>Target</th><th>Channels</th><th>New / Total</th><th>Cost</th><th>Digest</th><th>Tokens</th><th>Status</th><th>Duration</th></tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table>' +
       '</div>'
     );
   }
+
+  $(document).on('change', '#pipelineHistoryFilter', renderAllRunHistory);
 
   // Shared by Run and Save — parses/validates the textarea once so both
   // buttons reject the same malformed input the same way.
@@ -1834,6 +2358,58 @@ $(function () {
       '<div class="stat-value">' + esc(value) + '</div>' +
     '</div>';
   }
+
+  /* ─── Channel retry (re-scrape one failed channel) ────────
+     Sends the target config already cached from /api/accounts/<key>
+     (state.targetData) back through /api/run scoped to just this
+     channel via `only`, then refreshes the channel grid in place. */
+  $('#channelGrid').on('click', '.channel-retry-btn', function (e) {
+    e.stopPropagation();
+    var $btn = $(this);
+    var ch = $btn.data('channel');
+    var acct = state.account.meta;
+    var target = state.targetData[acct.key];
+
+    if (!target) {
+      $btn.prop('disabled', true).text('Reload page to retry');
+      return;
+    }
+
+    var limit = (state.account.json.query && state.account.json.query.limit) || 20;
+    $btn.prop('disabled', true).text('Retrying…');
+
+    $.ajax({
+      url: '/api/run',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: apiHeaders(),
+      data: JSON.stringify({
+        kind: acct.kind === 'person' ? 'person' : 'company',
+        target: target,
+        limit: limit,
+        generate_digest: false,
+        only: [ch]
+      })
+    }).done(function (res) {
+      var entry = res && res.entry;
+      if (!res || !res.ok) {
+        $btn.prop('disabled', false).text('↻ Retry failed — try again');
+        return;
+      }
+      var apiPath = (acct.kind === 'person' ? '/api/people/' : '/api/accounts/') + encodeURIComponent(acct.key);
+      $.ajax({ url: apiPath, headers: apiHeaders() }).done(function (res2) {
+        state.data[acct.key] = res2.store;
+        state.digestData[acct.key] = res2.digest;
+        state.targetData[acct.key] = res2.target;
+        showAccount(acct, res2.store, res2.digest);
+      }).fail(function () {
+        $btn.prop('disabled', false).text('↻ Retry failed — try again');
+      });
+    }).fail(function (xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Retry failed';
+      $btn.prop('disabled', false).text('↻ ' + msg);
+    });
+  });
 
   /* ─── Channel click → posts ────────────────────────────── */
   $('#channelGrid').on('click', '.channel-card', function () {

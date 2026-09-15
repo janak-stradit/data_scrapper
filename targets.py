@@ -13,7 +13,12 @@ import custom_targets
 import db
 
 COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
-    "bny": {
+    # Key matches sales_agent-ai's accounts.key for this company (see
+    # MERGE_PLAN.md S7.3 — every targets.key must correspond to an
+    # accounts.key so the two apps' content-intelligence cross-link
+    # resolves without a fuzzy-match fallback). Was "bny" until the
+    # rename; all the old spellings still work via ALIASES below.
+    "bank_of_new_york_mellon_corporation": {
         "display_name": "BNY (Bank of New York Mellon)",
         "ticker": "BK",
         "linkedin_url": "https://www.linkedin.com/company/bny-mellon/",
@@ -44,6 +49,18 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         # unrelated funds' filings (verified live). That channel is far
         # more useful on individual names — see people_targets.py.
         "regulatory_query": "Bank of New York Mellon",
+        # CXO movement tracking (joins/resigns/appointments) via
+        # scrapers/cxo_news_scraper.py — verified live 2026-09-03 against
+        # this exact query shape (real end-to-end run surfaced BNY's own
+        # CEO joining OpenAI's board), then rolled out to every company.
+        "cxo_news_query": (
+            '"BNY" OR "Bank of New York Mellon" '
+            '(CEO OR CFO OR COO OR CTO OR President OR "Chief Investment Officer" '
+            'OR "Chief Risk Officer" OR VP OR "Vice President" OR SVP OR EVP '
+            'OR "Senior Vice President" OR "Executive Vice President") '
+            '(joins OR appointed OR named OR resigns OR "steps down" OR retires '
+            'OR promoted OR succeeds)'
+        ),
     },
     "northern_trust": {
         "display_name": "Northern Trust",
@@ -64,6 +81,14 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         # Press releases live under /pr/<year>/, not under media-resources.
         "newsroom_url": "https://www.northerntrust.com/united-states/about-us/media-resources/press-release-archive",
         "newsroom_glob": "https://www.northerntrust.com/united-states/pr/**",
+        "cxo_news_query": (
+            '"Northern Trust" '
+            '(CEO OR CFO OR COO OR CTO OR President OR "Chief Investment Officer" '
+            'OR "Chief Risk Officer" OR VP OR "Vice President" OR SVP OR EVP '
+            'OR "Senior Vice President" OR "Executive Vice President") '
+            '(joins OR appointed OR named OR resigns OR "steps down" OR retires '
+            'OR promoted OR succeeds)'
+        ),
     },
     "blackrock": {
         "display_name": "BlackRock",
@@ -79,6 +104,14 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         "blog_glob": "https://www.blackrock.com/corporate/insights/**",
         "newsroom_url": "https://www.blackrock.com/corporate/newsroom",
         "newsroom_glob": "https://www.blackrock.com/corporate/newsroom/**",
+        "cxo_news_query": (
+            '"BlackRock" '
+            '(CEO OR CFO OR COO OR CTO OR President OR "Chief Investment Officer" '
+            'OR "Chief Risk Officer" OR VP OR "Vice President" OR SVP OR EVP '
+            'OR "Senior Vice President" OR "Executive Vice President") '
+            '(joins OR appointed OR named OR resigns OR "steps down" OR retires '
+            'OR promoted OR succeeds)'
+        ),
     },
     "vanguard": {
         "display_name": "The Vanguard Group",
@@ -105,17 +138,28 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
         # The archive lists years of releases; crawling in document order finds
         # the oldest. Seed from the index and sort by the date in the slug.
         "newsroom_seed_from_index": True,
+        # Same narrowed name as news_query above — bare "Vanguard" collides
+        # with the Riot Games anti-cheat driver and Marvel's Vanguard.
+        "cxo_news_query": (
+            '"Vanguard Group" OR "Vanguard funds" '
+            '(CEO OR CFO OR COO OR CTO OR President OR "Chief Investment Officer" '
+            'OR "Chief Risk Officer" OR VP OR "Vice President" OR SVP OR EVP '
+            'OR "Senior Vice President" OR "Executive Vice President") '
+            '(joins OR appointed OR named OR resigns OR "steps down" OR retires '
+            'OR promoted OR succeeds)'
+        ),
     },
 }
 COMPANY_TARGETS.update(custom_targets.load_section("companies"))
 
 # Convenience aliases so the CLI accepts what people actually type.
 ALIASES = {
-    "bny": "bny",
-    "bnymellon": "bny",
-    "bny_mellon": "bny",
-    "bank-of-new-york-mellon": "bny",
-    "bk": "bny",
+    "bank_of_new_york_mellon_corporation": "bank_of_new_york_mellon_corporation",
+    "bny": "bank_of_new_york_mellon_corporation",
+    "bnymellon": "bank_of_new_york_mellon_corporation",
+    "bny_mellon": "bank_of_new_york_mellon_corporation",
+    "bank-of-new-york-mellon": "bank_of_new_york_mellon_corporation",
+    "bk": "bank_of_new_york_mellon_corporation",
     "northern_trust": "northern_trust",
     "northerntrust": "northern_trust",
     "northern-trust": "northern_trust",
