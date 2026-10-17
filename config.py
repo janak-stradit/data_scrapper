@@ -102,8 +102,17 @@ SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USERNAME)
 # .env files keep working unchanged. Flip DB_USE_LOCAL=true to switch —
 # see MERGE_PLAN.md Phase 1 before pointing this at local Postgres, the
 # sales_agent-ai `posts` table needs its UNIQUE constraint fixed first.
-DATABASE_URL_NEON = os.getenv("DATABASE_URL_NEON", os.getenv("DATABASE_URL", ""))
-DATABASE_URL_LOCAL = os.getenv("DATABASE_URL_LOCAL", "")
+def _libpq_url(url: str) -> str:
+    """Accept SQLAlchemy-style URLs (postgresql+psycopg2://, postgres://)
+    too — db.py hands this straight to psycopg2.connect(), and libpq
+    rejects a "+driver" suffix as an invalid DSN, which db.py would
+    swallow as "could not connect; continuing with JSON only"."""
+    import re
+    return re.sub(r"^postgres(?:ql)?(?:\+\w+)?://", "postgresql://", (url or "").strip())
+
+
+DATABASE_URL_NEON = _libpq_url(os.getenv("DATABASE_URL_NEON", os.getenv("DATABASE_URL", "")))
+DATABASE_URL_LOCAL = _libpq_url(os.getenv("DATABASE_URL_LOCAL", ""))
 DB_USE_LOCAL = os.getenv("DB_USE_LOCAL", "false").strip().lower() in ("1", "true", "yes")
 DATABASE_URL = DATABASE_URL_LOCAL if DB_USE_LOCAL else DATABASE_URL_NEON
 
