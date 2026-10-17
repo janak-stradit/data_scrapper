@@ -116,13 +116,33 @@ DATABASE_URL_LOCAL = _libpq_url(os.getenv("DATABASE_URL_LOCAL", ""))
 DB_USE_LOCAL = os.getenv("DB_USE_LOCAL", "false").strip().lower() in ("1", "true", "yes")
 DATABASE_URL = DATABASE_URL_LOCAL if DB_USE_LOCAL else DATABASE_URL_NEON
 
-# ─── API key (required only once this is reachable off localhost) ─
-# When set, every /api/* request (GET and POST) must send a matching
-# X-API-Key header or main.py's serve command rejects it with 401. Left
-# blank for local dev on purpose — set it before deploying anywhere the
-# app isn't the only thing that can reach the port, since /api/run can
-# trigger billed Apify scrapes and /api/send-email sends real mail.
-API_KEY = os.getenv("API_KEY", "")
+# ─── Scheduler (runs inside `python main.py serve`) ──────────────
+# Off by default so a local dev server never starts billed runs on its
+# own — set SCHEDULER_ENABLED=true in the production env file only.
+#   news job:   every SCHEDULE_NEWS_HOURS, the news channels below for
+#               every company target.
+#   people job: every SCHEDULE_PEOPLE_DAYS, a full scrape of every
+#               person target, one at a time.
+# One summary email per finished batch goes to SCHEDULE_NOTIFY_TO
+# (comma-separated for several; blank = no email).
+def _env_list(name: str, default: str) -> list:
+    return [x.strip() for x in os.getenv(name, default).split(",") if x.strip()]
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "false").strip().lower() in ("1", "true", "yes")
+SCHEDULE_NEWS_HOURS = _env_float("SCHEDULE_NEWS_HOURS", 3)
+SCHEDULE_NEWS_CHANNELS = _env_list("SCHEDULE_NEWS_CHANNELS", "news,bloomberg,cxo_news")
+SCHEDULE_NEWS_LIMIT = int(_env_float("SCHEDULE_NEWS_LIMIT", 20))
+SCHEDULE_PEOPLE_DAYS = _env_float("SCHEDULE_PEOPLE_DAYS", 3)
+SCHEDULE_PEOPLE_LIMIT = int(_env_float("SCHEDULE_PEOPLE_LIMIT", 20))
+SCHEDULE_NOTIFY_TO = os.getenv("SCHEDULE_NOTIFY_TO", "Janak@stradit.com").strip()
 
 # Google News RSS locale.
 NEWS_LOCALE = {"hl": "en-US", "gl": "US"}

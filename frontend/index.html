@@ -281,12 +281,10 @@
       border: 1px solid var(--border); border-bottom-width: 2px;
       background: var(--surface-2); color: var(--text-2);
     }
-    .api-key-input {
       width: 120px; height: 34px; padding: 0 10px;
       border: 1px solid var(--border); border-radius: 8px;
       background: var(--surface); font-size: .8rem; outline: none;
     }
-    .api-key-input:focus { border-color: var(--accent); box-shadow: var(--focus); }
 
     .main-pad { padding: 24px 28px 48px; width: 100%; max-width: 1440px; }
 
@@ -853,7 +851,6 @@
       .main-pad { padding: 18px 16px 40px; }
       .search-trigger { min-width: 0; }
       .search-trigger .st-label, .search-trigger kbd { display: none; }
-      .api-key-input { width: 90px; }
       .stat-grid { grid-template-columns: repeat(2, 1fr); }
       .table-wrap { max-height: none; }
       .md-panel { padding: 20px; }
@@ -926,7 +923,6 @@
         <span class="st-label">Jump to a company, person or page…</span>
         <kbd>Ctrl K</kbd>
       </button>
-      <input type="password" id="apiKeyInput" class="api-key-input" placeholder="API key" title="Only needed if this server has API_KEY set (e.g. a public deployment) — saved in this browser only">
       <button type="button" class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme"></button>
     </header>
 
@@ -955,6 +951,10 @@
             <div id="homeRecentRuns"><div class="card-body"><span class="skeleton sk-line"></span><span class="skeleton sk-line"></span><span class="skeleton sk-line"></span></div></div>
           </div>
           <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="card d-none" id="homeSchedules">
+              <div class="card-head"><h2 class="card-title">Schedules</h2><span class="pill" id="homeSchedulesState"></span></div>
+              <div class="card-body" style="padding-top:4px;padding-bottom:6px;" id="homeSchedulesBody"></div>
+            </div>
             <div class="card">
               <div class="card-head"><h2 class="card-title">Quick actions</h2></div>
               <div class="card-body quick-actions">
@@ -1419,16 +1419,16 @@ $(function () {
   // back to Postgres when a target has no local JSON (e.g. this instance
   // never scraped it itself, but another one sharing DATABASE_URL did).
   function loadManifest() {
-    var accountsReq = $.ajax({ url: '/api/accounts', headers: apiHeaders() });
-    var peopleReq = $.ajax({ url: '/api/people', headers: apiHeaders() });
+    var accountsReq = $.ajax({ url: '/api/accounts' });
+    var peopleReq = $.ajax({ url: '/api/people' });
     // Just the counts, not the rows — CRM records not yet registered as
     // scrape targets can number in the hundreds (read-only discovery
     // data from the shared sales_agent-ai accounts/personas tables, see
     // db.list_accounts()/list_personas()), so the nav only shows a count
     // badge linking to the dedicated CRM page. limit=1 keeps this cheap.
     // Best-effort: no DATABASE_URL or missing tables just means total: 0.
-    var crmAccountsReq = $.ajax({ url: '/api/crm-accounts?limit=1', headers: apiHeaders() });
-    var crmPeopleReq = $.ajax({ url: '/api/crm-people?limit=1', headers: apiHeaders() });
+    var crmAccountsReq = $.ajax({ url: '/api/crm-accounts?limit=1' });
+    var crmPeopleReq = $.ajax({ url: '/api/crm-people?limit=1' });
 
     if (!state.manifestLoaded) {
       var sk = '';
@@ -1481,6 +1481,7 @@ $(function () {
     if (deepLinkKey) openTargetByKey(deepLinkKey);
   });
   loadRunHistory().always(renderHome);
+  loadSchedules();
 
   function findTarget(key) {
     return state.accounts.concat(state.people).filter(function (a) { return a.key === key; })[0];
@@ -1613,7 +1614,7 @@ $(function () {
       return;
     }
 
-    $.ajax({ url: apiPathFor(acct) + '?view=summary', headers: apiHeaders() })
+    $.ajax({ url: apiPathFor(acct) + '?view=summary' })
       .done(function (res) {
         if (!state.account || state.account.meta.key !== key) return;  // user moved on
         if (!res.store) {
@@ -1823,7 +1824,6 @@ $(function () {
       url: '/api/news-brief',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: acct.kind === 'person' ? 'person' : 'company',
         target: { key: acct.key, display_name: acct.name }
@@ -1889,7 +1889,6 @@ $(function () {
       url: '/api/send-email',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({ to: to, subject: brief.subject, body: brief.body, html: brief.html })
     }).done(function (res) {
       if (res && res.ok) {
@@ -2277,7 +2276,6 @@ $(function () {
       url: '/api/send-email',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({ to: to, subject: mailSubject, body: email.body, html: buildEmailHtml(email) })
     }).done(function (res) {
       if (res && res.ok) {
@@ -2363,7 +2361,7 @@ $(function () {
     }
     var apiPath = apiPathFor({ kind: pipelineState.kind, key: key }) + '?view=summary';
     $('#pipelineAccountMeta').html('<span class="pill pill-muted">Loading…</span>');
-    $.ajax({ url: apiPath, headers: apiHeaders() })
+    $.ajax({ url: apiPath })
       .done(function (res) {
         pipelineState.target = res.target;
         var totalPosts = (res.store && res.store.metadata && res.store.metadata.total_posts) || 0;
@@ -2396,7 +2394,6 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: pipelineState.kind,
         target: pipelineState.target,
@@ -2445,7 +2442,6 @@ $(function () {
       url: '/api/digest',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: pipelineState.kind,
         target: pipelineState.target,
@@ -2848,7 +2844,7 @@ $(function () {
       $('#peopleStatRow').html(skeletonCards(4).replace(/sk-card/g, 'sk-card" style="height:78px;'));
     }
     $('#peopleRefreshBtn').addClass('spinning');
-    var peopleReq = $.ajax({ url: '/api/people', headers: apiHeaders() });
+    var peopleReq = $.ajax({ url: '/api/people' });
     // loadRunHistory() already swallows its own failure (no history file
     // yet just means no "last status" per person).
     var historyReq = loadRunHistory().then(null, function () { return $.Deferred().resolve(); });
@@ -3127,7 +3123,6 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: 'person',
         target: p.target || { key: p.key, display_name: p.display_name },
@@ -3295,7 +3290,7 @@ $(function () {
     if (!$('#crmPageTable .table-wrap').length) $('#crmPageTable').html(skeletonRows(8));
     else $('#crmPageTable').css('opacity', .55);
 
-    $.ajax({ url: url, headers: apiHeaders() }).done(function (res) {
+    $.ajax({ url: url }).done(function (res) {
       var items = res[listKey] || [];
       crmPageState.lastItems = items;
       $('#crmPageTable').css('opacity', '');
@@ -3475,7 +3470,6 @@ $(function () {
         url: '/api/save-target',
         method: 'POST',
         contentType: 'application/json',
-        headers: apiHeaders(),
         data: JSON.stringify({ kind: kind, target: buildTargetFromCrm(entry.raw) })
       }).done(function (res) {
         if (res && res.ok) { succeeded++; } else { failed.push(entry.raw.display_name || entry.key); }
@@ -3523,7 +3517,6 @@ $(function () {
         url: '/api/save-target',
         method: 'POST',
         contentType: 'application/json',
-        headers: apiHeaders(),
         data: JSON.stringify({ kind: kind, target: target })
       }).done(function (saveRes) {
         if (!saveRes || !saveRes.ok) { cb(false); return; }
@@ -3531,7 +3524,6 @@ $(function () {
           url: '/api/run',
           method: 'POST',
           contentType: 'application/json',
-          headers: apiHeaders(),
           data: JSON.stringify({ kind: kind, target: target, limit: 20, generate_digest: false })
         }).done(function (runRes) {
           var runId = runRes && runRes.entry && runRes.entry.run_id;
@@ -3660,8 +3652,7 @@ $(function () {
     $('#historyRefreshBtn').addClass('spinning');
 
     $.ajax({
-      url: '/api/run-history?page=' + page + '&limit=' + historyPageState.limit,
-      headers: apiHeaders()
+      url: '/api/run-history?page=' + page + '&limit=' + historyPageState.limit
     }).done(function (res) {
       var entries = res.entries || [];
       $('#historyPageTable').css('opacity', '');
@@ -3749,7 +3740,6 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({ kind: state.runKind, target: target, limit: limit, generate_digest: genDigest })
     }).done(function (res) {
       var runId = res && res.entry && res.entry.run_id;
@@ -3797,7 +3787,6 @@ $(function () {
       url: '/api/save-target',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({ kind: state.runKind, target: target })
     }).done(function (res) {
       if (res && res.ok) {
@@ -3829,7 +3818,7 @@ $(function () {
   // posts (they're stale now) and repaints only if it's still on screen.
   function refreshAccountSummary(acct) {
     clearPostCache(acct.key);
-    return $.ajax({ url: apiPathFor(acct) + '?view=summary', headers: apiHeaders() }).done(function (res2) {
+    return $.ajax({ url: apiPathFor(acct) + '?view=summary' }).done(function (res2) {
       state.data[acct.key] = res2.store;
       state.digestData[acct.key] = res2.digest;
       state.targetData[acct.key] = res2.target;
@@ -3864,7 +3853,6 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: acct.kind === 'person' ? 'person' : 'company',
         target: target,
@@ -3932,7 +3920,6 @@ $(function () {
       url: '/api/run',
       method: 'POST',
       contentType: 'application/json',
-      headers: apiHeaders(),
       data: JSON.stringify({
         kind: acct.kind === 'person' ? 'person' : 'company',
         target: target,
@@ -4041,7 +4028,7 @@ $(function () {
     }
     $('#postList').html(sk);
 
-    $.ajax({ url: apiPathFor(acct) + '?channel=' + encodeURIComponent(ch), headers: apiHeaders() })
+    $.ajax({ url: apiPathFor(acct) + '?channel=' + encodeURIComponent(ch) })
       .done(function (res) {
         var posts = (res.store && res.store.data && res.store.data[ch] && res.store.data[ch].posts) || [];
         state.postCache[cacheKey] = posts;
@@ -4184,6 +4171,7 @@ $(function () {
   function showHome() {
     showPage('#emptyState', 'Overview', 'home');
     renderHome();
+    loadSchedules();
   }
   $('#homeNav').on('click', showHome);
   $('#homeAllRunsBtn').on('click', showHistoryPageSection);
@@ -4249,6 +4237,53 @@ $(function () {
       : emptyNote('Nothing scraped yet.', ''));
   }
   $(document).on('click', '.recent-item', function () { openTargetByKey($(this).data('key')); });
+
+  // Scheduled jobs (scheduler.py) — last result, next run, "Run now".
+  // Polled every 30s while Overview is open so a running batch's
+  // progress counts move without a refresh.
+  function loadSchedules() {
+    if ($('#emptyState').hasClass('d-none')) return;
+    $.ajax({ url: '/api/scheduler' }).done(function (res) {
+      var jobs = res.jobs || {};
+      $('#homeSchedules').removeClass('d-none');
+      $('#homeSchedulesState').text(res.enabled ? 'on' : 'off')
+        .attr('class', 'pill ' + (res.enabled ? 'pill-success' : 'pill-muted'))
+        .attr('title', res.enabled ? 'Summary emails go to ' + (res.notify_to || 'nobody') : 'Set SCHEDULER_ENABLED=true on the server to turn on');
+      $('#homeSchedulesBody').html('<ul class="recent-list">' + Object.keys(jobs).map(function (name) {
+        var j = jobs[name], r = j.running;
+        var every = j.every_hours >= 24 ? (j.every_hours / 24) + ' days' : j.every_hours + ' h';
+        var last = j.last_finished
+          ? (j.last_failed ? '<span style="color:var(--danger)">' + j.last_failed + ' failed</span>, ' : '') + (j.last_ok || 0) + ' ok · ' + fmtAgo(j.last_finished)
+          : 'never run';
+        var right = r
+          ? '<span class="pill pill-running">' + r.done + ' / ' + (r.total || '…') + '</span>'
+          : '<button type="button" class="btn btn-sm sched-run-btn" data-job="' + esc(name) + '">Run now</button>';
+        return '<li><div class="recent-item" style="cursor:default;">' +
+          '<div class="acct-info"><div class="acct-name">' + esc(j.label) + '</div>' +
+          '<div class="acct-ticker">Every ' + esc(every) + ' · last: ' + last +
+            (res.enabled && j.next_run && !r ? ' · next ' + esc(fmtUntil(j.next_run)) : '') + '</div></div>' +
+          '<div class="recent-meta">' + right + '</div></div></li>';
+      }).join('') + '</ul>');
+    });
+  }
+  function fmtUntil(v) {
+    var m = Math.round((new Date(v).getTime() - Date.now()) / 60000);
+    if (isNaN(m)) return '';
+    if (m <= 0) return 'due now';
+    if (m < 60) return 'in ' + m + 'm';
+    var h = Math.round(m / 60);
+    return h < 48 ? 'in ' + h + 'h' : 'in ' + Math.round(h / 24) + 'd';
+  }
+  $(document).on('click', '.sched-run-btn', function () {
+    var job = $(this).data('job');
+    var big = job === 'people';
+    if (!confirm('Start the "' + job + '" schedule now?' + (big ? ' This runs every person one at a time (several hours, billed Apify calls).' : '') +
+                 ' A summary email is sent when it finishes.')) return;
+    $(this).prop('disabled', true).html('<span class="btn-spinner"></span>');
+    $.ajax({ url: '/api/scheduler/run', method: 'POST', contentType: 'application/json', data: JSON.stringify({ job: job }) })
+      .always(function () { setTimeout(loadSchedules, 800); });
+  });
+  setInterval(loadSchedules, 30000);
   $(document).on('click', '.recent-run-open', function () { openTargetByKey($(this).data('key')); });
 
   /* ─── Command palette (Ctrl+K) ─────────────────────────── */
@@ -4376,24 +4411,6 @@ $(function () {
   $('#runJsonResetBtn').on('click', function () {
     $('#runTargetJson').val(JSON.stringify(RUN_EXAMPLES[state.runKind], null, 2)).trigger('input');
   });
-
-  /* ─── API key ──────────────────────────────────────────── */
-  // Only matters when the server has API_KEY set (e.g. a public
-  // deployment) — locally the server accepts every request regardless,
-  // so an empty key here is the normal, expected state.
-  try {
-    var savedKey = localStorage.getItem('scraperApiKey');
-    if (savedKey) $('#apiKeyInput').val(savedKey);
-  } catch (e) {}
-
-  $('#apiKeyInput').on('input', function () {
-    try { localStorage.setItem('scraperApiKey', $(this).val()); } catch (e) {}
-  });
-
-  function apiHeaders() {
-    var key = $('#apiKeyInput').val();
-    return key ? { 'X-API-Key': key } : {};
-  }
 
   /* ─── Mobile sidebar ───────────────────────────────────── */
   function closeSidebar() {
