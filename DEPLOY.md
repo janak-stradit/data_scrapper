@@ -113,17 +113,16 @@ docker compose version    # confirm the Compose plugin is present
 mkdir -p ~/data_scrapper_output
 ```
 
-Create `~/data_scrapper.env` — **outside** the `~/data_scrapper/` repo
-directory (rsync's `--delete` would otherwise wipe it on the next sync).
-This is a real production copy of your local `.env`, plus two additions:
-
-```bash
-nano ~/data_scrapper.env
-```
+The app reads its settings from `~/data_scrapper.env` — **outside** the
+`~/data_scrapper/` repo directory (rsync's `--delete` would otherwise wipe
+it on the next sync). You don't create it by hand: the deploy workflow
+writes it on every deploy from the `PROD_ENV_FILE` secret (step 3). Its
+contents are a production copy of your local `.env`, plus two additions:
 
 ```env
 APIFY_TOKEN=...
-DATABASE_URL=postgresql://...
+# postgresql://... or SQLAlchemy-style postgresql+psycopg2://... both work
+DATABASE_URL=postgresql+psycopg2://USER:PASSWORD@HOST:5432/DBNAME?sslmode=require
 ANTHROPIC_API_KEY=...
 SMTP_HOST=...
 SMTP_PORT=587
@@ -139,20 +138,31 @@ SERVE_HOST=0.0.0.0
 PORT=8080
 ```
 
-**Never commit this file or paste its contents into a GitHub secret** —
-it stays only on this instance and in your local `.env`.
+**Never commit this file** — it lives only in the `PROD_ENV_FILE` secret,
+on the instance, and in your local `.env`. Only set `DATABASE_URL` in it:
+a `DATABASE_URL_NEON` line (copied from a local `.env`) takes priority and
+would point production at Neon instead.
 
-## 3. Add GitHub repo secrets
+## 3. Add GitHub environment secrets
 
-Repo → Settings → Secrets and variables → Actions → New repository secret:
+Repo → Settings → Environments → `prod` → Environment secrets → Add secret
+(the workflow declares `environment: prod`; secrets added anywhere else
+resolve to empty strings in this job):
 
 | Secret | Value |
 |---|---|
 | `EC2_HOST` | the instance's public IP |
 | `EC2_USER` | `ubuntu` |
 | `EC2_SSH_KEY` | the full contents of the `.pem` file from step 1 |
+| `PROD_ENV_FILE` | the whole env file from step 2, pasted as-is (multi-line is fine) |
 
 That's the complete secret list — no Docker registry credentials needed.
+
+To change a setting later (rotate a password, switch databases), edit
+`PROD_ENV_FILE` and re-run the workflow (Actions → Deploy to EC2 → Run
+workflow) — the file on the server is replaced and the app restarted. If
+`PROD_ENV_FILE` is ever removed, deploys keep whatever file is already on
+the server rather than blanking it.
 
 ## 4. Push
 

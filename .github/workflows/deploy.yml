@@ -35,6 +35,37 @@ jobs:
           remote_user: ${{ secrets.EC2_USER }}
           remote_key: ${{ secrets.EC2_SSH_KEY }}
 
+      # The production .env lives in the PROD_ENV_FILE environment secret
+      # (the whole file, pasted as-is) and is written to
+      # ~/data_scrapper.env — what docker-compose.yml's env_file reads —
+      # on every deploy. Streamed over ssh stdin rather than through an
+      # action input or a command-line argument, so the contents never
+      # appear in a process list or the log. If the secret is unset the
+      # step leaves the server's existing file alone rather than
+      # replacing it with an empty one.
+      - name: Write production env file
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PROD_ENV_FILE}" ]; then
+            echo "::warning::PROD_ENV_FILE secret is not set — keeping the env file already on the server."
+            exit 0
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Strip Windows line endings in case the secret was pasted from
+          # a CRLF file — docker compose would keep the \r in every value.
+          printf '%s\n' "$PROD_ENV_FILE" | tr -d '\r' | ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
+            "$EC2_USER@$EC2_HOST" \
+            'umask 077 && cat > ~/data_scrapper.env.tmp && mv ~/data_scrapper.env.tmp ~/data_scrapper.env && echo "env file written: $(grep -c "=" ~/data_scrapper.env) variables"'
+          rm -f ~/.ssh/deploy_key
+
       - name: Build image and restart containers
         uses: appleboy/ssh-action@v1.0.3
         with:
