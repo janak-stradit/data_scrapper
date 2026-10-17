@@ -56,6 +56,12 @@ TIMEOUTS = {
     # well above that since maxItems scales the number of publisher
     # pages it has to fetch.
     "cxo_news": 180,
+    "bloomberg": 30,
+    "bloomberg_content": 60,
+    "web_search": 30,
+    "sec_proxy": 60,
+    "brokercheck": 30,
+    "uk_directorships": 30,
 }
 
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
@@ -67,6 +73,12 @@ SEC_USER_AGENT = os.getenv(
 # YouTube Data API v3 — free key from Google Cloud Console (enable
 # "YouTube Data API v3" under APIs & Services, then Credentials -> API key).
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
+
+# UK Companies House API — free key from
+# https://developer.company-information.service.gov.uk/ (register, then
+# "Create an application" -> REST API key). Unset = the uk_directorships
+# channel is simply skipped.
+COMPANIES_HOUSE_API_KEY = os.getenv("COMPANIES_HOUSE_API_KEY", "")
 
 # ─── Outbound mail (SMTP, STARTTLS) ──────────────────────────────
 SMTP_HOST = os.getenv("SMTP_HOST", "")

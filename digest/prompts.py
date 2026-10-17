@@ -28,6 +28,11 @@ CHANNEL_LABELS = {
     "regulatory": "Regulatory actions (Fed/OCC)",
     "linkedin_jobs": "LinkedIn job postings",
     "cxo_news": "Executive moves (joins/resigns/appointments)",
+    "bloomberg": "Bloomberg coverage",
+    "web_search": "Web search results",
+    "sec_proxy": "SEC proxy statements (DEF 14A)",
+    "brokercheck": "FINRA BrokerCheck record",
+    "uk_directorships": "UK company directorships (Companies House)",
 }
 
 # What each channel is actually good for. Sent alongside that channel's posts so
@@ -145,6 +150,18 @@ CHANNEL_GUIDANCE = {
         "unrelated companies' executives who merely mention this company "
         "(e.g. 'formerly of <this company>') in a bio line."
     ),
+    "bloomberg": (
+        "Third-party financial/business press specifically from Bloomberg, "
+        "found via a site:bloomberg.com search — same rules as the general "
+        "'news' channel (distinguish real journalism from noise, name the "
+        "story, don't over-read a headline). Most articles come back "
+        "headline-only since Bloomberg is paywalled and this pipeline does "
+        "not log into a subscriber account — treat a headline-only post's "
+        "summary as just the headline, not confirmation of the full story. "
+        "Bloomberg coverage of a financial institution is generally "
+        "higher-signal than aggregator sites, so don't discount a "
+        "headline-only hit just because the body wasn't extractable."
+    ),
 }
 
 # Same idea as CHANNEL_GUIDANCE, but for an individual contact rather than a
@@ -217,6 +234,43 @@ PERSON_CHANNEL_GUIDANCE = {
         "CEO certification exhibit) — a real name match is much less "
         "noisy for an individual than for a company, but still check the "
         "filer isn't an unrelated person with the same name."
+    ),
+    "web_search": (
+        "Top general web search results for his name plus employer — "
+        "each post is a page title and a short snippet, not the page "
+        "itself. Useful for finding what exists: a leadership bio, a "
+        "conference speaker page, an interview, a quote in an article, "
+        "his LinkedIn profile. Name what each substantive hit is and "
+        "where it's from; ignore directory/aggregator pages (ZoomInfo, "
+        "RocketReach, people-search sites). A same-name different person "
+        "is possible — say so if a result's employer or field doesn't fit."
+    ),
+    "sec_proxy": (
+        "Annual proxy statements (DEF 14A) that name him — the official "
+        "source for a named executive officer's or director's bio, role "
+        "history, other board seats, and compensation. The newest proxy "
+        "carries `excerpts`: the actual passages naming him — extract "
+        "concrete facts from them (title, tenure, prior roles, board "
+        "committees, education). Report compensation figures only as "
+        "stated. A hit filed by a company other than his employer "
+        "usually means he sits on that company's board — say so."
+    ),
+    "brokercheck": (
+        "His FINRA BrokerCheck record, matched on name AND employer — "
+        "registration status, years in the industry, employment history, "
+        "and licensing exams passed. Use the employment history and exams "
+        "to describe his career path and regulatory scope. If disclosures "
+        "are listed, state only their type, date and resolution exactly as "
+        "recorded — never characterise, elaborate on, or speculate about "
+        "them, and never raise them as a sales talking point."
+    ),
+    "uk_directorships": (
+        "Officer appointments he holds or held in UK-registered companies "
+        "(director, secretary), from Companies House. Distinguish current "
+        "from resigned appointments and name the companies; board seats "
+        "outside his employer are relationship context. `matched_by` says "
+        "how the record was attributed — treat 'only exact-name officer' "
+        "as a likely but unconfirmed match."
     ),
 }
 
@@ -466,6 +520,123 @@ to that offering"}
   "priority_reason": "one sentence",
   "confidence": "high | medium | low — how well evidenced this briefing is",
   "do_not_say": ["items a rep must not raise with the account, or omit if none"],
+  "data_gaps": ["what was missing or stale that limits this briefing, or omit \
+if none"]
+}"""
+
+# ── Single-pass email prompts ────────────────────────────────────
+# DIGEST_MODE=single (the default) skips the per-channel summary/storyline
+# calls entirely and writes the email straight from the raw posts in ONE
+# model call — one system prompt, one capability table, one output instead
+# of one of each per channel. Same output schema as EMAIL_SYSTEM /
+# PERSON_EMAIL_SYSTEM so the renderer, frontend and mailer are unchanged;
+# the analysis rules the channel step used to enforce move in here.
+
+EMAIL_DIRECT_SYSTEM = """You write internal briefing emails for a B2B sales team \
+covering large financial institutions.
+
+You will be given recent posts for ONE account, grouped by channel, each post \
+with a source URL. You may also be given a reference list of OUR OWN offerings \
+and case studies — use it only to check for genuine matches.
+
+METHOD:
+1. Read every channel, then identify the two or three developments that \
+actually changed this period.
+2. De-duplicate across channels. The same announcement usually appears on \
+LinkedIn, X, the newsroom and in press coverage — report it ONCE, citing the \
+most authoritative source (newsroom or filing over social).
+3. Weight by evidence. Specific, recent, first-party posts outweigh chatter; \
+mention thin channels (Reddit, off-topic results, navigation pages) only if \
+they change the picture, and label them as thin when you do.
+4. "Double-click" each post that names a specific third-party vendor, \
+technology, product or infrastructure initiative: does it genuinely match one \
+of OUR offerings? If yes, write one capability_opportunities entry with a \
+verbatim supporting quote from that post. An empty list is the honest, common \
+case.
+
+HARD RULES:
+- Never invent facts, numbers, names, dates or deals. If unsure, omit it.
+- Every talking point and capability_opportunities entry carries a real \
+source_url copied exactly from the supplied posts. Never construct or guess a URL.
+- `supporting_quote` must be copied verbatim from the post's text — never \
+paraphrased — trimmed to the single most relevant sentence, under 300 characters.
+- A shared buzzword is not a match. State the specific mechanism in `pitch`.
+- At most 4 capability_opportunities entries — the strongest, de-duplicated ones.
+- Anything not literally stated in a post must be phrased as inference \
+("suggests", "likely"), never as fact.
+- Put unannounced personnel moves, hostile sentiment and internal-only \
+inference in do_not_say, not in the body.
+- Lead with what changed and why it matters commercially, not with background.
+- Cut anything that would be true of any large bank in any month.
+- No greetings, no "I hope this finds you well". Internal tone, 200-300 words.
+- If the period genuinely contained nothing notable, say so and set priority to \
+"low". A quiet month honestly reported is more useful than a manufactured hook.
+
+Return ONLY valid JSON:
+{
+  "subject": "specific subject naming the account and the headline change",
+  "body": "plain text, short paragraphs — the narrative only. Do not list or \
+repeat the talking points here; they render separately from the \
+talking_points field below.",
+  "talking_points": [
+    {"point": "one thing to say on the call", "source_url": "https://...", \
+"channel": "which channel it came from"}
+  ],
+  "capability_opportunities": [
+    {"theme": "the vendor/technology/initiative", "source_url": "https://...", \
+"supporting_quote": "verbatim quote from that post", "offering": "the exact \
+offering name from the reference list", "pitch": "1-2 sentences: the specific \
+mechanism connecting this development to that offering"}
+  ],
+  "priority": "high | medium | low",
+  "priority_reason": "one sentence",
+  "confidence": "high | medium | low — how well evidenced this briefing is",
+  "do_not_say": ["items a rep must not raise with the account, or omit if none"],
+  "data_gaps": ["what was missing or stale that limits this briefing, or omit \
+if none"]
+}"""
+
+PERSON_EMAIL_DIRECT_SYSTEM = """You write internal briefing emails for a B2B \
+sales team ahead of a call with a named individual contact.
+
+You will be given recent posts about ONE person, grouped by channel, each post \
+with a source URL. Write one briefing a salesperson reads before the call.
+
+METHOD:
+1. Identify the one or two professional developments that actually matter \
+this period — a new initiative, a role change, a public statement.
+2. De-duplicate across channels — report the same development once, citing \
+the most authoritative source.
+3. Weight by evidence. Specific first-party posts outweigh chatter; label thin \
+sources as thin when you use them.
+
+HARD RULES:
+- Stay strictly professional. Do NOT include personality assessments, \
+psychological inference, religious/political affiliation, family, or other \
+personal-life details, even if they appeared in the source material.
+- Never invent facts, numbers, names or deals.
+- Every talking point carries a real source_url copied from the supplied posts.
+- Put unannounced moves, hostile sentiment and internal-only inference in \
+do_not_say, not in the body.
+- Lead with what changed and why it matters commercially, not with background.
+- No greetings, no "I hope this finds you well". Internal tone, 150-250 words.
+- If the period genuinely contained nothing notable, say so and set priority \
+to "low".
+
+Return ONLY valid JSON:
+{
+  "subject": "specific subject naming the contact and the headline change",
+  "body": "plain text, short paragraphs — the narrative only. Do not list or \
+repeat the talking points here; they render separately from the \
+talking_points field below.",
+  "talking_points": [
+    {"point": "one thing to say on the call", "source_url": "https://...", \
+"channel": "which channel it came from"}
+  ],
+  "priority": "high | medium | low",
+  "priority_reason": "one sentence",
+  "confidence": "high | medium | low — how well evidenced this briefing is",
+  "do_not_say": ["items a rep must not raise, or omit if none"],
   "data_gaps": ["what was missing or stale that limits this briefing, or omit \
 if none"]
 }"""

@@ -59,11 +59,15 @@ GET /api/people
       "has_store": true,
       "has_digest": true,
       "total_posts": 99,
-      "last_run": "2026-08-22T14:11:56.913805Z"
+      "last_run": "2026-08-22T14:11:56.913805Z",
+      "target": { "key": "bny", "display_name": "BNY (Bank of New York Mellon)", "linkedin_url": "…" }
     }
   ]
 }
 ```
+
+`target` is the full target config — the same object `POST /api/run`
+takes as its `target`, so a list consumer can re-run any row directly.
 
 `/api/people` returns the same shape under a `"people"` key; `ticker` is
 always `null` there. `channels` lists which channels this target has
@@ -107,12 +111,18 @@ GET /api/people/robin_vince
 
 ## `POST /api/run`
 
-Runs the pipeline (scrape all applicable channels → merge into the store →
-optionally generate the digest) for one target, then logs the outcome to
-run history. This is synchronous — the request blocks until the whole run
-finishes, which can take from a couple of seconds (free channels only) to
-several minutes (LinkedIn/Reddit/Twitter/blog all go through real Apify
-actor runs).
+Kicks off the pipeline (scrape all applicable channels → merge into the
+store → optionally generate the digest) for one target, in a background
+thread, and returns immediately. **Asynchronous** — the response is not
+the result of the run, just confirmation it started; a real run can take
+anywhere from a couple of seconds (free channels only) to several minutes
+(LinkedIn/Reddit/Twitter/blog go through real Apify actor runs) or, on a
+slow day, tens of minutes (SEC EDGAR alone has taken up to 10 minutes in
+testing). Poll `GET /output/run_history.json` for the `run_id` this
+returns — that entry's `status` starts `"running"` and flips to
+`"success"`/`"failed"` once the background thread finishes, at which
+point the same fields the old synchronous response used to return
+directly (`new_posts`, `digest`, etc.) are filled in on it.
 
 The target does **not** need to be pre-registered in `targets.py` /
 `people_targets.py`. Pass it as JSON and it's scraped as a one-off; only
@@ -185,42 +195,69 @@ channels that get scraped are exactly the ones with a truthy value here:
 | `regulatory_query` | regulatory | ✓ | ✓ |
 | `linkedin_jobs_query` | linkedin_jobs | ✓ | — |
 
-### Response — `200 OK`
+### Response — `202 Accepted`
 
 ```json
 {
   "ok": true,
+  "started": true,
   "entry": {
+    "run_id": "a1b2c3d4e5f64a7b8c9d0e1f2a3b4c5d",
     "recorded_at": "2026-08-23T06:04:18.871686Z",
+    "status": "running",
     "kind": "company",
     "key": "example_co",
     "display_name": "Example Co",
-    "limit": 10,
-    "new_posts": 6,
-    "total_posts": 42,
-    "platforms_scraped": ["sec", "news"],
-    "platforms_failed": [],
-    "digest": {
-      "llm": "anthropic/claude-sonnet-5",
-      "posts_considered": 12
-    },
-    "success": true,
-    "duration_ms": 8213
+    "limit": 10
   }
 }
 ```
 
-- `ok` mirrors `entry.success`.
+`ok`/`started` just mean the background thread was launched — they say
+nothing about whether the run itself will succeed. Poll
+`GET /output/run_history.json`, find the entry whose `run_id` matches, and
+watch its `status`:
+
+```json
+{
+  "run_id": "a1b2c3d4e5f64a7b8c9d0e1f2a3b4c5d",
+  "status": "success",
+  "recorded_at": "2026-08-23T06:04:18.871686Z",
+  "kind": "company",
+  "key": "example_co",
+  "display_name": "Example Co",
+  "limit": 10,
+  "new_posts": 6,
+  "total_posts": 42,
+  "platforms_scraped": ["sec", "news"],
+  "platforms_failed": [],
+  "cost_usd": 0.014,
+  "digest": {
+    "llm": "anthropic/claude-sonnet-5",
+    "posts_considered": 12,
+    "input_tokens": 4807,
+    "output_tokens": 2493
+  },
+  "success": true,
+  "duration_ms": 8213
+}
+```
+
+- `status`: `"running"` → `"success"` or `"failed"`. Only meaningful once
+  it's left `"running"` — every field below is absent/stale until then.
 - `new_posts` / `total_posts` — posts added this run / total now on file for this target.
 - `platforms_failed` — channels that errored (e.g. an Apify actor timing out); the run as a whole can still be `success: true` with some channels failed.
+- `cost_usd` — total Apify actor cost this run actually incurred (`0` if every channel scraped was free — `sec`/`patents`/`rss`/`youtube`/`reddit`).
 - `digest` — present only when `generate_digest: true` was requested.
   - `digest.llm` describes the model actually used. If no `ANTHROPIC_API_KEY` (or the configured provider's key) is set, this reads `"... — ANTHROPIC_API_KEY not set, falling back to dry-run"` and the digest is a placeholder, not a real LLM-written briefing — check for that substring if your integration cares.
+  - `digest.input_tokens`/`digest.output_tokens` — LLM token usage across every channel-summary call plus the email rollup call.
   - `digest.error` appears instead of the above if digest generation itself failed (e.g. no posts were in scope).
-- A run can still return `200` with `"success": false` and an `"error"` field at the top level of `entry` if the scrape itself threw (e.g. all channels failed).
+- A finished run can still have `"status": "failed"`, `"success": false`, and an `"error"` field at the top level if the scrape itself threw (e.g. all channels failed).
+- If your poller gives up before `status` leaves `"running"` (the run is unusually slow, or the process was restarted mid-run), the entry just stays `"running"` — there's no separate timeout/cancellation signal; the background thread either finishes and calls `finish()`, or the process exits and it's abandoned as one, distinguishable only by checking whether the process is still running.
 
 ### Response — `400 Bad Request`
 
-Returned before anything runs, for malformed input:
+Returned before anything is even scheduled, for malformed input:
 
 ```json
 { "ok": false, "error": "target must be a JSON object with a non-empty \"key\"" }
@@ -245,27 +282,42 @@ curl -s -X POST http://127.0.0.1:8001/api/run \
       "sec_cik": "0001234567"
     }
   }'
+# {"ok":true,"started":true,"entry":{"run_id":"...","status":"running",...}}
+
+# then poll:
+curl -s http://127.0.0.1:8001/output/run_history.json \
+  | python3 -c "import json,sys; print(next(e for e in json.load(sys.stdin) if e['run_id']=='<run_id>'))"
 ```
 
 ### Cost note
 
-`linkedin`, `reddit`, `twitter`, and `blog` each run a real Apify actor
-billed against `APIFY_TOKEN` in `.env`. So does `news`, partially — the
-headline list itself is free (Google's own RSS), but every article's full
-text is then fetched via the same website-content-crawler actor
-`blog` uses, one article per headline, best-effort (silently falls back
-to headline-only per-article if a publisher blocks the fetch — this
-doesn't reduce the Apify cost of having attempted it). `linkedin_jobs` also
-runs a real Apify actor (`harvestapi/linkedin-job-search`), but pay-per-result
-at $1/1,000 jobs — negligible at the ~10-20 postings per run this pipeline
-asks for. `sec`, `patents`, `rss`, and `youtube` are the only channels with
-no Apify cost at all
-(`youtube` needs a free `YOUTUBE_API_KEY` from Google Cloud Console, with
-its own 10,000-unit/day quota — not billed, but can be exhausted on very
-heavy use). An integration calling this frequently on a target with
-social fields (or `news_query`) populated will consume Apify compute
-units on every call — there's no dedupe/rate-limiting beyond what the
-store's incremental fetch windows already do (see `store.py`).
+`linkedin`, `twitter`, and `blog` each run a real Apify actor billed
+against `APIFY_TOKEN` in `.env`. So does `news`, partially — the headline
+list itself is free (Google's own RSS), but every article's full text is
+then fetched via the same website-content-crawler actor `blog` uses, one
+article per headline, best-effort (silently falls back to headline-only
+per-article if a publisher blocks the fetch — this doesn't reduce the
+Apify cost of having attempted it). `linkedin_jobs` also runs a real
+Apify actor (`harvestapi/linkedin-job-search`), but pay-per-result at
+$1/1,000 jobs — negligible at the ~10-20 postings per run this pipeline
+asks for. `sec`, `patents`, `rss`, `youtube`, and `reddit` are the only
+channels with no Apify cost at all (`youtube` needs a free
+`YOUTUBE_API_KEY` from Google Cloud Console, with its own 10,000-unit/day
+quota — not billed, but can be exhausted on very heavy use; `reddit` fetches
+Reddit's own free `.rss` search/listing feed directly — no actor, no
+token, no per-run charge, just Reddit's own unauthenticated rate limit).
+An integration calling this frequently on a target with `linkedin`/
+`twitter`/`blog` fields (or `news_query`) populated will consume Apify
+compute units on every call — there's no dedupe/rate-limiting beyond what
+the store's incremental fetch windows already do (see `store.py`).
+
+The person-only public-records channels — `web_search` (DuckDuckGo),
+`sec_proxy` (SEC DEF 14A), `brokercheck` (FINRA BrokerCheck) and
+`uk_directorships` (UK Companies House, needs a free
+`COMPANIES_HOUSE_API_KEY`) — have no Apify cost. `web_search` uses an
+unofficial endpoint that rate-limits: requests are spaced 5s apart, and a
+throttled request fails that channel with "rate-limited" rather than
+returning nothing.
 
 ---
 
@@ -277,6 +329,12 @@ no scraping happens. Pairs with `POST /api/run` called with
 whenever you want a (re)generated digest without paying for another
 scrape. This is what the frontend's **Pipeline** page uses for its two
 independent stage buttons (① Fetch, ② Create digest).
+
+**Asynchronous, same as `/api/run`**: returns immediately once the
+background thread is launched; a real LLM call has taken over half a
+minute in testing. Poll `GET /output/run_history.json` for the returned
+`run_id` — see `/api/run` above for the full polling contract, `status`
+values, and field meanings, all shared between the two endpoints.
 
 ### Request
 
@@ -303,25 +361,28 @@ Content-Type: application/json
 | `max_posts` | integer | `25` | posts per channel considered |
 | `all_posts` | boolean | `false` | `true` summarises everything in the window; `false` (default) summarises only posts added by the most recent scrape |
 
-### Response — `200 OK`
+### Response — `202 Accepted`
 
 ```json
 {
   "ok": true,
+  "started": true,
   "entry": {
+    "run_id": "f1e2d3c4b5a64738291607f5e4d3c2b1",
     "recorded_at": "2026-09-12T09:00:00.000000Z",
+    "status": "running",
     "kind": "company",
     "key": "example_co",
-    "display_name": "Example Co",
-    "digest": { "llm": "anthropic/claude-sonnet-5", "posts_considered": 12 },
-    "success": true,
-    "duration_ms": 4310
+    "display_name": "Example Co"
   }
 }
 ```
 
-`entry.digest.error` (with `ok: false`) appears instead if digest
-generation failed — most commonly `"No store at ... Run: python main.py
+Poll `GET /output/run_history.json` for that `run_id`; once `status`
+leaves `"running"`, the same entry carries `digest`, `success`,
+`duration_ms` — same shapes `/api/run`'s finished entry does. A failed
+digest generation shows up as `digest.error` (with `status: "failed"`,
+`success: false`) — most commonly `"No store at ... Run: python main.py
 scrape <key> ..."` when nothing has been scraped for this target yet, or
 `"Nothing to summarise — no posts in scope"` when `since_days`/`all_posts`
 narrows the window to zero posts.
@@ -331,6 +392,81 @@ narrows the window to zero posts.
 ```json
 { "ok": false, "error": "target must be a JSON object with a non-empty \"key\"" }
 ```
+
+---
+
+## `POST /api/news-brief`
+
+Builds a **Daily News Brief** — today's and yesterday's posts from the
+`news` and `bloomberg` channels only, formatted as a subject/body/html
+ready to send. Unlike `/api/digest`, this makes no LLM call: it's a plain
+filter + format over whatever's already in the target's store, so it
+answers **synchronously**, no polling required. Send it with the generic
+`/api/send-email` below, passing this response's `subject`/`body`/`html`
+straight through.
+
+### Request
+
+```
+POST /api/news-brief
+Content-Type: application/json
+```
+
+```json
+{
+  "kind": "company",
+  "target": { "key": "example_co", "display_name": "Example Co" }
+}
+```
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `kind` | `"company"` \| `"person"` | `"company"` | same meaning as `/api/run` |
+| `target` | object | — | **required**. Must include a non-empty `key` matching a target that already has a store file (`output/stores/<key>_output.json`) |
+
+### Response — `200 OK`
+
+```json
+{
+  "ok": true,
+  "brief": {
+    "company": "Example Co",
+    "company_key": "example_co",
+    "kind": "company",
+    "generated_at": "2026-09-17T09:00:00.000000Z",
+    "window": "today + yesterday (UTC)",
+    "posts_considered": 3,
+    "posts": [
+      {
+        "platform": "news",
+        "channel": "news",
+        "title": "Example Co announces...",
+        "post_url": "https://news.google.com/...",
+        "source": "Reuters",
+        "published_at": "Wed, 17 Sep 2026 08:15:00 GMT"
+      }
+    ],
+    "subject": "Daily News Brief — Example Co — Sep 17, 2026",
+    "body": "Daily News Brief — Example Co — Sep 17, 2026\n\n- [Google News] ...",
+    "html": "<div ...>...</div>"
+  }
+}
+```
+
+`posts` carries every field the original scraped post had, plus `channel`
+(`"news"` or `"bloomberg"`) so the two can be told apart in a combined
+list. An empty `posts` array (with a "No news or Bloomberg coverage..."
+`body`/`html`) is a normal, successful response — not an error.
+
+### Response — `400 Bad Request` / soft failure
+
+```json
+{ "ok": false, "error": "target must be a JSON object with a non-empty \"key\"" }
+```
+
+A target with no store yet comes back `200 OK` with `{"ok": false,
+"error": "No store at ... Run: python main.py scrape <key> ..."}`, same
+convention as `/api/send-email`'s failure responses below.
 
 ---
 
@@ -463,10 +599,13 @@ time it returns.
 ## Integration checklist
 
 1. `python main.py serve --port 8001` running on the target machine.
-2. `APIFY_TOKEN` set in `.env` if you'll scrape linkedin/reddit/twitter/blog.
+2. `APIFY_TOKEN` set in `.env` if you'll scrape linkedin/twitter/blog (reddit is free, no token needed).
 3. `ANTHROPIC_API_KEY` (or your chosen `LLM_PROVIDER`'s key) set in `.env`
    if you want real digests instead of dry-run placeholders.
 4. For `/api/send-email`: `SMTP_HOST`/`SMTP_USERNAME`/`SMTP_PASSWORD` set in
    `.env`, verified with `python mailer.py --test`.
-5. Point your app at `POST /api/run`, read `entry.digest.llm` to detect
-   dry-run, and `entry.platforms_failed` to detect partial failures.
+5. Point your app at `POST /api/run` — it's async: read `entry.run_id`
+   from the `202` response, then poll `GET /output/run_history.json` for
+   that `run_id` until `status` leaves `"running"`. Once finished, read
+   `digest.llm` to detect dry-run and `platforms_failed` to detect
+   partial failures.

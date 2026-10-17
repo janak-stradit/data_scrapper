@@ -41,6 +41,3108 @@
       "name": "Robin Vince (Chairman, President & CEO, BNY)",
       "file": "../output/stores/robin_vince_output.json",
       "digest": "../output/digests/robin_vince_digest.json"
+    },
+    {
+      "key": "abhinay_pathak",
+      "name": "Abhinay Pathak (CAO, Securities Finance, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/abhinay_pathak_output.json",
+      "digest": "../output/digests/abhinay_pathak_digest.json"
+    },
+    {
+      "key": "aditya_s",
+      "name": "Aditya S. (CFO, Global Markets Execution Services, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/aditya_s_output.json",
+      "digest": "../output/digests/aditya_s_digest.json"
+    },
+    {
+      "key": "adrienne_v_pershing_international_nominees_limited",
+      "name": "Adrienne V.",
+      "file": "../output/stores/adrienne_v_pershing_international_nominees_limited_output.json",
+      "digest": "../output/digests/adrienne_v_pershing_international_nominees_limited_digest.json"
+    },
+    {
+      "key": "aj_s",
+      "name": "AJ S. (Chief Financial Officer - Operations, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/aj_s_output.json",
+      "digest": "../output/digests/aj_s_digest.json"
+    },
+    {
+      "key": "ajinkya_a",
+      "name": "Ajinkya A. (Vice President, COO Office / Business Management, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ajinkya_a_output.json",
+      "digest": "../output/digests/ajinkya_a_digest.json"
+    },
+    {
+      "key": "ajith_augustine_inautix",
+      "name": "Ajith Augustine",
+      "file": "../output/stores/ajith_augustine_inautix_output.json",
+      "digest": "../output/digests/ajith_augustine_inautix_digest.json"
+    },
+    {
+      "key": "alexandra_g",
+      "name": "Alexandra G. (Chief Risk Officer, APAC, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/alexandra_g_output.json",
+      "digest": "../output/digests/alexandra_g_digest.json"
+    },
+    {
+      "key": "alfred_w_zollar",
+      "name": "Alfred W. Zollar (Board Member & Technology Advisory Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/alfred_w_zollar_output.json",
+      "digest": "../output/digests/alfred_w_zollar_digest.json"
+    },
+    {
+      "key": "alison_h",
+      "name": "Alison H. (Managing Director - Head of Markets Compliance/Swap Dealer CCO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/alison_h_output.json",
+      "digest": "../output/digests/alison_h_digest.json"
+    },
+    {
+      "key": "andrea_k",
+      "name": "Andrea K. (Chief Operating Officer (APAC - Markets), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/andrea_k_output.json",
+      "digest": "../output/digests/andrea_k_digest.json"
+    },
+    {
+      "key": "andrea_r",
+      "name": "Andrea R. (Deputy Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/andrea_r_output.json",
+      "digest": "../output/digests/andrea_r_digest.json"
+    },
+    {
+      "key": "angel_r",
+      "name": "Angel R. (Director, Office of the CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/angel_r_output.json",
+      "digest": "../output/digests/angel_r_digest.json"
+    },
+    {
+      "key": "angelina_tiong",
+      "name": "Angelina Tiong (Chief Operating Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/angelina_tiong_output.json",
+      "digest": "../output/digests/angelina_tiong_digest.json"
+    },
+    {
+      "key": "anil_k",
+      "name": "Anil K. (VICE President II AS COO Risk, Compliance & Control Governance, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/anil_k_output.json",
+      "digest": "../output/digests/anil_k_digest.json"
+    },
+    {
+      "key": "anish_a",
+      "name": "Anish Rao T.",
+      "file": "../output/stores/anish_a_output.json",
+      "digest": "../output/digests/anish_a_digest.json"
+    },
+    {
+      "key": "anish_amlekar",
+      "name": "Anish Amlekar (Vice President II, Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/anish_amlekar_output.json",
+      "digest": "../output/digests/anish_amlekar_digest.json"
+    },
+    {
+      "key": "anna_p_pershing_international_nominees_limited",
+      "name": "Anna P.",
+      "file": "../output/stores/anna_p_pershing_international_nominees_limited_output.json",
+      "digest": "../output/digests/anna_p_pershing_international_nominees_limited_digest.json"
+    },
+    {
+      "key": "anne_p",
+      "name": "Ann Marie Myers",
+      "file": "../output/stores/anne_p_output.json",
+      "digest": "../output/digests/anne_p_digest.json"
+    },
+    {
+      "key": "anne_paris",
+      "name": "Anne Paris (Vice President & Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/anne_paris_output.json",
+      "digest": "../output/digests/anne_paris_digest.json"
+    },
+    {
+      "key": "anthony_m",
+      "name": "Anthony M. (CTO & Fvp, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/anthony_m_output.json",
+      "digest": "../output/digests/anthony_m_digest.json"
+    },
+    {
+      "key": "apoorva_p",
+      "name": "Apoorva P. (COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/apoorva_p_output.json",
+      "digest": "../output/digests/apoorva_p_digest.json"
+    },
+    {
+      "key": "arun_k",
+      "name": "Arun K. (Vice President Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/arun_k_output.json",
+      "digest": "../output/digests/arun_k_digest.json"
+    },
+    {
+      "key": "arun_s",
+      "name": "Arun S. (Vice President, Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/arun_s_output.json",
+      "digest": "../output/digests/arun_s_digest.json"
+    },
+    {
+      "key": "ashik_jagtiani",
+      "name": "Ashik Jagtiani (CFO, BNY European Bank, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ashik_jagtiani_output.json",
+      "digest": "../output/digests/ashik_jagtiani_digest.json"
+    },
+    {
+      "key": "ashley_j",
+      "name": "Ashley J. (Office of the CFO Summer Analyst, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ashley_j_output.json",
+      "digest": "../output/digests/ashley_j_digest.json"
+    },
+    {
+      "key": "ashley_t",
+      "name": "Ashley T. (CFO Analyst, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ashley_t_output.json",
+      "digest": "../output/digests/ashley_t_digest.json"
+    },
+    {
+      "key": "ashutosh_d",
+      "name": "Ashutosh Devari",
+      "file": "../output/stores/ashutosh_d_output.json",
+      "digest": "../output/digests/ashutosh_d_digest.json"
+    },
+    {
+      "key": "ashutosh_singh",
+      "name": "Ashutosh Singh (Vice President - Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ashutosh_singh_output.json",
+      "digest": "../output/digests/ashutosh_singh_digest.json"
+    },
+    {
+      "key": "ava_d",
+      "name": "Ava D. (COO Summer Analyst, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ava_d_output.json",
+      "digest": "../output/digests/ava_d_digest.json"
+    },
+    {
+      "key": "aviral_k",
+      "name": "Aviral K. (Vice President Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/aviral_k_output.json",
+      "digest": "../output/digests/aviral_k_digest.json"
+    },
+    {
+      "key": "ayla_q",
+      "name": "Ayla Q. (Senior Vice President, CFO Product Lead, Markets, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ayla_q_output.json",
+      "digest": "../output/digests/ayla_q_digest.json"
+    },
+    {
+      "key": "ben_l",
+      "name": "Ben L. (Chief Operating Officer and Head of US Product - Global Equities, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ben_l_output.json",
+      "digest": "../output/digests/ben_l_digest.json"
+    },
+    {
+      "key": "beth_g",
+      "name": "Beth G. (CFO - Corporate Staff / Other Segment, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/beth_g_output.json",
+      "digest": "../output/digests/beth_g_digest.json"
+    },
+    {
+      "key": "bill_d",
+      "name": "Bill Brunell",
+      "file": "../output/stores/bill_d_output.json",
+      "digest": "../output/digests/bill_d_digest.json"
+    },
+    {
+      "key": "bora_purutcuoglu",
+      "name": "Bora Purutcuoglu (Vice President/Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/bora_purutcuoglu_output.json",
+      "digest": "../output/digests/bora_purutcuoglu_digest.json"
+    },
+    {
+      "key": "brad_m",
+      "name": "Brad M. (CFO, Corporate Treasury & Chief Investment Office, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/brad_m_output.json",
+      "digest": "../output/digests/brad_m_digest.json"
+    },
+    {
+      "key": "brian_c",
+      "name": "Brian C. (COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/brian_c_output.json",
+      "digest": "../output/digests/brian_c_digest.json"
+    },
+    {
+      "key": "brian_curtin_cfa_mellon_financial_corporation",
+      "name": "Brian Curtin, CFA",
+      "file": "../output/stores/brian_curtin_cfa_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/brian_curtin_cfa_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "brian_f",
+      "name": "Brian F. (COO Asset Management, Global Head of Operations, President & COO Asset Management Operations LLC.,, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/brian_f_output.json",
+      "digest": "../output/digests/brian_f_digest.json"
+    },
+    {
+      "key": "brian_p",
+      "name": "Brian Mcgerigle",
+      "file": "../output/stores/brian_p_output.json",
+      "digest": "../output/digests/brian_p_digest.json"
+    },
+    {
+      "key": "brian_s",
+      "name": "Brian S. (COO Strategy and Analytics, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/brian_s_output.json",
+      "digest": "../output/digests/brian_s_digest.json"
+    },
+    {
+      "key": "caitlin_mccully_mellon_financial_corporation",
+      "name": "Caitlin McCully",
+      "file": "../output/stores/caitlin_mccully_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/caitlin_mccully_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "carl_b",
+      "name": "Carl B. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/carl_b_output.json",
+      "digest": "../output/digests/carl_b_digest.json"
+    },
+    {
+      "key": "cathy_j",
+      "name": "Cathy J. (Regional Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/cathy_j_output.json",
+      "digest": "../output/digests/cathy_j_digest.json"
+    },
+    {
+      "key": "chelsea_l",
+      "name": "Chelsea L. (Vice President, Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/chelsea_l_output.json",
+      "digest": "../output/digests/chelsea_l_digest.json"
+    },
+    {
+      "key": "cheryl_senosk",
+      "name": "Cheryl Senosk (Vice President/Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/cheryl_senosk_output.json",
+      "digest": "../output/digests/cheryl_senosk_digest.json"
+    },
+    {
+      "key": "christine_b",
+      "name": "Christine B. (Asset Servicing & Markets APAC CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/christine_b_output.json",
+      "digest": "../output/digests/christine_b_digest.json"
+    },
+    {
+      "key": "christine_d",
+      "name": "Christine D. (Chief Operational Risk Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/christine_d_output.json",
+      "digest": "../output/digests/christine_d_digest.json"
+    },
+    {
+      "key": "christine_lestan_standish_mellon_asset_management",
+      "name": "Christine Lestan",
+      "file": "../output/stores/christine_lestan_standish_mellon_asset_management_output.json",
+      "digest": "../output/digests/christine_lestan_standish_mellon_asset_management_digest.json"
+    },
+    {
+      "key": "christine_m",
+      "name": "Christine M. (Commercial COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/christine_m_output.json",
+      "digest": "../output/digests/christine_m_digest.json"
+    },
+    {
+      "key": "christopher_k",
+      "name": "Christopher K. (Vice President - CAO Risk and Controls, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/christopher_k_output.json",
+      "digest": "../output/digests/christopher_k_digest.json"
+    },
+    {
+      "key": "christy_graham",
+      "name": "Christy Graham (Vice President, Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/christy_graham_output.json",
+      "digest": "../output/digests/christy_graham_digest.json"
+    },
+    {
+      "key": "christy_l",
+      "name": "Christi Fisher",
+      "file": "../output/stores/christy_l_output.json",
+      "digest": "../output/digests/christy_l_digest.json"
+    },
+    {
+      "key": "claire_i",
+      "name": "Claire I. (Office of the CFO - Finance, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/claire_i_output.json",
+      "digest": "../output/digests/claire_i_digest.json"
+    },
+    {
+      "key": "colin_w",
+      "name": "Colin W. (Enterprise Platform CIO, Head of Technology Architecture, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/colin_w_output.json",
+      "digest": "../output/digests/colin_w_digest.json"
+    },
+    {
+      "key": "craig_fiduccia_mellon_financial_corporation",
+      "name": "Craig Fiduccia",
+      "file": "../output/stores/craig_fiduccia_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/craig_fiduccia_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "d_sir_e_weiss_newton_investment_management",
+      "name": "Désirée Weiss",
+      "file": "../output/stores/d_sir_e_weiss_newton_investment_management_output.json",
+      "digest": "../output/digests/d_sir_e_weiss_newton_investment_management_digest.json"
+    },
+    {
+      "key": "dan_t",
+      "name": "Dan T. (EMEA COO Liquidity and Financing, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/dan_t_output.json",
+      "digest": "../output/digests/dan_t_digest.json"
+    },
+    {
+      "key": "daniel_c",
+      "name": "Daniel C. (COO Frankfurt Branch & Global Head of Entity Sourcing Leads & Site Lead Germany, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/daniel_c_output.json",
+      "digest": "../output/digests/daniel_c_digest.json"
+    },
+    {
+      "key": "dave_t",
+      "name": "Dave T. (COO Treasury Services, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/dave_t_output.json",
+      "digest": "../output/digests/dave_t_digest.json"
+    },
+    {
+      "key": "david_d",
+      "name": "David D. (Chief Operating Officer, Securities Finance, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/david_d_output.json",
+      "digest": "../output/digests/david_d_digest.json"
+    },
+    {
+      "key": "david_frazier",
+      "name": "David Frazier (Vice President - Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/david_frazier_output.json",
+      "digest": "../output/digests/david_frazier_digest.json"
+    },
+    {
+      "key": "david_r",
+      "name": "David R. (Chief Information Security Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/david_r_output.json",
+      "digest": "../output/digests/david_r_digest.json"
+    },
+    {
+      "key": "derek_g",
+      "name": "Derek Graham",
+      "file": "../output/stores/derek_g_output.json",
+      "digest": "../output/digests/derek_g_digest.json"
+    },
+    {
+      "key": "dermot_mcdonogh",
+      "name": "Dermot M. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/dermot_mcdonogh_output.json",
+      "digest": "../output/digests/dermot_mcdonogh_digest.json"
+    },
+    {
+      "key": "dhrubaj_kishore",
+      "name": "Dhrubaj Kishore (Chief Marketing Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/dhrubaj_kishore_output.json",
+      "digest": "../output/digests/dhrubaj_kishore_digest.json"
+    },
+    {
+      "key": "diana_perez",
+      "name": "Diana Perez (Treasury Services and Depositary Receipts CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/diana_perez_output.json",
+      "digest": "../output/digests/diana_perez_digest.json"
+    },
+    {
+      "key": "diane_p",
+      "name": "Diane P. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/diane_p_output.json",
+      "digest": "../output/digests/diane_p_digest.json"
+    },
+    {
+      "key": "dinesh_bihani",
+      "name": "Dinesh Bihani (Lead Manager (Vice President II), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/dinesh_bihani_output.json",
+      "digest": "../output/digests/dinesh_bihani_digest.json"
+    },
+    {
+      "key": "donna_k",
+      "name": "Donna K. (Chief Financial Officer, Wealth Solutions, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/donna_k_output.json",
+      "digest": "../output/digests/donna_k_digest.json"
+    },
+    {
+      "key": "elaine_w",
+      "name": "Elaine W. (Chief Administrative Officer (CAO), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/elaine_w_output.json",
+      "digest": "../output/digests/elaine_w_digest.json"
+    },
+    {
+      "key": "electra_economopoulos",
+      "name": "Electra Economopoulos (Senior Associate, CEO Office, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/electra_economopoulos_output.json",
+      "digest": "../output/digests/electra_economopoulos_digest.json"
+    },
+    {
+      "key": "eric_b",
+      "name": "Eric B. (CIO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/eric_b_output.json",
+      "digest": "../output/digests/eric_b_digest.json"
+    },
+    {
+      "key": "erica_o",
+      "name": "Erica O. (International Chief Compliance Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/erica_o_output.json",
+      "digest": "../output/digests/erica_o_digest.json"
+    },
+    {
+      "key": "erik_n",
+      "name": "Erik N. (Chief Financial Officer (Netherlands & Denmark), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/erik_n_output.json",
+      "digest": "../output/digests/erik_n_digest.json"
+    },
+    {
+      "key": "ethan_c",
+      "name": "Ethan C. (COO Analyst, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ethan_c_output.json",
+      "digest": "../output/digests/ethan_c_digest.json"
+    },
+    {
+      "key": "fernando_costa",
+      "name": "Fernando Costa (Managing Director - Securities Services and Markets CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/fernando_costa_output.json",
+      "digest": "../output/digests/fernando_costa_digest.json"
+    },
+    {
+      "key": "fernando_m",
+      "name": "Fernando M. (CIO & Head of Technology, Growth Ventures, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/fernando_m_output.json",
+      "digest": "../output/digests/fernando_m_digest.json"
+    },
+    {
+      "key": "filip_baron",
+      "name": "Filip Baron (Lead Manager / Vice President II, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/filip_baron_output.json",
+      "digest": "../output/digests/filip_baron_digest.json"
+    },
+    {
+      "key": "fiona_a",
+      "name": "Fiona A. (Portfolio Manager, Regulatory CAO Regulatory Solutions & Compliance Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/fiona_a_output.json",
+      "digest": "../output/digests/fiona_a_digest.json"
+    },
+    {
+      "key": "francisco_g",
+      "name": "Francisco G. (COO - Global Operations, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/francisco_g_output.json",
+      "digest": "../output/digests/francisco_g_digest.json"
+    },
+    {
+      "key": "gaj_s",
+      "name": "Gaj S. (Managing Director | Global Engineering Lead | CIO | Enterprise Onboarding & Billing, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gaj_s_output.json",
+      "digest": "../output/digests/gaj_s_digest.json"
+    },
+    {
+      "key": "ganesh_lakshminarayanan_inautix",
+      "name": "Ganesh Lakshminarayanan",
+      "file": "../output/stores/ganesh_lakshminarayanan_inautix_output.json",
+      "digest": "../output/digests/ganesh_lakshminarayanan_inautix_digest.json"
+    },
+    {
+      "key": "gareth_becker",
+      "name": "Gareth Becker (Global Distribution CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gareth_becker_output.json",
+      "digest": "../output/digests/gareth_becker_digest.json"
+    },
+    {
+      "key": "gary_h",
+      "name": "Gary H. (Chief Information Officer & Managing Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gary_h_output.json",
+      "digest": "../output/digests/gary_h_digest.json"
+    },
+    {
+      "key": "gary_p",
+      "name": "Gary P. (CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gary_p_output.json",
+      "digest": "../output/digests/gary_p_digest.json"
+    },
+    {
+      "key": "gaurav_g",
+      "name": "Gaurav G. (Vice President - Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gaurav_g_output.json",
+      "digest": "../output/digests/gaurav_g_digest.json"
+    },
+    {
+      "key": "gayatri_krishnan",
+      "name": "Gayatri Krishnan (Chief Operating Officer - Pershing/Wealth/Investment Management Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/gayatri_krishnan_output.json",
+      "digest": "../output/digests/gayatri_krishnan_digest.json"
+    },
+    {
+      "key": "george_m",
+      "name": "George M. (Chief Credit Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/george_m_output.json",
+      "digest": "../output/digests/george_m_digest.json"
+    },
+    {
+      "key": "greg_partridge",
+      "name": "Greg Partridge (Legal Entity Controller & CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/greg_partridge_output.json",
+      "digest": "../output/digests/greg_partridge_digest.json"
+    },
+    {
+      "key": "guri_v",
+      "name": "Guri V. (Chief Market Risk Officer - Securities Finance, Lending and Reinvestment, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/guri_v_output.json",
+      "digest": "../output/digests/guri_v_digest.json"
+    },
+    {
+      "key": "hafiz_rahman",
+      "name": "Hafiz Rahman (Vice-President, Lead Consultant, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/hafiz_rahman_output.json",
+      "digest": "../output/digests/hafiz_rahman_digest.json"
+    },
+    {
+      "key": "hanneke_smits_newton_investment_management",
+      "name": "Hanneke Smits",
+      "file": "../output/stores/hanneke_smits_newton_investment_management_output.json",
+      "digest": "../output/digests/hanneke_smits_newton_investment_management_digest.json"
+    },
+    {
+      "key": "harrison_k",
+      "name": "Harrison K. (Vice President and Chief Accounting Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/harrison_k_output.json",
+      "digest": "../output/digests/harrison_k_digest.json"
+    },
+    {
+      "key": "harry_v",
+      "name": "Harry Samuels",
+      "file": "../output/stores/harry_v_output.json",
+      "digest": "../output/digests/harry_v_digest.json"
+    },
+    {
+      "key": "hiren_v",
+      "name": "Hiren V. (Vice President - Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/hiren_v_output.json",
+      "digest": "../output/digests/hiren_v_digest.json"
+    },
+    {
+      "key": "hiren_vara",
+      "name": "Hiren Vara (Chief Administrative Officer (CAO) of HK, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/hiren_vara_output.json",
+      "digest": "../output/digests/hiren_vara_digest.json"
+    },
+    {
+      "key": "howard_r",
+      "name": "Howard R. (COO Treasury Services Operations, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/howard_r_output.json",
+      "digest": "../output/digests/howard_r_digest.json"
+    },
+    {
+      "key": "iris_l",
+      "name": "Iris L. (Regional Chief Operating Officer, APAC ex Japan, BNY Investments, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/iris_l_output.json",
+      "digest": "../output/digests/iris_l_digest.json"
+    },
+    {
+      "key": "jacqueline_b",
+      "name": "Jacqueline B. (Chief Accounting Officer for Financial Markets & Treasury Services, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jacqueline_b_output.json",
+      "digest": "../output/digests/jacqueline_b_digest.json"
+    },
+    {
+      "key": "james_lewis",
+      "name": "James Lewis (Lead Manager, Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/james_lewis_output.json",
+      "digest": "../output/digests/james_lewis_digest.json"
+    },
+    {
+      "key": "james_r",
+      "name": "James R. (CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/james_r_output.json",
+      "digest": "../output/digests/james_r_digest.json"
+    },
+    {
+      "key": "james_t_crowley",
+      "name": "James T. Crowley (Executive Vice Chair & General Executive, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/james_t_crowley_output.json",
+      "digest": "../output/digests/james_t_crowley_digest.json"
+    },
+    {
+      "key": "jamie_b",
+      "name": "Jamie B. (Growth Ventures and Data & Analytics - CFO (Director), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jamie_b_output.json",
+      "digest": "../output/digests/jamie_b_digest.json"
+    },
+    {
+      "key": "janelle_belcher",
+      "name": "Janelle Belcher (Deputy CCO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/janelle_belcher_output.json",
+      "digest": "../output/digests/janelle_belcher_digest.json"
+    },
+    {
+      "key": "janlyn_fankulewski",
+      "name": "Janlyn Fankulewski (Deputy COO Global Cybersecurity, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/janlyn_fankulewski_output.json",
+      "digest": "../output/digests/janlyn_fankulewski_digest.json"
+    },
+    {
+      "key": "janty_p",
+      "name": "Janty Pierre",
+      "file": "../output/stores/janty_p_output.json",
+      "digest": "../output/digests/janty_p_digest.json"
+    },
+    {
+      "key": "jasmine_g",
+      "name": "Jasmine G. (Office of CFO- Enterprise Transformation Hub, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jasmine_g_output.json",
+      "digest": "../output/digests/jasmine_g_digest.json"
+    },
+    {
+      "key": "jason_l",
+      "name": "Jason L. (Chief Financial Officer - Clearance & Collateral Management, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jason_l_output.json",
+      "digest": "../output/digests/jason_l_digest.json"
+    },
+    {
+      "key": "jason_pfister_mellon_financial_corporation",
+      "name": "Jason Pfister",
+      "file": "../output/stores/jason_pfister_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/jason_pfister_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "jeffrey_goldstein",
+      "name": "Jeffrey Goldstein (Board Member & Governance Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jeffrey_goldstein_output.json",
+      "digest": "../output/digests/jeffrey_goldstein_digest.json"
+    },
+    {
+      "key": "jeffrey_k",
+      "name": "Jeffrey K. (Chief Operating Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jeffrey_k_output.json",
+      "digest": "../output/digests/jeffrey_k_digest.json"
+    },
+    {
+      "key": "jennifer_o",
+      "name": "Jennifer O. (Senior Manager | CEO Office, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jennifer_o_output.json",
+      "digest": "../output/digests/jennifer_o_digest.json"
+    },
+    {
+      "key": "jenny_p",
+      "name": "Jenny P. (EMEA Markets COO - Fixed Income & Equity - Business Planning and Analysis, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jenny_p_output.json",
+      "digest": "../output/digests/jenny_p_digest.json"
+    },
+    {
+      "key": "jerald_m",
+      "name": "Jerald M. (CFO - Global Real Estate, Enterprise Sourcing, Workplace Experience, Strategic Partnerships, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jerald_m_output.json",
+      "digest": "../output/digests/jerald_m_digest.json"
+    },
+    {
+      "key": "jessica_n",
+      "name": "Jessica N. (Assistant Team Leader - CCO Settlements UK, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jessica_n_output.json",
+      "digest": "../output/digests/jessica_n_digest.json"
+    },
+    {
+      "key": "jessica_v",
+      "name": "Jessica V. (Vice President, Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jessica_v_output.json",
+      "digest": "../output/digests/jessica_v_digest.json"
+    },
+    {
+      "key": "john_d",
+      "name": "John D. (CCO Settlements Assistant Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/john_d_output.json",
+      "digest": "../output/digests/john_d_digest.json"
+    },
+    {
+      "key": "john_grochan",
+      "name": "John Grochan (Vice President Team Lead, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/john_grochan_output.json",
+      "digest": "../output/digests/john_grochan_digest.json"
+    },
+    {
+      "key": "john_m",
+      "name": "John M. (Chief Operating Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/john_m_output.json",
+      "digest": "../output/digests/john_m_digest.json"
+    },
+    {
+      "key": "john_obrist",
+      "name": "John Obrist (CPO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/john_obrist_output.json",
+      "digest": "../output/digests/john_obrist_digest.json"
+    },
+    {
+      "key": "john_r",
+      "name": "John R. (Chief Operating Officer for Corporate Treasury, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/john_r_output.json",
+      "digest": "../output/digests/john_r_digest.json"
+    },
+    {
+      "key": "joseph_c",
+      "name": "Joseph C. (Fund Services CFO -- Asset Servicing and Digital (ASD) Finance, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/joseph_c_output.json",
+      "digest": "../output/digests/joseph_c_digest.json"
+    },
+    {
+      "key": "joseph_echevarria",
+      "name": "Joseph Echevarria (Independent Chairman of the Board of Directors, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/joseph_echevarria_output.json",
+      "digest": "../output/digests/joseph_echevarria_digest.json"
+    },
+    {
+      "key": "joseph_kovacs_mba_mellon_financial_corporation",
+      "name": "Joseph Kovacs, MBA",
+      "file": "../output/stores/joseph_kovacs_mba_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/joseph_kovacs_mba_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "joseph_n",
+      "name": "Joseph N. (Managing Director & Chief Technology and Cyber Risk Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/joseph_n_output.json",
+      "digest": "../output/digests/joseph_n_digest.json"
+    },
+    {
+      "key": "joseph_t",
+      "name": "Joseph T. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/joseph_t_output.json",
+      "digest": "../output/digests/joseph_t_digest.json"
+    },
+    {
+      "key": "julie_o",
+      "name": "Julie O. (Chief Administrative Officer, Technology Services EMEA, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/julie_o_output.json",
+      "digest": "../output/digests/julie_o_digest.json"
+    },
+    {
+      "key": "june_c",
+      "name": "June C. (Chief Admin Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/june_c_output.json",
+      "digest": "../output/digests/june_c_digest.json"
+    },
+    {
+      "key": "jyoti_p",
+      "name": "Jyoti P. (Vice President CCO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/jyoti_p_output.json",
+      "digest": "../output/digests/jyoti_p_digest.json"
+    },
+    {
+      "key": "kailash_javanjal",
+      "name": "Kailash Javanjal (Vice President || (Lead Manager), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kailash_javanjal_output.json",
+      "digest": "../output/digests/kailash_javanjal_digest.json"
+    },
+    {
+      "key": "karamchand_samaroo_inautix",
+      "name": "Karamchand Samaroo",
+      "file": "../output/stores/karamchand_samaroo_inautix_output.json",
+      "digest": "../output/digests/karamchand_samaroo_inautix_digest.json"
+    },
+    {
+      "key": "karthik_vijayakumar",
+      "name": "Karthik Vijayakumar (Head of Strategy - AI & Data, COO / Chief of Staff, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/karthik_vijayakumar_output.json",
+      "digest": "../output/digests/karthik_vijayakumar_digest.json"
+    },
+    {
+      "key": "kavita_s",
+      "name": "Kavita S. (Board Liaison - CEO Office, Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kavita_s_output.json",
+      "digest": "../output/digests/kavita_s_digest.json"
+    },
+    {
+      "key": "kellie_l",
+      "name": "Kellie L. (Line of Business CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kellie_l_output.json",
+      "digest": "../output/digests/kellie_l_digest.json"
+    },
+    {
+      "key": "kelly_l",
+      "name": "Kelly L. (Global Sr. People Business Partner, Office of the COO and Corporate Affairs, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kelly_l_output.json",
+      "digest": "../output/digests/kelly_l_digest.json"
+    },
+    {
+      "key": "kenneth_r",
+      "name": "Kenneth R. (CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kenneth_r_output.json",
+      "digest": "../output/digests/kenneth_r_digest.json"
+    },
+    {
+      "key": "kerry_o",
+      "name": "Kerry O. (CFO, Engineering Platforms and Hubs, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kerry_o_output.json",
+      "digest": "../output/digests/kerry_o_digest.json"
+    },
+    {
+      "key": "kevin_q",
+      "name": "Kevin Q. (Vice President - CAO of Alternatives Investment Services Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kevin_q_output.json",
+      "digest": "../output/digests/kevin_q_digest.json"
+    },
+    {
+      "key": "khadeeja_a",
+      "name": "Khadeeja A. (Vice President – CCO MENA Expert, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/khadeeja_a_output.json",
+      "digest": "../output/digests/khadeeja_a_digest.json"
+    },
+    {
+      "key": "khushi_s",
+      "name": "Khushi S. (Vice President- Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/khushi_s_output.json",
+      "digest": "../output/digests/khushi_s_digest.json"
+    },
+    {
+      "key": "krzysztof_kowalski",
+      "name": "Krzysztof Kowalski (Middle Office Product CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/krzysztof_kowalski_output.json",
+      "digest": "../output/digests/krzysztof_kowalski_digest.json"
+    },
+    {
+      "key": "krzysztof_stodulski",
+      "name": "Krzysztof Stodulski (Vice President – Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/krzysztof_stodulski_output.json",
+      "digest": "../output/digests/krzysztof_stodulski_digest.json"
+    },
+    {
+      "key": "kurt_e_pershing_international_nominees_limited",
+      "name": "Kurt E.",
+      "file": "../output/stores/kurt_e_pershing_international_nominees_limited_output.json",
+      "digest": "../output/digests/kurt_e_pershing_international_nominees_limited_digest.json"
+    },
+    {
+      "key": "kyle_fasel",
+      "name": "Kyle Fasel (Vice President, Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/kyle_fasel_output.json",
+      "digest": "../output/digests/kyle_fasel_digest.json"
+    },
+    {
+      "key": "laura_d",
+      "name": "Laura D. (Vice President, Governance and Communications, Risk & Compliance CAO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/laura_d_output.json",
+      "digest": "../output/digests/laura_d_digest.json"
+    },
+    {
+      "key": "lauren_a",
+      "name": "Lauren A. (Managing Director & CFO of Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/lauren_a_output.json",
+      "digest": "../output/digests/lauren_a_digest.json"
+    },
+    {
+      "key": "lauren_h",
+      "name": "Lauren H. (CAO / Chief of Staff, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/lauren_h_output.json",
+      "digest": "../output/digests/lauren_h_digest.json"
+    },
+    {
+      "key": "lauren_p",
+      "name": "Lauren P. (CFO, Conventional Trust Platform, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/lauren_p_output.json",
+      "digest": "../output/digests/lauren_p_digest.json"
+    },
+    {
+      "key": "laxmi_k",
+      "name": "Laxmi K. (APAC Co-cro, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/laxmi_k_output.json",
+      "digest": "../output/digests/laxmi_k_digest.json"
+    },
+    {
+      "key": "leanne_b",
+      "name": "Leanne B. (Vice President, Service Management - Office of the COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/leanne_b_output.json",
+      "digest": "../output/digests/leanne_b_digest.json"
+    },
+    {
+      "key": "linda_j",
+      "name": "Linda J. (Chief Administrative Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/linda_j_output.json",
+      "digest": "../output/digests/linda_j_digest.json"
+    },
+    {
+      "key": "liz_c",
+      "name": "Liz C. (Chief Administrative Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/liz_c_output.json",
+      "digest": "../output/digests/liz_c_digest.json"
+    },
+    {
+      "key": "luciana_b",
+      "name": "Luciana B. (Chief Compliance Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/luciana_b_output.json",
+      "digest": "../output/digests/luciana_b_digest.json"
+    },
+    {
+      "key": "lynn_e",
+      "name": "Lynn E. (Product Governance CAO & Head of Transformation | Operations, AI, Analytics, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/lynn_e_output.json",
+      "digest": "../output/digests/lynn_e_digest.json"
+    },
+    {
+      "key": "lynne_sawyer",
+      "name": "Lynne Sawyer (Managing Director, Chief Operating Officer Wealth Management, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/lynne_sawyer_output.json",
+      "digest": "../output/digests/lynne_sawyer_digest.json"
+    },
+    {
+      "key": "mahesh_govindasamy_inautix",
+      "name": "Mahesh Govindasamy",
+      "file": "../output/stores/mahesh_govindasamy_inautix_output.json",
+      "digest": "../output/digests/mahesh_govindasamy_inautix_digest.json"
+    },
+    {
+      "key": "manikandan_gandhipalani",
+      "name": "Manikandan Gandhipalani (Vice President -Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/manikandan_gandhipalani_output.json",
+      "digest": "../output/digests/manikandan_gandhipalani_digest.json"
+    },
+    {
+      "key": "marc_m",
+      "name": "Marc M. (Chief Administrative Officer (CAO) | Managing Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/marc_m_output.json",
+      "digest": "../output/digests/marc_m_digest.json"
+    },
+    {
+      "key": "marc_p_harborwalk_talf_opportunities_fund_lp",
+      "name": "Marc P.",
+      "file": "../output/stores/marc_p_harborwalk_talf_opportunities_fund_lp_output.json",
+      "digest": "../output/digests/marc_p_harborwalk_talf_opportunities_fund_lp_digest.json"
+    },
+    {
+      "key": "marcela_amorim",
+      "name": "Marcela Amorim (Director, Technology COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/marcela_amorim_output.json",
+      "digest": "../output/digests/marcela_amorim_digest.json"
+    },
+    {
+      "key": "marcin_c",
+      "name": "Marcin C. (CRO and CCO for BNY’s Subsidiaries in Poland, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/marcin_c_output.json",
+      "digest": "../output/digests/marcin_c_digest.json"
+    },
+    {
+      "key": "marek_b",
+      "name": "Marek B. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/marek_b_output.json",
+      "digest": "../output/digests/marek_b_digest.json"
+    },
+    {
+      "key": "martin_d",
+      "name": "Martin D. (Managing Director - Global CFO for Operations and all Corporate Staff LOBs, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/martin_d_output.json",
+      "digest": "../output/digests/martin_d_digest.json"
+    },
+    {
+      "key": "mary_l",
+      "name": "Mary L. (CAO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/mary_l_output.json",
+      "digest": "../output/digests/mary_l_digest.json"
+    },
+    {
+      "key": "mary_m",
+      "name": "Mary Jo Valenti Wagener",
+      "file": "../output/stores/mary_m_output.json",
+      "digest": "../output/digests/mary_m_digest.json"
+    },
+    {
+      "key": "matt_w",
+      "name": "Matt W. (Chief Accounting Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/matt_w_output.json",
+      "digest": "../output/digests/matt_w_digest.json"
+    },
+    {
+      "key": "matthew_k",
+      "name": "Matthew K. (COO + Head of Delivery, Wealth Services Platform, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/matthew_k_output.json",
+      "digest": "../output/digests/matthew_k_digest.json"
+    },
+    {
+      "key": "matthew_rinehart",
+      "name": "Matthew Rinehart (Lead Manager, Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/matthew_rinehart_output.json",
+      "digest": "../output/digests/matthew_rinehart_digest.json"
+    },
+    {
+      "key": "mauricio_g",
+      "name": "Mauricio G. (COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/mauricio_g_output.json",
+      "digest": "../output/digests/mauricio_g_digest.json"
+    },
+    {
+      "key": "meaghan_m",
+      "name": "Meaghan M. (Chief Sustainability Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/meaghan_m_output.json",
+      "digest": "../output/digests/meaghan_m_digest.json"
+    },
+    {
+      "key": "meg_b",
+      "name": "Meg B. (COO and Growth & Strategy Leader for Treasury Services Americas Sales, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/meg_b_output.json",
+      "digest": "../output/digests/meg_b_digest.json"
+    },
+    {
+      "key": "melinda_valentine",
+      "name": "Melinda Valentine (Department Head, Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/melinda_valentine_output.json",
+      "digest": "../output/digests/melinda_valentine_digest.json"
+    },
+    {
+      "key": "michael_k",
+      "name": "Michael K. (Divisional CIO and President BNY Pennsylvania, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/michael_k_output.json",
+      "digest": "../output/digests/michael_k_digest.json"
+    },
+    {
+      "key": "michael_m",
+      "name": "Michael M. (Chief Information Officer (PCF-49), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/michael_m_output.json",
+      "digest": "../output/digests/michael_m_digest.json"
+    },
+    {
+      "key": "michelle_r",
+      "name": "Michelle R. (Chief Operating Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/michelle_r_output.json",
+      "digest": "../output/digests/michelle_r_digest.json"
+    },
+    {
+      "key": "mohanram_balakrishnan",
+      "name": "Mohanram Balakrishnan (VP / Scrum Lead, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/mohanram_balakrishnan_output.json",
+      "digest": "../output/digests/mohanram_balakrishnan_digest.json"
+    },
+    {
+      "key": "monica_p",
+      "name": "Monica Oliveira",
+      "file": "../output/stores/monica_p_output.json",
+      "digest": "../output/digests/monica_p_digest.json"
+    },
+    {
+      "key": "monika_bradford",
+      "name": "Monika Bradford (Vice President/ Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/monika_bradford_output.json",
+      "digest": "../output/digests/monika_bradford_digest.json"
+    },
+    {
+      "key": "muthulakshmi_ramadoss_inautix",
+      "name": "Muthulakshmi Ramadoss",
+      "file": "../output/stores/muthulakshmi_ramadoss_inautix_output.json",
+      "digest": "../output/digests/muthulakshmi_ramadoss_inautix_digest.json"
+    },
+    {
+      "key": "nagarajan_p",
+      "name": "Saikumar Nagarajan",
+      "file": "../output/stores/nagarajan_p_output.json",
+      "digest": "../output/digests/nagarajan_p_digest.json"
+    },
+    {
+      "key": "nathan_h",
+      "name": "Nathan H. (CCO Cash UK - Assistant Team Leader, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/nathan_h_output.json",
+      "digest": "../output/digests/nathan_h_digest.json"
+    },
+    {
+      "key": "netta_m",
+      "name": "Netta M. (Senior Director, COO & PMO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/netta_m_output.json",
+      "digest": "../output/digests/netta_m_digest.json"
+    },
+    {
+      "key": "niamh_m",
+      "name": "Niamh M. (EMEA Chief Information Security Officer & Innovation Lead, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/niamh_m_output.json",
+      "digest": "../output/digests/niamh_m_digest.json"
+    },
+    {
+      "key": "nicholas_kicher_mellon_financial_corporation",
+      "name": "Nicholas Kicher",
+      "file": "../output/stores/nicholas_kicher_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/nicholas_kicher_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "nigel_warner",
+      "name": "Nigel Warner (EMEA COO Trust and Depositary, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/nigel_warner_output.json",
+      "digest": "../output/digests/nigel_warner_digest.json"
+    },
+    {
+      "key": "nirav_p",
+      "name": "Nirav P. (VICE President, International CFO Group, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/nirav_p_output.json",
+      "digest": "../output/digests/nirav_p_digest.json"
+    },
+    {
+      "key": "nishant_thakker",
+      "name": "Nishant Thakker (Vice President II, Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/nishant_thakker_output.json",
+      "digest": "../output/digests/nishant_thakker_digest.json"
+    },
+    {
+      "key": "nitin_choudhari",
+      "name": "Nitin Choudhari (Vice President Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/nitin_choudhari_output.json",
+      "digest": "../output/digests/nitin_choudhari_digest.json"
+    },
+    {
+      "key": "orlaith_redmond",
+      "name": "Orlaith Redmond (Vice President, Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/orlaith_redmond_output.json",
+      "digest": "../output/digests/orlaith_redmond_digest.json"
+    },
+    {
+      "key": "paresh_s",
+      "name": "Paresh S. (Managing Director - Global Chief Operating Officer of FX, Fixed Income & Equities, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/paresh_s_output.json",
+      "digest": "../output/digests/paresh_s_digest.json"
+    },
+    {
+      "key": "pathman_gangesar",
+      "name": "Pathman Gangesar (Head of Treasury and Chief Investment Office (CIO) Engineering, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/pathman_gangesar_output.json",
+      "digest": "../output/digests/pathman_gangesar_digest.json"
+    },
+    {
+      "key": "patricia_l",
+      "name": "Patricia L. (CIO Money Fund Strategies, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/patricia_l_output.json",
+      "digest": "../output/digests/patricia_l_digest.json"
+    },
+    {
+      "key": "patrick_mullaly",
+      "name": "Patrick Mullaly (Vice President, Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/patrick_mullaly_output.json",
+      "digest": "../output/digests/patrick_mullaly_digest.json"
+    },
+    {
+      "key": "paul_adamo",
+      "name": "Paul Adamo (CFO and COO - Treasury Services, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/paul_adamo_output.json",
+      "digest": "../output/digests/paul_adamo_digest.json"
+    },
+    {
+      "key": "paul_k",
+      "name": "Paul K. (Chief Executive Officer Funds Services DAC Ireland, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/paul_k_output.json",
+      "digest": "../output/digests/paul_k_digest.json"
+    },
+    {
+      "key": "pooja_sanzgiri",
+      "name": "Pooja Sanzgiri (Vice President - Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/pooja_sanzgiri_output.json",
+      "digest": "../output/digests/pooja_sanzgiri_digest.json"
+    },
+    {
+      "key": "pratheep_v",
+      "name": "Pratheep V (Vice President II - Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/pratheep_v_output.json",
+      "digest": "../output/digests/pratheep_v_digest.json"
+    },
+    {
+      "key": "preethika_pc",
+      "name": "Preethika Pc (Lead Manager Vice President II, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/preethika_pc_output.json",
+      "digest": "../output/digests/preethika_pc_digest.json"
+    },
+    {
+      "key": "purvish_dave_inautix",
+      "name": "Purvish Dave",
+      "file": "../output/stores/purvish_dave_inautix_output.json",
+      "digest": "../output/digests/purvish_dave_inautix_digest.json"
+    },
+    {
+      "key": "rachel_z",
+      "name": "Rachel Z. (MD, Chief Operating Officer and Executive Member of the Board of Directors, European Bank, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rachel_z_output.json",
+      "digest": "../output/digests/rachel_z_digest.json"
+    },
+    {
+      "key": "rajashree_d",
+      "name": "Rajashree D. (Chief Risk Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rajashree_d_output.json",
+      "digest": "../output/digests/rajashree_d_digest.json"
+    },
+    {
+      "key": "rajeev_b",
+      "name": "Rajeev Bhatnagar (Vice President | Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rajeev_b_output.json",
+      "digest": "../output/digests/rajeev_b_digest.json"
+    },
+    {
+      "key": "raman_ananthanarayanan",
+      "name": "Raman Ananthanarayanan (Lead Manager - Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/raman_ananthanarayanan_output.json",
+      "digest": "../output/digests/raman_ananthanarayanan_digest.json"
+    },
+    {
+      "key": "ranganathan_k",
+      "name": "Ranganathan K. (Regional Head - Infrastructure and Production Services (India) (CTO), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/ranganathan_k_output.json",
+      "digest": "../output/digests/ranganathan_k_digest.json"
+    },
+    {
+      "key": "ranjit-s-samra-the-bank-of-new-york-mellon-corporation",
+      "name": "Ranjit S. Samra",
+      "file": "../output/stores/ranjit-s-samra-the-bank-of-new-york-mellon-corporation_output.json",
+      "digest": "../output/digests/ranjit-s-samra-the-bank-of-new-york-mellon-corporation_digest.json"
+    },
+    {
+      "key": "rasheed_a",
+      "name": "Rasheed A. (Chief Financial Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rasheed_a_output.json",
+      "digest": "../output/digests/rasheed_a_digest.json"
+    },
+    {
+      "key": "regina_m",
+      "name": "Regina M. (Chief Operating Officer Global MArkets, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/regina_m_output.json",
+      "digest": "../output/digests/regina_m_digest.json"
+    },
+    {
+      "key": "renee_f",
+      "name": "Renee F. (Technology Production Services COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/renee_f_output.json",
+      "digest": "../output/digests/renee_f_digest.json"
+    },
+    {
+      "key": "renu_a",
+      "name": "Renu A. (Sr Exec Asst to (1) APAC CFO & MD-, (2)CFO-Technology & Finance Head-Ops, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/renu_a_output.json",
+      "digest": "../output/digests/renu_a_digest.json"
+    },
+    {
+      "key": "richard_mangano",
+      "name": "Richard Mangano (VP/Lead Tax Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/richard_mangano_output.json",
+      "digest": "../output/digests/richard_mangano_digest.json"
+    },
+    {
+      "key": "richard_t",
+      "name": "Richard T. (VP - Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/richard_t_output.json",
+      "digest": "../output/digests/richard_t_digest.json"
+    },
+    {
+      "key": "riley_h",
+      "name": "Riley H. (Office of the CFO - Enterprise Transformation Internship, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/riley_h_output.json",
+      "digest": "../output/digests/riley_h_digest.json"
+    },
+    {
+      "key": "rob_s",
+      "name": "Rob S. (VP, Office of the CIO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rob_s_output.json",
+      "digest": "../output/digests/rob_s_digest.json"
+    },
+    {
+      "key": "robert_b",
+      "name": "Robert B. (Chief Operating Officer (COO) / Chief Administration Officer (CAO), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/robert_b_output.json",
+      "digest": "../output/digests/robert_b_digest.json"
+    },
+    {
+      "key": "robert_v",
+      "name": "Robert V. (VP - GCM Chief Accounting Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/robert_v_output.json",
+      "digest": "../output/digests/robert_v_digest.json"
+    },
+    {
+      "key": "roger_s",
+      "name": "Roger S. (Global Head of Strategy - Payments, Treasury, Issuer Services & COO Markets & Regulatory Operations, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/roger_s_output.json",
+      "digest": "../output/digests/roger_s_digest.json"
+    },
+    {
+      "key": "rosemary_r",
+      "name": "Rosemary R. (CAO Corporate Trust Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rosemary_r_output.json",
+      "digest": "../output/digests/rosemary_r_digest.json"
+    },
+    {
+      "key": "rosie_w",
+      "name": "Rosie W. (COO, Markets EMEA, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rosie_w_output.json",
+      "digest": "../output/digests/rosie_w_digest.json"
+    },
+    {
+      "key": "rupinder_sahota",
+      "name": "Rupinder Sahota (CFO EMEA Asset ServicingDirector, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/rupinder_sahota_output.json",
+      "digest": "../output/digests/rupinder_sahota_digest.json"
+    },
+    {
+      "key": "ryan_s_pershing_international_nominees_limited",
+      "name": "Ryan S.",
+      "file": "../output/stores/ryan_s_pershing_international_nominees_limited_output.json",
+      "digest": "../output/digests/ryan_s_pershing_international_nominees_limited_digest.json"
+    },
+    {
+      "key": "sabet_e",
+      "name": "Sabet E. (CTO, Managing Director, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sabet_e_output.json",
+      "digest": "../output/digests/sabet_e_digest.json"
+    },
+    {
+      "key": "sachin_g_nair_mellon_financial_corporation",
+      "name": "Sachin G Nair",
+      "file": "../output/stores/sachin_g_nair_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/sachin_g_nair_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "sachin_w",
+      "name": "Sachin W. (Chief Operating Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sachin_w_output.json",
+      "digest": "../output/digests/sachin_w_digest.json"
+    },
+    {
+      "key": "saikat_bhattacharjee",
+      "name": "Saikat Bhattacharjee (Lead Manager VP, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/saikat_bhattacharjee_output.json",
+      "digest": "../output/digests/saikat_bhattacharjee_digest.json"
+    },
+    {
+      "key": "samantha_l",
+      "name": "Samantha L. (VP, COO Office, Product & Innovation, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/samantha_l_output.json",
+      "digest": "../output/digests/samantha_l_digest.json"
+    },
+    {
+      "key": "samuel_g",
+      "name": "Samuel G. (Product Owner, VP, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/samuel_g_output.json",
+      "digest": "../output/digests/samuel_g_digest.json"
+    },
+    {
+      "key": "sanal_k",
+      "name": "Sanal K. (Vice President, Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sanal_k_output.json",
+      "digest": "../output/digests/sanal_k_digest.json"
+    },
+    {
+      "key": "santosh_s",
+      "name": "Santosh Talekar",
+      "file": "../output/stores/santosh_s_output.json",
+      "digest": "../output/digests/santosh_s_digest.json"
+    },
+    {
+      "key": "sarah_a",
+      "name": "Sarah A. (Chief Talent Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sarah_a_output.json",
+      "digest": "../output/digests/sarah_a_digest.json"
+    },
+    {
+      "key": "sarvesh_p",
+      "name": "Sarvesh P. (Vice President - Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sarvesh_p_output.json",
+      "digest": "../output/digests/sarvesh_p_digest.json"
+    },
+    {
+      "key": "saumil_s",
+      "name": "Saumil S.",
+      "file": "../output/stores/saumil_s_output.json",
+      "digest": "../output/digests/saumil_s_digest.json"
+    },
+    {
+      "key": "sayali_d",
+      "name": "Sayali D. (Vice President Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sayali_d_output.json",
+      "digest": "../output/digests/sayali_d_digest.json"
+    },
+    {
+      "key": "sayali_patankar_inautix",
+      "name": "Sayali Patankar",
+      "file": "../output/stores/sayali_patankar_inautix_output.json",
+      "digest": "../output/digests/sayali_patankar_inautix_digest.json"
+    },
+    {
+      "key": "scott_b",
+      "name": "Scott B. (COO of Workplace Technology, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/scott_b_output.json",
+      "digest": "../output/digests/scott_b_digest.json"
+    },
+    {
+      "key": "sergei_o",
+      "name": "Sergei O. (Chief Operating Officer for Alternatives, Brazil and Investment Operations (Senior Director), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sergei_o_output.json",
+      "digest": "../output/digests/sergei_o_digest.json"
+    },
+    {
+      "key": "shahrukh_s",
+      "name": "Shahrukh S. (Vice President - Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/shahrukh_s_output.json",
+      "digest": "../output/digests/shahrukh_s_digest.json"
+    },
+    {
+      "key": "shannon_hobbs",
+      "name": "Shannon Hobbs (Chief Compliance Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/shannon_hobbs_output.json",
+      "digest": "../output/digests/shannon_hobbs_digest.json"
+    },
+    {
+      "key": "shanthi_velupandian",
+      "name": "Shanthi Velupandian (Vice President - Scrum Lead, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/shanthi_velupandian_output.json",
+      "digest": "../output/digests/shanthi_velupandian_digest.json"
+    },
+    {
+      "key": "shofiur_r",
+      "name": "Shofiur R. (COO of Corporate Affairs, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/shofiur_r_output.json",
+      "digest": "../output/digests/shofiur_r_digest.json"
+    },
+    {
+      "key": "simon_s",
+      "name": "Simon S. (Director, COO, MEA, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/simon_s_output.json",
+      "digest": "../output/digests/simon_s_digest.json"
+    },
+    {
+      "key": "sindy_a",
+      "name": "Sindy A. (Chief Operating Officer of Global Fixed Income, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sindy_a_output.json",
+      "digest": "../output/digests/sindy_a_digest.json"
+    },
+    {
+      "key": "snehil_k",
+      "name": "Snehil Kapoor",
+      "file": "../output/stores/snehil_k_output.json",
+      "digest": "../output/digests/snehil_k_digest.json"
+    },
+    {
+      "key": "sonali_k",
+      "name": "Sonali Bhatnagar",
+      "file": "../output/stores/sonali_k_output.json",
+      "digest": "../output/digests/sonali_k_digest.json"
+    },
+    {
+      "key": "sonesh_sancheti",
+      "name": "Sonesh Sancheti (Vice President, Lead Manager, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sonesh_sancheti_output.json",
+      "digest": "../output/digests/sonesh_sancheti_digest.json"
+    },
+    {
+      "key": "sonia_kataria",
+      "name": "Sonia Kataria (Engineering Strategy and Execution, Office of the CIO and CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sonia_kataria_output.json",
+      "digest": "../output/digests/sonia_kataria_digest.json"
+    },
+    {
+      "key": "srinivasan_madeswaran_inautix",
+      "name": "Srinivasan Madeswaran",
+      "file": "../output/stores/srinivasan_madeswaran_inautix_output.json",
+      "digest": "../output/digests/srinivasan_madeswaran_inautix_digest.json"
+    },
+    {
+      "key": "stephen_b",
+      "name": "Stephen B. (BNY Conventional Trust Platform - Chief Financial Officer, Senior Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/stephen_b_output.json",
+      "digest": "../output/digests/stephen_b_digest.json"
+    },
+    {
+      "key": "steve_j",
+      "name": "Steve J. (COO UK Transfer Agency, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/steve_j_output.json",
+      "digest": "../output/digests/steve_j_digest.json"
+    },
+    {
+      "key": "subramaniam_dwarakanathan",
+      "name": "Subramaniam Dwarakanathan (Vice President ( Lead Manager), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/subramaniam_dwarakanathan_output.json",
+      "digest": "../output/digests/subramaniam_dwarakanathan_digest.json"
+    },
+    {
+      "key": "sudha_karuppaiyan",
+      "name": "Sudha Karuppaiyan (Vice President - Project Lead, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sudha_karuppaiyan_output.json",
+      "digest": "../output/digests/sudha_karuppaiyan_digest.json"
+    },
+    {
+      "key": "sudhi_h",
+      "name": "Sudhi H. (Senior Director, Cto/ai Innovation - Conventional Trust, Structured Debt Platform, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sudhi_h_output.json",
+      "digest": "../output/digests/sudhi_h_digest.json"
+    },
+    {
+      "key": "sue_b",
+      "name": "Sue B. (Chief Administration Officer, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sue_b_output.json",
+      "digest": "../output/digests/sue_b_digest.json"
+    },
+    {
+      "key": "sue_r",
+      "name": "Sue R. (Chief Administrative Officer (CAO), The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sue_r_output.json",
+      "digest": "../output/digests/sue_r_digest.json"
+    },
+    {
+      "key": "suman_patra_inautix",
+      "name": "Suman Patra",
+      "file": "../output/stores/suman_patra_inautix_output.json",
+      "digest": "../output/digests/suman_patra_inautix_digest.json"
+    },
+    {
+      "key": "sumit_d",
+      "name": "Sumit D. (Finance Analyst - Office of the CFO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/sumit_d_output.json",
+      "digest": "../output/digests/sumit_d_digest.json"
+    },
+    {
+      "key": "talia_r",
+      "name": "Talia R. (Vice President Product Owner, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/talia_r_output.json",
+      "digest": "../output/digests/talia_r_digest.json"
+    },
+    {
+      "key": "tanya_m",
+      "name": "Tanya M. (SVP / Global Head of Strategy CCO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/tanya_m_output.json",
+      "digest": "../output/digests/tanya_m_digest.json"
+    },
+    {
+      "key": "theodore_bair_jr_standish_mellon_asset_management",
+      "name": "Theodore Bair, Jr.",
+      "file": "../output/stores/theodore_bair_jr_standish_mellon_asset_management_output.json",
+      "digest": "../output/digests/theodore_bair_jr_standish_mellon_asset_management_digest.json"
+    },
+    {
+      "key": "thomas_d",
+      "name": "Thomas D. (International COO, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/thomas_d_output.json",
+      "digest": "../output/digests/thomas_d_digest.json"
+    },
+    {
+      "key": "tim_g",
+      "name": "Tim Bigley Crisc Cisa",
+      "file": "../output/stores/tim_g_output.json",
+      "digest": "../output/digests/tim_g_digest.json"
+    },
+    {
+      "key": "todd_arnold_mellon_financial_corporation",
+      "name": "Todd Arnold",
+      "file": "../output/stores/todd_arnold_mellon_financial_corporation_output.json",
+      "digest": "../output/digests/todd_arnold_mellon_financial_corporation_digest.json"
+    },
+    {
+      "key": "tricia_loughran_standish_mellon_asset_management",
+      "name": "Tricia Loughran",
+      "file": "../output/stores/tricia_loughran_standish_mellon_asset_management_output.json",
+      "digest": "../output/digests/tricia_loughran_standish_mellon_asset_management_digest.json"
+    },
+    {
+      "key": "tyler_b",
+      "name": "Tyler B. (COO Analyst, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/tyler_b_output.json",
+      "digest": "../output/digests/tyler_b_digest.json"
+    },
+    {
+      "key": "ursula_hauptmann_walter_scott",
+      "name": "Ursula Hauptmann",
+      "file": "../output/stores/ursula_hauptmann_walter_scott_output.json",
+      "digest": "../output/digests/ursula_hauptmann_walter_scott_digest.json"
+    },
+    {
+      "key": "vaisali_raja_inautix",
+      "name": "Vaisali Raja",
+      "file": "../output/stores/vaisali_raja_inautix_output.json",
+      "digest": "../output/digests/vaisali_raja_inautix_digest.json"
+    },
+    {
+      "key": "vijay_nadar",
+      "name": "Vijay Nadar (Lead Manager Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/vijay_nadar_output.json",
+      "digest": "../output/digests/vijay_nadar_digest.json"
+    },
+    {
+      "key": "vijay_p",
+      "name": "Vijay Ponnusamy",
+      "file": "../output/stores/vijay_p_output.json",
+      "digest": "../output/digests/vijay_p_digest.json"
+    },
+    {
+      "key": "vishwanathan_g",
+      "name": "Vishwanathan G. (Senior Director and India Country Controller (CFO) for BNY Entities, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/vishwanathan_g_output.json",
+      "digest": "../output/digests/vishwanathan_g_digest.json"
+    },
+    {
+      "key": "wojciech_j",
+      "name": "Wojciech Lubowicki",
+      "file": "../output/stores/wojciech_j_output.json",
+      "digest": "../output/digests/wojciech_j_digest.json"
+    },
+    {
+      "key": "youssef_oulbacha",
+      "name": "Youssef Oulbacha (Lead Manager, Vice President, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/youssef_oulbacha_output.json",
+      "digest": "../output/digests/youssef_oulbacha_digest.json"
+    },
+    {
+      "key": "zoe_m",
+      "name": "Zoe M. (Senior Associate, CEO Office, The Bank of New York Mellon Corporation)",
+      "file": "../output/stores/zoe_m_output.json",
+      "digest": "../output/digests/zoe_m_digest.json"
+    },
+    {
+      "key": "aaron_d._wasserman",
+      "name": "Aaron D. Wasserman (Managing Director, Chief Compliance Officer of BlackRock Funds)",
+      "file": "../output/stores/aaron_d._wasserman_output.json",
+      "digest": "../output/digests/aaron_d._wasserman_digest.json"
+    },
+    {
+      "key": "abdurrahman_tanira",
+      "name": "Abdurrahman Tanira (Vice President, Corporate COO Exec – Enterprise Technology Risk & Control)",
+      "file": "../output/stores/abdurrahman_tanira_output.json",
+      "digest": "../output/digests/abdurrahman_tanira_digest.json"
+    },
+    {
+      "key": "abegale_p.",
+      "name": "Abegale P. (Vice President, ETF & Index Investments APAC COO & Strategy)",
+      "file": "../output/stores/abegale_p._output.json",
+      "digest": "../output/digests/abegale_p._digest.json"
+    },
+    {
+      "key": "abel_k.",
+      "name": "Abel K. (Client Chief Investment Officer (OCIO), Associate)",
+      "file": "../output/stores/abel_k._output.json",
+      "digest": "../output/digests/abel_k._digest.json"
+    },
+    {
+      "key": "abhi_g",
+      "name": "Abhi G. (Vice President, BlackRock)",
+      "file": "../output/stores/abhi_g_output.json",
+      "digest": "../output/digests/abhi_g_digest.json"
+    },
+    {
+      "key": "abhilash_p",
+      "name": "Abhilash P. (Vice President, BlackRock)",
+      "file": "../output/stores/abhilash_p_output.json",
+      "digest": "../output/digests/abhilash_p_digest.json"
+    },
+    {
+      "key": "abhinav_r",
+      "name": "Abhinav R. (Vice President, BlackRock)",
+      "file": "../output/stores/abhinav_r_output.json",
+      "digest": "../output/digests/abhinav_r_digest.json"
+    },
+    {
+      "key": "abhishek_t",
+      "name": "Abhishek T. (Vice President - Lead Engineer, BlackRock)",
+      "file": "../output/stores/abhishek_t_output.json",
+      "digest": "../output/digests/abhishek_t_digest.json"
+    },
+    {
+      "key": "adam_a.",
+      "name": "Adam A. (Managing Director)",
+      "file": "../output/stores/adam_a._output.json",
+      "digest": "../output/digests/adam_a._digest.json"
+    },
+    {
+      "key": "adam_k.",
+      "name": "Adam K. (Vice President, Client CIO | EMEA Wealth Solutions)",
+      "file": "../output/stores/adam_k._output.json",
+      "digest": "../output/digests/adam_k._digest.json"
+    },
+    {
+      "key": "adam_lubczanski",
+      "name": "Adam Lubczanski (Managing Director)",
+      "file": "../output/stores/adam_lubczanski_output.json",
+      "digest": "../output/digests/adam_lubczanski_digest.json"
+    },
+    {
+      "key": "adam_ondricek",
+      "name": "Adam Ondricek (Managing Director)",
+      "file": "../output/stores/adam_ondricek_output.json",
+      "digest": "../output/digests/adam_ondricek_digest.json"
+    },
+    {
+      "key": "adam_pazda",
+      "name": "Adam Pazda (Managing Director)",
+      "file": "../output/stores/adam_pazda_output.json",
+      "digest": "../output/digests/adam_pazda_digest.json"
+    },
+    {
+      "key": "adam_s.",
+      "name": "Adam S. (Managing Director)",
+      "file": "../output/stores/adam_s._output.json",
+      "digest": "../output/digests/adam_s._digest.json"
+    },
+    {
+      "key": "adebayo-ogunlesi-blackrock-inc",
+      "name": "Adebayo Ogunlesi (Senior Managing Director, Head of Global Infrastructure Partners)",
+      "file": "../output/stores/adebayo-ogunlesi-blackrock-inc_output.json",
+      "digest": "../output/digests/adebayo-ogunlesi-blackrock-inc_digest.json"
+    },
+    {
+      "key": "adette_inguito",
+      "name": "Adette Inguito (Managing Director)",
+      "file": "../output/stores/adette_inguito_output.json",
+      "digest": "../output/digests/adette_inguito_digest.json"
+    },
+    {
+      "key": "aishwarya_venkatesan",
+      "name": "Aishwarya Venkatesan (Head of Artificial Intelligence for BlackRock Global Markets and Index Investments)",
+      "file": "../output/stores/aishwarya_venkatesan_output.json",
+      "digest": "../output/digests/aishwarya_venkatesan_digest.json"
+    },
+    {
+      "key": "aitor_jauregui",
+      "name": "Aitor Jauregui (Managing Director)",
+      "file": "../output/stores/aitor_jauregui_output.json",
+      "digest": "../output/digests/aitor_jauregui_digest.json"
+    },
+    {
+      "key": "ajar_ashyrkulova",
+      "name": "Ajar Ashyrkulova (Managing Director)",
+      "file": "../output/stores/ajar_ashyrkulova_output.json",
+      "digest": "../output/digests/ajar_ashyrkulova_digest.json"
+    },
+    {
+      "key": "akash_a",
+      "name": "Akash A. (Vice President, BlackRock)",
+      "file": "../output/stores/akash_a_output.json",
+      "digest": "../output/digests/akash_a_digest.json"
+    },
+    {
+      "key": "akash_g",
+      "name": "Akash G (Vice President (Lead Engineer), BlackRock)",
+      "file": "../output/stores/akash_g_output.json",
+      "digest": "../output/digests/akash_g_digest.json"
+    },
+    {
+      "key": "akhil_mehta",
+      "name": "Akhil Mehta (Managing Director)",
+      "file": "../output/stores/akhil_mehta_output.json",
+      "digest": "../output/digests/akhil_mehta_digest.json"
+    },
+    {
+      "key": "akiko_yoshizawa",
+      "name": "Akiko Yoshizawa (Business Coordinator in COO Office)",
+      "file": "../output/stores/akiko_yoshizawa_output.json",
+      "digest": "../output/digests/akiko_yoshizawa_digest.json"
+    },
+    {
+      "key": "akiyoshi_takeuchi",
+      "name": "Akiyoshi Takeuchi (Managing Director)",
+      "file": "../output/stores/akiyoshi_takeuchi_output.json",
+      "digest": "../output/digests/akiyoshi_takeuchi_digest.json"
+    },
+    {
+      "key": "alan_harris",
+      "name": "Alan Harris (Managing Director)",
+      "file": "../output/stores/alan_harris_output.json",
+      "digest": "../output/digests/alan_harris_digest.json"
+    },
+    {
+      "key": "alan_s",
+      "name": "Alan S. (Lead Engineer (Vice President), BlackRock)",
+      "file": "../output/stores/alan_s_output.json",
+      "digest": "../output/digests/alan_s_digest.json"
+    },
+    {
+      "key": "alan_tom",
+      "name": "Alan Tom (Managing Director)",
+      "file": "../output/stores/alan_tom_output.json",
+      "digest": "../output/digests/alan_tom_digest.json"
+    },
+    {
+      "key": "alasdair_riach",
+      "name": "Alasdair Riach (Managing Director)",
+      "file": "../output/stores/alasdair_riach_output.json",
+      "digest": "../output/digests/alasdair_riach_digest.json"
+    },
+    {
+      "key": "albert_matriotti",
+      "name": "Albert Matriotti (Managing Director)",
+      "file": "../output/stores/albert_matriotti_output.json",
+      "digest": "../output/digests/albert_matriotti_digest.json"
+    },
+    {
+      "key": "albert_wu",
+      "name": "Albert Wu (Managing Director)",
+      "file": "../output/stores/albert_wu_output.json",
+      "digest": "../output/digests/albert_wu_digest.json"
+    },
+    {
+      "key": "alex_brazier",
+      "name": "Alex Brazier (Managing Director)",
+      "file": "../output/stores/alex_brazier_output.json",
+      "digest": "../output/digests/alex_brazier_digest.json"
+    },
+    {
+      "key": "alex_kancov",
+      "name": "Alex Kancov (Managing Director)",
+      "file": "../output/stores/alex_kancov_output.json",
+      "digest": "../output/digests/alex_kancov_digest.json"
+    },
+    {
+      "key": "alex_lu",
+      "name": "Alex Lu (Managing Director)",
+      "file": "../output/stores/alex_lu_output.json",
+      "digest": "../output/digests/alex_lu_digest.json"
+    },
+    {
+      "key": "alex_m.",
+      "name": "Alex M. (Director, Head of Engineering @ AI Labs)",
+      "file": "../output/stores/alex_m._output.json",
+      "digest": "../output/digests/alex_m._digest.json"
+    },
+    {
+      "key": "alex_o",
+      "name": "Alex O. (Vice President, BlackRock)",
+      "file": "../output/stores/alex_o_output.json",
+      "digest": "../output/digests/alex_o_digest.json"
+    },
+    {
+      "key": "alex_t.",
+      "name": "Alex T. (Managing Director)",
+      "file": "../output/stores/alex_t._output.json",
+      "digest": "../output/digests/alex_t._digest.json"
+    },
+    {
+      "key": "alex_w.",
+      "name": "Alex W. (Managing Director)",
+      "file": "../output/stores/alex_w._output.json",
+      "digest": "../output/digests/alex_w._digest.json"
+    },
+    {
+      "key": "alexa_moses",
+      "name": "Alexa Moses (Vice President, Chief of Staff to the Global Chief Financial Officer at BlackRock)",
+      "file": "../output/stores/alexa_moses_output.json",
+      "digest": "../output/digests/alexa_moses_digest.json"
+    },
+    {
+      "key": "alfred_lerman",
+      "name": "Alfred Lerman (Managing Director - Chief Investment Officer, Insurance Solutions)",
+      "file": "../output/stores/alfred_lerman_output.json",
+      "digest": "../output/digests/alfred_lerman_digest.json"
+    },
+    {
+      "key": "ali_n.",
+      "name": "Ali N. (Managing Director)",
+      "file": "../output/stores/ali_n._output.json",
+      "digest": "../output/digests/ali_n._digest.json"
+    },
+    {
+      "key": "alice_chen",
+      "name": "Alice Chen (Managing Director)",
+      "file": "../output/stores/alice_chen_output.json",
+      "digest": "../output/digests/alice_chen_digest.json"
+    },
+    {
+      "key": "alisha_virdi",
+      "name": "Alisha Virdi (Chief Financial Officer, Riyadh)",
+      "file": "../output/stores/alisha_virdi_output.json",
+      "digest": "../output/digests/alisha_virdi_digest.json"
+    },
+    {
+      "key": "alison_pickering",
+      "name": "Alison Pickering (Managing Director)",
+      "file": "../output/stores/alison_pickering_output.json",
+      "digest": "../output/digests/alison_pickering_digest.json"
+    },
+    {
+      "key": "alistair_hunter",
+      "name": "Alistair Hunter (Global Fixed Income, EMEA, COO Team)",
+      "file": "../output/stores/alistair_hunter_output.json",
+      "digest": "../output/digests/alistair_hunter_digest.json"
+    },
+    {
+      "key": "amanda_mandel",
+      "name": "Amanda Mandel (Chief Operating Officer, BlackRock Investment Institute)",
+      "file": "../output/stores/amanda_mandel_output.json",
+      "digest": "../output/digests/amanda_mandel_digest.json"
+    },
+    {
+      "key": "amanda_summers",
+      "name": "Amanda Summers (Managing Director)",
+      "file": "../output/stores/amanda_summers_output.json",
+      "digest": "../output/digests/amanda_summers_digest.json"
+    },
+    {
+      "key": "ami_cook",
+      "name": "Ami Cook (COO Office)",
+      "file": "../output/stores/ami_cook_output.json",
+      "digest": "../output/digests/ami_cook_digest.json"
+    },
+    {
+      "key": "amin_h._nasser",
+      "name": "Amin H. Nasser (Board of Directors (Saudi Arabian businessperson, engineer and merchant))",
+      "file": "../output/stores/amin_h._nasser_output.json",
+      "digest": "../output/digests/amin_h._nasser_digest.json"
+    },
+    {
+      "key": "amit_m.",
+      "name": "Amit M. (Managing Director)",
+      "file": "../output/stores/amit_m._output.json",
+      "digest": "../output/digests/amit_m._digest.json"
+    },
+    {
+      "key": "amitabh_i.",
+      "name": "Amitabh I. (Managing Director | Head Aladdin Engineering, India & Global Head, Private Data Engineering)",
+      "file": "../output/stores/amitabh_i._output.json",
+      "digest": "../output/digests/amitabh_i._digest.json"
+    },
+    {
+      "key": "amogh_b",
+      "name": "Amogh B. (Vice President, BlackRock)",
+      "file": "../output/stores/amogh_b_output.json",
+      "digest": "../output/digests/amogh_b_digest.json"
+    },
+    {
+      "key": "amy_alam",
+      "name": "Amy Alam (Vice President, Marketing COO Team)",
+      "file": "../output/stores/amy_alam_output.json",
+      "digest": "../output/digests/amy_alam_digest.json"
+    },
+    {
+      "key": "anamika_d.",
+      "name": "Anamika D. (Business Manager, COO - EMEA Fixed Income)",
+      "file": "../output/stores/anamika_d._output.json",
+      "digest": "../output/digests/anamika_d._digest.json"
+    },
+    {
+      "key": "andrae_allen",
+      "name": "Andrae Allen (Managing Director)",
+      "file": "../output/stores/andrae_allen_output.json",
+      "digest": "../output/digests/andrae_allen_digest.json"
+    },
+    {
+      "key": "andrew_g.",
+      "name": "Andrew G. (COO for Business Operations & Technology and BLK Trust Company)",
+      "file": "../output/stores/andrew_g._output.json",
+      "digest": "../output/digests/andrew_g._digest.json"
+    },
+    {
+      "key": "andrew_loa",
+      "name": "Andrew Loa (Director, CIO)",
+      "file": "../output/stores/andrew_loa_output.json",
+      "digest": "../output/digests/andrew_loa_digest.json"
+    },
+    {
+      "key": "andrew_lok",
+      "name": "Andrew Lok (Director & COO, APAC Equities and Multi-Asset)",
+      "file": "../output/stores/andrew_lok_output.json",
+      "digest": "../output/digests/andrew_lok_digest.json"
+    },
+    {
+      "key": "andrew_m.",
+      "name": "Andrew M. (Head of Data Product Delivery)",
+      "file": "../output/stores/andrew_m._output.json",
+      "digest": "../output/digests/andrew_m._digest.json"
+    },
+    {
+      "key": "anju_jain",
+      "name": "Anju Jain (Head of Data Governance Product Management)",
+      "file": "../output/stores/anju_jain_output.json",
+      "digest": "../output/digests/anju_jain_digest.json"
+    },
+    {
+      "key": "ankur_srivastava",
+      "name": "Ankur Srivastava (Managing Director)",
+      "file": "../output/stores/ankur_srivastava_output.json",
+      "digest": "../output/digests/ankur_srivastava_digest.json"
+    },
+    {
+      "key": "ann_frechette",
+      "name": "Ann Frechette (Managing Director)",
+      "file": "../output/stores/ann_frechette_output.json",
+      "digest": "../output/digests/ann_frechette_digest.json"
+    },
+    {
+      "key": "ann_k.",
+      "name": "Ann K. (Managing Director)",
+      "file": "../output/stores/ann_k._output.json",
+      "digest": "../output/digests/ann_k._digest.json"
+    },
+    {
+      "key": "anna_ashurov",
+      "name": "Anna Ashurov (Managing Director)",
+      "file": "../output/stores/anna_ashurov_output.json",
+      "digest": "../output/digests/anna_ashurov_digest.json"
+    },
+    {
+      "key": "anna_b.",
+      "name": "Anna B. (Head of Data Science Strategy, EMEA Wealth (Vice President))",
+      "file": "../output/stores/anna_b._output.json",
+      "digest": "../output/digests/anna_b._digest.json"
+    },
+    {
+      "key": "anna_yeh",
+      "name": "Anna Yeh (Taiwan Investment COO & PMG Lead)",
+      "file": "../output/stores/anna_yeh_output.json",
+      "digest": "../output/digests/anna_yeh_digest.json"
+    },
+    {
+      "key": "anne_d",
+      "name": "Anne D (Managing Director)",
+      "file": "../output/stores/anne_d_output.json",
+      "digest": "../output/digests/anne_d_digest.json"
+    },
+    {
+      "key": "anne_moore",
+      "name": "Anne Moore (Managing Director)",
+      "file": "../output/stores/anne_moore_output.json",
+      "digest": "../output/digests/anne_moore_digest.json"
+    },
+    {
+      "key": "anne_wilschut",
+      "name": "Anne Wilschut (COO Netherlands and Nordics)",
+      "file": "../output/stores/anne_wilschut_output.json",
+      "digest": "../output/digests/anne_wilschut_digest.json"
+    },
+    {
+      "key": "anouar_bahbouhi",
+      "name": "Anouar Bahbouhi (Managing Director)",
+      "file": "../output/stores/anouar_bahbouhi_output.json",
+      "digest": "../output/digests/anouar_bahbouhi_digest.json"
+    },
+    {
+      "key": "anthony_filocamo",
+      "name": "Anthony Filocamo (Managing Director)",
+      "file": "../output/stores/anthony_filocamo_output.json",
+      "digest": "../output/digests/anthony_filocamo_digest.json"
+    },
+    {
+      "key": "anthony_g.",
+      "name": "Anthony G. (Head of Product, SVP - AlphaGen)",
+      "file": "../output/stores/anthony_g._output.json",
+      "digest": "../output/digests/anthony_g._digest.json"
+    },
+    {
+      "key": "anthony_medici",
+      "name": "Anthony Medici (Managing Director)",
+      "file": "../output/stores/anthony_medici_output.json",
+      "digest": "../output/digests/anthony_medici_digest.json"
+    },
+    {
+      "key": "anthony_vitarelli",
+      "name": "Anthony Vitarelli (Managing Director, Chief Operating Officer for Legal & Compliance)",
+      "file": "../output/stores/anthony_vitarelli_output.json",
+      "digest": "../output/digests/anthony_vitarelli_digest.json"
+    },
+    {
+      "key": "antoinette_campbell",
+      "name": "Antoinette Campbell (Managing Director, Global COO of Compliance)",
+      "file": "../output/stores/antoinette_campbell_output.json",
+      "digest": "../output/digests/antoinette_campbell_digest.json"
+    },
+    {
+      "key": "antonio_g.",
+      "name": "Antonio G. (Managing Director)",
+      "file": "../output/stores/antonio_g._output.json",
+      "digest": "../output/digests/antonio_g._digest.json"
+    },
+    {
+      "key": "anwen_j.",
+      "name": "Anwen J. (Managing Director)",
+      "file": "../output/stores/anwen_j._output.json",
+      "digest": "../output/digests/anwen_j._digest.json"
+    },
+    {
+      "key": "ariana_berry",
+      "name": "Ariana Berry (Managing Director)",
+      "file": "../output/stores/ariana_berry_output.json",
+      "digest": "../output/digests/ariana_berry_digest.json"
+    },
+    {
+      "key": "arthur_steinmetz",
+      "name": "Arthur Steinmetz (Board of Directors (CEO at Oppenheimer Acquisition))",
+      "file": "../output/stores/arthur_steinmetz_output.json",
+      "digest": "../output/digests/arthur_steinmetz_digest.json"
+    },
+    {
+      "key": "ashima_bhalla",
+      "name": "Ashima Bhalla (Managing Director)",
+      "file": "../output/stores/ashima_bhalla_output.json",
+      "digest": "../output/digests/ashima_bhalla_digest.json"
+    },
+    {
+      "key": "ashish_john",
+      "name": "Ashish John (Director and Global Head of Data Management)",
+      "file": "../output/stores/ashish_john_output.json",
+      "digest": "../output/digests/ashish_john_digest.json"
+    },
+    {
+      "key": "ashley_blatter",
+      "name": "Ashley Blatter (Managing Director)",
+      "file": "../output/stores/ashley_blatter_output.json",
+      "digest": "../output/digests/ashley_blatter_digest.json"
+    },
+    {
+      "key": "attila_u",
+      "name": "Attila U. (Lead Engineer (Vice President), BlackRock)",
+      "file": "../output/stores/attila_u_output.json",
+      "digest": "../output/digests/attila_u_digest.json"
+    },
+    {
+      "key": "avinash_k",
+      "name": "Avinash K. (Vice President, BlackRock)",
+      "file": "../output/stores/avinash_k_output.json",
+      "digest": "../output/digests/avinash_k_digest.json"
+    },
+    {
+      "key": "ayman_d.",
+      "name": "Ayman D. (Managing Director)",
+      "file": "../output/stores/ayman_d._output.json",
+      "digest": "../output/digests/ayman_d._digest.json"
+    },
+    {
+      "key": "bader_m._alsaad",
+      "name": "Bader M. Alsaad (Board Member at Blackrock)",
+      "file": "../output/stores/bader_m._alsaad_output.json",
+      "digest": "../output/digests/bader_m._alsaad_digest.json"
+    },
+    {
+      "key": "badr_bevaart",
+      "name": "Badr Bevaart (Managing Director)",
+      "file": "../output/stores/badr_bevaart_output.json",
+      "digest": "../output/digests/badr_bevaart_digest.json"
+    },
+    {
+      "key": "barbara_novick",
+      "name": "Barbara Novick (Co-Founder (BlackRock))",
+      "file": "../output/stores/barbara_novick_output.json",
+      "digest": "../output/digests/barbara_novick_digest.json"
+    },
+    {
+      "key": "barry_rosenberg",
+      "name": "Barry Rosenberg (Managing Director)",
+      "file": "../output/stores/barry_rosenberg_output.json",
+      "digest": "../output/digests/barry_rosenberg_digest.json"
+    },
+    {
+      "key": "barry_s.",
+      "name": "Barry S. (Managing Director)",
+      "file": "../output/stores/barry_s._output.json",
+      "digest": "../output/digests/barry_s._digest.json"
+    },
+    {
+      "key": "bart_s.",
+      "name": "Bart S. (Managing Director)",
+      "file": "../output/stores/bart_s._output.json",
+      "digest": "../output/digests/bart_s._digest.json"
+    },
+    {
+      "key": "belinda_boa",
+      "name": "Belinda Boa (Head of Active Investments for Asia Pacific & CIO of Emerging Markets)",
+      "file": "../output/stores/belinda_boa_output.json",
+      "digest": "../output/digests/belinda_boa_digest.json"
+    },
+    {
+      "key": "ben_golub",
+      "name": "Ben Golub (Co-Founder (BlackRock))",
+      "file": "../output/stores/ben_golub_output.json",
+      "digest": "../output/digests/ben_golub_digest.json"
+    },
+    {
+      "key": "ben_leax",
+      "name": "Ben Leax (Managing Director)",
+      "file": "../output/stores/ben_leax_output.json",
+      "digest": "../output/digests/ben_leax_digest.json"
+    },
+    {
+      "key": "ben_s.",
+      "name": "Ben S. (Managing Director -- SRA CTO)",
+      "file": "../output/stores/ben_s._output.json",
+      "digest": "../output/digests/ben_s._digest.json"
+    },
+    {
+      "key": "benjamin_maurer",
+      "name": "Benjamin Maurer (Managing Director)",
+      "file": "../output/stores/benjamin_maurer_output.json",
+      "digest": "../output/digests/benjamin_maurer_digest.json"
+    },
+    {
+      "key": "benjamin_souza",
+      "name": "Benjamin Souza (Managing Director)",
+      "file": "../output/stores/benjamin_souza_output.json",
+      "digest": "../output/digests/benjamin_souza_digest.json"
+    },
+    {
+      "key": "beth_m.",
+      "name": "Beth M. (Managing Director)",
+      "file": "../output/stores/beth_m._output.json",
+      "digest": "../output/digests/beth_m._digest.json"
+    },
+    {
+      "key": "bhavik_patel",
+      "name": "Bhavik Patel (Head & Chief Investment Officer of Wealth Solutions EMEA, Multi Asset Strategies & Solutions)",
+      "file": "../output/stores/bhavik_patel_output.json",
+      "digest": "../output/digests/bhavik_patel_digest.json"
+    },
+    {
+      "key": "billy_fox",
+      "name": "Billy Fox (Vice President, BlackRock)",
+      "file": "../output/stores/billy_fox_output.json",
+      "digest": "../output/digests/billy_fox_digest.json"
+    },
+    {
+      "key": "blake_c",
+      "name": "Blake C. (Vice President, BlackRock)",
+      "file": "../output/stores/blake_c_output.json",
+      "digest": "../output/digests/blake_c_digest.json"
+    },
+    {
+      "key": "botond_pesti",
+      "name": "Botond Pesti (Client Chief Investment Officer (CIO), Associate)",
+      "file": "../output/stores/botond_pesti_output.json",
+      "digest": "../output/digests/botond_pesti_digest.json"
+    },
+    {
+      "key": "brad_kim",
+      "name": "Brad Kim (Managing Director)",
+      "file": "../output/stores/brad_kim_output.json",
+      "digest": "../output/digests/brad_kim_digest.json"
+    },
+    {
+      "key": "branden_jones",
+      "name": "Branden Jones (CMO, BlackRock Aladdin | Managing Director)",
+      "file": "../output/stores/branden_jones_output.json",
+      "digest": "../output/digests/branden_jones_digest.json"
+    },
+    {
+      "key": "brett_j_sadler",
+      "name": "Brett J Sadler (Managing Director)",
+      "file": "../output/stores/brett_j_sadler_output.json",
+      "digest": "../output/digests/brett_j_sadler_digest.json"
+    },
+    {
+      "key": "brett_walsh",
+      "name": "Brett Walsh (Managing Director)",
+      "file": "../output/stores/brett_walsh_output.json",
+      "digest": "../output/digests/brett_walsh_digest.json"
+    },
+    {
+      "key": "brian_bottini",
+      "name": "Brian Bottini (Managing Director)",
+      "file": "../output/stores/brian_bottini_output.json",
+      "digest": "../output/digests/brian_bottini_digest.json"
+    },
+    {
+      "key": "brian_diener",
+      "name": "Brian Diener (Managing Director)",
+      "file": "../output/stores/brian_diener_output.json",
+      "digest": "../output/digests/brian_diener_digest.json"
+    },
+    {
+      "key": "brian_feinberg",
+      "name": "Brian Feinberg (Managing Director)",
+      "file": "../output/stores/brian_feinberg_output.json",
+      "digest": "../output/digests/brian_feinberg_digest.json"
+    },
+    {
+      "key": "brian_monteleone",
+      "name": "Brian Monteleone (Managing Director)",
+      "file": "../output/stores/brian_monteleone_output.json",
+      "digest": "../output/digests/brian_monteleone_digest.json"
+    },
+    {
+      "key": "brian_schwartz",
+      "name": "Brian Schwartz (Managing Director)",
+      "file": "../output/stores/brian_schwartz_output.json",
+      "digest": "../output/digests/brian_schwartz_digest.json"
+    },
+    {
+      "key": "bruce_m.",
+      "name": "Bruce M. (Managing Director)",
+      "file": "../output/stores/bruce_m._output.json",
+      "digest": "../output/digests/bruce_m._digest.json"
+    },
+    {
+      "key": "bryan_lee",
+      "name": "Bryan Lee (Managing Director)",
+      "file": "../output/stores/bryan_lee_output.json",
+      "digest": "../output/digests/bryan_lee_digest.json"
+    },
+    {
+      "key": "bryan_spiers",
+      "name": "Bryan Spiers (Director - Head of Aladdin Data Product for Analytics)",
+      "file": "../output/stores/bryan_spiers_output.json",
+      "digest": "../output/digests/bryan_spiers_digest.json"
+    },
+    {
+      "key": "caitlin_freeh",
+      "name": "Caitlin Freeh (Managing Director)",
+      "file": "../output/stores/caitlin_freeh_output.json",
+      "digest": "../output/digests/caitlin_freeh_digest.json"
+    },
+    {
+      "key": "cameron_skinner",
+      "name": "Cameron Skinner (Managing Director)",
+      "file": "../output/stores/cameron_skinner_output.json",
+      "digest": "../output/digests/cameron_skinner_digest.json"
+    },
+    {
+      "key": "carlton_linnenbach",
+      "name": "Carlton Linnenbach (Chief Operating Officer, Systematic Active Equity Group)",
+      "file": "../output/stores/carlton_linnenbach_output.json",
+      "digest": "../output/digests/carlton_linnenbach_digest.json"
+    },
+    {
+      "key": "carol_m.",
+      "name": "Carol M. (Chief Operating Officer, BlackRock Alternative Advisors)",
+      "file": "../output/stores/carol_m._output.json",
+      "digest": "../output/digests/carol_m._digest.json"
+    },
+    {
+      "key": "caroline-heller-blackrock-inc",
+      "name": "Caroline H. (Managing Director, EMEA COO & Head of Transformation for Global Product Solutions)",
+      "file": "../output/stores/caroline-heller-blackrock-inc_output.json",
+      "digest": "../output/digests/caroline-heller-blackrock-inc_digest.json"
+    },
+    {
+      "key": "caroline_c",
+      "name": "Caroline C. (VP, Chief of Staff, BlackRock)",
+      "file": "../output/stores/caroline_c_output.json",
+      "digest": "../output/digests/caroline_c_digest.json"
+    },
+    {
+      "key": "caroline_c.",
+      "name": "Caroline C. (COO)",
+      "file": "../output/stores/caroline_c._output.json",
+      "digest": "../output/digests/caroline_c._digest.json"
+    },
+    {
+      "key": "caroline_m.",
+      "name": "Caroline M. (Managing Director)",
+      "file": "../output/stores/caroline_m._output.json",
+      "digest": "../output/digests/caroline_m._digest.json"
+    },
+    {
+      "key": "carolyn_glick",
+      "name": "Carolyn Glick (Managing Director)",
+      "file": "../output/stores/carolyn_glick_output.json",
+      "digest": "../output/digests/carolyn_glick_digest.json"
+    },
+    {
+      "key": "casey_kisling",
+      "name": "Casey Kisling (Vice President, SMA Solutions Chief Operating Officer - Risk & Controls)",
+      "file": "../output/stores/casey_kisling_output.json",
+      "digest": "../output/digests/casey_kisling_digest.json"
+    },
+    {
+      "key": "catherine_kress",
+      "name": "Catherine Kress (Board of Directors (Chairman at Blackrock))",
+      "file": "../output/stores/catherine_kress_output.json",
+      "digest": "../output/digests/catherine_kress_digest.json"
+    },
+    {
+      "key": "cem_inal",
+      "name": "Cem Inal (Managing Director)",
+      "file": "../output/stores/cem_inal_output.json",
+      "digest": "../output/digests/cem_inal_digest.json"
+    },
+    {
+      "key": "chad_meuse",
+      "name": "Chad Meuse (Managing Director)",
+      "file": "../output/stores/chad_meuse_output.json",
+      "digest": "../output/digests/chad_meuse_digest.json"
+    },
+    {
+      "key": "charles_hatami",
+      "name": "Charles Hatami (Senior Managing Director, Global Head of Financial & Strategic Investors Group)",
+      "file": "../output/stores/charles_hatami_output.json",
+      "digest": "../output/digests/charles_hatami_digest.json"
+    },
+    {
+      "key": "charles_park",
+      "name": "Charles Park (Chief Compliance Officer)",
+      "file": "../output/stores/charles_park_output.json",
+      "digest": "../output/digests/charles_park_digest.json"
+    },
+    {
+      "key": "charlie_f.",
+      "name": "Charlie F. (Chief Operating Officer for Aladdin Platform Engineering)",
+      "file": "../output/stores/charlie_f._output.json",
+      "digest": "../output/digests/charlie_f._digest.json"
+    },
+    {
+      "key": "chen_ai",
+      "name": "Chen Ai (Managing Director)",
+      "file": "../output/stores/chen_ai_output.json",
+      "digest": "../output/digests/chen_ai_digest.json"
+    },
+    {
+      "key": "cheryl_mills",
+      "name": "Cheryl Mills (Board of Directors (American lawyer))",
+      "file": "../output/stores/cheryl_mills_output.json",
+      "digest": "../output/digests/cheryl_mills_digest.json"
+    },
+    {
+      "key": "chetan_v",
+      "name": "Chetan V. (Vice President, BlackRock)",
+      "file": "../output/stores/chetan_v_output.json",
+      "digest": "../output/digests/chetan_v_digest.json"
+    },
+    {
+      "key": "chian_lee",
+      "name": "Chian Lee (Managing Director)",
+      "file": "../output/stores/chian_lee_output.json",
+      "digest": "../output/digests/chian_lee_digest.json"
+    },
+    {
+      "key": "chip_holladay",
+      "name": "Chip Holladay (Managing Director)",
+      "file": "../output/stores/chip_holladay_output.json",
+      "digest": "../output/digests/chip_holladay_digest.json"
+    },
+    {
+      "key": "chris_christensen",
+      "name": "Chris Christensen (Managing Director)",
+      "file": "../output/stores/chris_christensen_output.json",
+      "digest": "../output/digests/chris_christensen_digest.json"
+    },
+    {
+      "key": "chris_kelly",
+      "name": "Chris Kelly (Managing Director)",
+      "file": "../output/stores/chris_kelly_output.json",
+      "digest": "../output/digests/chris_kelly_digest.json"
+    },
+    {
+      "key": "christian_bimueller",
+      "name": "Christian Bimueller (Managing Director)",
+      "file": "../output/stores/christian_bimueller_output.json",
+      "digest": "../output/digests/christian_bimueller_digest.json"
+    },
+    {
+      "key": "christina_p.",
+      "name": "Christina P. (Vice President, Business Manager, COO)",
+      "file": "../output/stores/christina_p._output.json",
+      "digest": "../output/digests/christina_p._digest.json"
+    },
+    {
+      "key": "christopher_brown",
+      "name": "Christopher Brown (Managing Director)",
+      "file": "../output/stores/christopher_brown_output.json",
+      "digest": "../output/digests/christopher_brown_digest.json"
+    },
+    {
+      "key": "christopher_harshman",
+      "name": "Christopher Harshman (Managing Director)",
+      "file": "../output/stores/christopher_harshman_output.json",
+      "digest": "../output/digests/christopher_harshman_digest.json"
+    },
+    {
+      "key": "christopher_rock",
+      "name": "Christopher Rock (Managing Director)",
+      "file": "../output/stores/christopher_rock_output.json",
+      "digest": "../output/digests/christopher_rock_digest.json"
+    },
+    {
+      "key": "christopher_s.",
+      "name": "Christopher S. (Vice President, Strategy - Aladdin COO Team)",
+      "file": "../output/stores/christopher_s._output.json",
+      "digest": "../output/digests/christopher_s._digest.json"
+    },
+    {
+      "key": "chuck_pulsfort",
+      "name": "Chuck Pulsfort (Managing Director)",
+      "file": "../output/stores/chuck_pulsfort_output.json",
+      "digest": "../output/digests/chuck_pulsfort_digest.json"
+    },
+    {
+      "key": "chuck_robbins",
+      "name": "Chuck Robbins (Board of Directors (American businessman))",
+      "file": "../output/stores/chuck_robbins_output.json",
+      "digest": "../output/digests/chuck_robbins_digest.json"
+    },
+    {
+      "key": "cindy_g.",
+      "name": "Cindy G. (Managing Director)",
+      "file": "../output/stores/cindy_g._output.json",
+      "digest": "../output/digests/cindy_g._digest.json"
+    },
+    {
+      "key": "claire_deng",
+      "name": "Claire Deng (Managing Director)",
+      "file": "../output/stores/claire_deng_output.json",
+      "digest": "../output/digests/claire_deng_digest.json"
+    },
+    {
+      "key": "claire_lane",
+      "name": "Claire Lane (Managing Director)",
+      "file": "../output/stores/claire_lane_output.json",
+      "digest": "../output/digests/claire_lane_digest.json"
+    },
+    {
+      "key": "clay_armistead",
+      "name": "Clay Armistead (Managing Director)",
+      "file": "../output/stores/clay_armistead_output.json",
+      "digest": "../output/digests/clay_armistead_digest.json"
+    },
+    {
+      "key": "cliff_c.",
+      "name": "Cliff C. (Head of Executive Search - Aladdin, Tech, Product, Clients, Data & AI)",
+      "file": "../output/stores/cliff_c._output.json",
+      "digest": "../output/digests/cliff_c._digest.json"
+    },
+    {
+      "key": "colin_o.",
+      "name": "Colin O. (Managing Director)",
+      "file": "../output/stores/colin_o._output.json",
+      "digest": "../output/digests/colin_o._digest.json"
+    },
+    {
+      "key": "colleen_davis",
+      "name": "Colleen Davis (Chief Operating Officer, Canada)",
+      "file": "../output/stores/colleen_davis_output.json",
+      "digest": "../output/digests/colleen_davis_digest.json"
+    },
+    {
+      "key": "corey_s.",
+      "name": "Corey S. (Managing Director)",
+      "file": "../output/stores/corey_s._output.json",
+      "digest": "../output/digests/corey_s._digest.json"
+    },
+    {
+      "key": "cybele_almeida",
+      "name": "Cybele Almeida (Head of Product Delivery, Aladdin Wealth Technology)",
+      "file": "../output/stores/cybele_almeida_output.json",
+      "digest": "../output/digests/cybele_almeida_digest.json"
+    },
+    {
+      "key": "cyprian_njamma",
+      "name": "Cyprian Njamma (Head of Investment Strategy and Client Chief Investment Officer, UK DB Pensions)",
+      "file": "../output/stores/cyprian_njamma_output.json",
+      "digest": "../output/digests/cyprian_njamma_digest.json"
+    },
+    {
+      "key": "dan_worrell",
+      "name": "Dan Worrell (Managing Director)",
+      "file": "../output/stores/dan_worrell_output.json",
+      "digest": "../output/digests/dan_worrell_digest.json"
+    },
+    {
+      "key": "daniel_dunay",
+      "name": "Daniel Dunay (Chief Operating Officer of Global Product Solutions)",
+      "file": "../output/stores/daniel_dunay_output.json",
+      "digest": "../output/digests/daniel_dunay_digest.json"
+    },
+    {
+      "key": "daniel_nellis",
+      "name": "Daniel Nellis (Managing Director)",
+      "file": "../output/stores/daniel_nellis_output.json",
+      "digest": "../output/digests/daniel_nellis_digest.json"
+    },
+    {
+      "key": "daniel_p_sefcik",
+      "name": "Daniel P Sefcik (Board of Directors (CIO at ANTHRACITE CAPITAL))",
+      "file": "../output/stores/daniel_p_sefcik_output.json",
+      "digest": "../output/digests/daniel_p_sefcik_digest.json"
+    },
+    {
+      "key": "daniel_prince",
+      "name": "Daniel Prince (Managing Director)",
+      "file": "../output/stores/daniel_prince_output.json",
+      "digest": "../output/digests/daniel_prince_digest.json"
+    },
+    {
+      "key": "daniel_s.",
+      "name": "Daniel S. (Managing Director)",
+      "file": "../output/stores/daniel_s._output.json",
+      "digest": "../output/digests/daniel_s._digest.json"
+    },
+    {
+      "key": "darshit_a",
+      "name": "Darshit A. (Vice President, BlackRock)",
+      "file": "../output/stores/darshit_a_output.json",
+      "digest": "../output/digests/darshit_a_digest.json"
+    },
+    {
+      "key": "dave_donnelly",
+      "name": "Dave Donnelly (Managing Director)",
+      "file": "../output/stores/dave_donnelly_output.json",
+      "digest": "../output/digests/dave_donnelly_digest.json"
+    },
+    {
+      "key": "david_arreola",
+      "name": "David Arreola (Chief Operating Officer)",
+      "file": "../output/stores/david_arreola_output.json",
+      "digest": "../output/digests/david_arreola_digest.json"
+    },
+    {
+      "key": "david_c.",
+      "name": "David C. (Managing Director)",
+      "file": "../output/stores/david_c._output.json",
+      "digest": "../output/digests/david_c._digest.json"
+    },
+    {
+      "key": "david_delbos",
+      "name": "David Delbos (Managing Director)",
+      "file": "../output/stores/david_delbos_output.json",
+      "digest": "../output/digests/david_delbos_digest.json"
+    },
+    {
+      "key": "david_griffith",
+      "name": "David Griffith (Head of Multi Asset Solutions and Solutions Chief Investment Officer)",
+      "file": "../output/stores/david_griffith_output.json",
+      "digest": "../output/digests/david_griffith_digest.json"
+    },
+    {
+      "key": "david_k.",
+      "name": "David K. (COO Business Management Lead)",
+      "file": "../output/stores/david_k._output.json",
+      "digest": "../output/digests/david_k._digest.json"
+    },
+    {
+      "key": "david_moore",
+      "name": "David Moore (Investment Operations COO)",
+      "file": "../output/stores/david_moore_output.json",
+      "digest": "../output/digests/david_moore_digest.json"
+    },
+    {
+      "key": "david_piazza",
+      "name": "David Piazza (Managing Director)",
+      "file": "../output/stores/david_piazza_output.json",
+      "digest": "../output/digests/david_piazza_digest.json"
+    },
+    {
+      "key": "david_s.",
+      "name": "David S. (Managing Director & Head of Product)",
+      "file": "../output/stores/david_s._output.json",
+      "digest": "../output/digests/david_s._digest.json"
+    },
+    {
+      "key": "david_w.",
+      "name": "David W. (Managing Director)",
+      "file": "../output/stores/david_w._output.json",
+      "digest": "../output/digests/david_w._digest.json"
+    },
+    {
+      "key": "david_z.",
+      "name": "David Z. (Managing Director)",
+      "file": "../output/stores/david_z._output.json",
+      "digest": "../output/digests/david_z._digest.json"
+    },
+    {
+      "key": "dean_wang",
+      "name": "Dean Wang (Managing Director)",
+      "file": "../output/stores/dean_wang_output.json",
+      "digest": "../output/digests/dean_wang_digest.json"
+    },
+    {
+      "key": "debbie_jelilian",
+      "name": "Debbie Jelilian (Managing Director)",
+      "file": "../output/stores/debbie_jelilian_output.json",
+      "digest": "../output/digests/debbie_jelilian_digest.json"
+    },
+    {
+      "key": "deep_w",
+      "name": "Deep W. (VP, BlackRock)",
+      "file": "../output/stores/deep_w_output.json",
+      "digest": "../output/digests/deep_w_digest.json"
+    },
+    {
+      "key": "deepak_s",
+      "name": "Deepak S. (Vice President - Lead Engineer, BlackRock)",
+      "file": "../output/stores/deepak_s_output.json",
+      "digest": "../output/digests/deepak_s_digest.json"
+    },
+    {
+      "key": "dele_adetunmbi",
+      "name": "Dele Adetunmbi (Managing Director)",
+      "file": "../output/stores/dele_adetunmbi_output.json",
+      "digest": "../output/digests/dele_adetunmbi_digest.json"
+    },
+    {
+      "key": "dennis_k.",
+      "name": "Dennis K. (Managing Director)",
+      "file": "../output/stores/dennis_k._output.json",
+      "digest": "../output/digests/dennis_k._digest.json"
+    },
+    {
+      "key": "dennis_quah",
+      "name": "Dennis Quah (Managing Director)",
+      "file": "../output/stores/dennis_quah_output.json",
+      "digest": "../output/digests/dennis_quah_digest.json"
+    },
+    {
+      "key": "derek_helgeson",
+      "name": "Derek Helgeson (Managing Director)",
+      "file": "../output/stores/derek_helgeson_output.json",
+      "digest": "../output/digests/derek_helgeson_digest.json"
+    },
+    {
+      "key": "derek_k.",
+      "name": "Derek K. (Managing Director)",
+      "file": "../output/stores/derek_k._output.json",
+      "digest": "../output/digests/derek_k._digest.json"
+    },
+    {
+      "key": "dhagash_mehta",
+      "name": "Dhagash Mehta (Head of Applied AI (AI, GenAI, Responsible AI) Research)",
+      "file": "../output/stores/dhagash_mehta_output.json",
+      "digest": "../output/digests/dhagash_mehta_digest.json"
+    },
+    {
+      "key": "diana_jenkins",
+      "name": "Diana Jenkins (Chief Risk Officer (CRO))",
+      "file": "../output/stores/diana_jenkins_output.json",
+      "digest": "../output/digests/diana_jenkins_digest.json"
+    },
+    {
+      "key": "diana_t.",
+      "name": "Diana T. (Admin Business Lead CORP Exec-coo Executive)",
+      "file": "../output/stores/diana_t._output.json",
+      "digest": "../output/digests/diana_t._digest.json"
+    },
+    {
+      "key": "dick_cavanagh",
+      "name": "Dick Cavanagh (Board of Directors (Chairman at Blackrock))",
+      "file": "../output/stores/dick_cavanagh_output.json",
+      "digest": "../output/digests/dick_cavanagh_digest.json"
+    },
+    {
+      "key": "dieter_zirkler",
+      "name": "Dieter Zirkler (Head of Design – Aladdin WealthTech)",
+      "file": "../output/stores/dieter_zirkler_output.json",
+      "digest": "../output/digests/dieter_zirkler_digest.json"
+    },
+    {
+      "key": "dilpreet_b.",
+      "name": "Dilpreet B. (Director - APAC Head of Technology Infrastructure)",
+      "file": "../output/stores/dilpreet_b._output.json",
+      "digest": "../output/digests/dilpreet_b._digest.json"
+    },
+    {
+      "key": "dominika_t.",
+      "name": "Dominika T. (EMEA COO Risk & Control Associate)",
+      "file": "../output/stores/dominika_t._output.json",
+      "digest": "../output/digests/dominika_t._digest.json"
+    },
+    {
+      "key": "donald_dilmore",
+      "name": "Donald Dilmore (Managing Director)",
+      "file": "../output/stores/donald_dilmore_output.json",
+      "digest": "../output/digests/donald_dilmore_digest.json"
+    },
+    {
+      "key": "donavon_m.",
+      "name": "Donavon M. (Business Manager - Aladdin COO Exec, Vice President)",
+      "file": "../output/stores/donavon_m._output.json",
+      "digest": "../output/digests/donavon_m._digest.json"
+    },
+    {
+      "key": "doug_vaccari",
+      "name": "Doug Vaccari (Managing Director)",
+      "file": "../output/stores/doug_vaccari_output.json",
+      "digest": "../output/digests/doug_vaccari_digest.json"
+    },
+    {
+      "key": "doug_waggoner",
+      "name": "Doug Waggoner (Managing Director)",
+      "file": "../output/stores/doug_waggoner_output.json",
+      "digest": "../output/digests/doug_waggoner_digest.json"
+    },
+    {
+      "key": "eddie_lunar",
+      "name": "Eddie Lunar (Chief Operating Officer)",
+      "file": "../output/stores/eddie_lunar_output.json",
+      "digest": "../output/digests/eddie_lunar_digest.json"
+    },
+    {
+      "key": "egon_v.",
+      "name": "Egon V. (Managing Director)",
+      "file": "../output/stores/egon_v._output.json",
+      "digest": "../output/digests/egon_v._digest.json"
+    },
+    {
+      "key": "eileen_kiely",
+      "name": "Eileen Kiely (Managing Director)",
+      "file": "../output/stores/eileen_kiely_output.json",
+      "digest": "../output/digests/eileen_kiely_digest.json"
+    },
+    {
+      "key": "eimear_martin",
+      "name": "Eimear Martin (Managing Director)",
+      "file": "../output/stores/eimear_martin_output.json",
+      "digest": "../output/digests/eimear_martin_digest.json"
+    },
+    {
+      "key": "elena_robino",
+      "name": "Elena Robino (EMEA Institutional Client Business COO Team - Vice President)",
+      "file": "../output/stores/elena_robino_output.json",
+      "digest": "../output/digests/elena_robino_digest.json"
+    },
+    {
+      "key": "eliana_y.",
+      "name": "Eliana Y. (Vice President, Global Head of Employer Brand)",
+      "file": "../output/stores/eliana_y._output.json",
+      "digest": "../output/digests/eliana_y._digest.json"
+    },
+    {
+      "key": "elina_michail",
+      "name": "Elina Michail (Vice President, Head of Data & Insights | EMEA Marketing)",
+      "file": "../output/stores/elina_michail_output.json",
+      "digest": "../output/digests/elina_michail_digest.json"
+    },
+    {
+      "key": "elizabeth_b.",
+      "name": "Elizabeth B. (Director, COO of Aladdin Client Experience Platform)",
+      "file": "../output/stores/elizabeth_b._output.json",
+      "digest": "../output/digests/elizabeth_b._digest.json"
+    },
+    {
+      "key": "emilie_skinner",
+      "name": "Emilie Skinner (Vice President, HR Business Partner at BlackRock)",
+      "file": "../output/stores/emilie_skinner_output.json",
+      "digest": "../output/digests/emilie_skinner_digest.json"
+    },
+    {
+      "key": "emily_w",
+      "name": "Emily W (Director, Global Fixed Income - Office of CIO)",
+      "file": "../output/stores/emily_w_output.json",
+      "digest": "../output/digests/emily_w_digest.json"
+    },
+    {
+      "key": "emma_b.",
+      "name": "Emma B. (Managing Director)",
+      "file": "../output/stores/emma_b._output.json",
+      "digest": "../output/digests/emma_b._digest.json"
+    },
+    {
+      "key": "eric_t",
+      "name": "Eric T. (Director, Vice President, BlackRock)",
+      "file": "../output/stores/eric_t_output.json",
+      "digest": "../output/digests/eric_t_digest.json"
+    },
+    {
+      "key": "erik_moss",
+      "name": "Erik Moss (Managing Director)",
+      "file": "../output/stores/erik_moss_output.json",
+      "digest": "../output/digests/erik_moss_digest.json"
+    },
+    {
+      "key": "erin_mills",
+      "name": "Erin Mills (Director, Head of Product Commercialization, US Wealth Advisory)",
+      "file": "../output/stores/erin_mills_output.json",
+      "digest": "../output/digests/erin_mills_digest.json"
+    },
+    {
+      "key": "ernesto_bettoni",
+      "name": "Ernesto Bettoni (Managing Director)",
+      "file": "../output/stores/ernesto_bettoni_output.json",
+      "digest": "../output/digests/ernesto_bettoni_digest.json"
+    },
+    {
+      "key": "esther_perkins",
+      "name": "Esther Perkins (Managing Director)",
+      "file": "../output/stores/esther_perkins_output.json",
+      "digest": "../output/digests/esther_perkins_digest.json"
+    },
+    {
+      "key": "etienne_weber",
+      "name": "Etienne Weber (Managing Director)",
+      "file": "../output/stores/etienne_weber_output.json",
+      "digest": "../output/digests/etienne_weber_digest.json"
+    },
+    {
+      "key": "evady_s",
+      "name": "Evady S (Chief Investment Officer)",
+      "file": "../output/stores/evady_s_output.json",
+      "digest": "../output/digests/evady_s_digest.json"
+    },
+    {
+      "key": "fabien_chen",
+      "name": "Fabien Chen (Managing Director)",
+      "file": "../output/stores/fabien_chen_output.json",
+      "digest": "../output/digests/fabien_chen_digest.json"
+    },
+    {
+      "key": "fabio_osta",
+      "name": "Fabio Osta (Managing Director)",
+      "file": "../output/stores/fabio_osta_output.json",
+      "digest": "../output/digests/fabio_osta_digest.json"
+    },
+    {
+      "key": "fabrizio_freda",
+      "name": "Fabrizio Freda (Board of Directors (Former President and CEO of The Estée Lauder Companies))",
+      "file": "../output/stores/fabrizio_freda_output.json",
+      "digest": "../output/digests/fabrizio_freda_digest.json"
+    },
+    {
+      "key": "frances_m.",
+      "name": "Frances M. (Global Corporate Affairs Chief Operations Officer (COO) Team Analyst)",
+      "file": "../output/stores/frances_m._output.json",
+      "digest": "../output/digests/frances_m._digest.json"
+    },
+    {
+      "key": "francesca_sesia",
+      "name": "Francesca Sesia (Chief Operating Officer, Managing Director)",
+      "file": "../output/stores/francesca_sesia_output.json",
+      "digest": "../output/digests/francesca_sesia_digest.json"
+    },
+    {
+      "key": "frederick_s.",
+      "name": "Frederick S. (SpiderRock Advisors Deputy Chief Investment Officer and Managing Director at BlackRock)",
+      "file": "../output/stores/frederick_s._output.json",
+      "digest": "../output/digests/frederick_s._digest.json"
+    },
+    {
+      "key": "gabor_m.",
+      "name": "Gabor M. (Managing Director)",
+      "file": "../output/stores/gabor_m._output.json",
+      "digest": "../output/digests/gabor_m._digest.json"
+    },
+    {
+      "key": "garrett_w._deutsch",
+      "name": "Garrett W. Deutsch (Managing Director)",
+      "file": "../output/stores/garrett_w._deutsch_output.json",
+      "digest": "../output/digests/garrett_w._deutsch_digest.json"
+    },
+    {
+      "key": "gary_stephen_shedlin",
+      "name": "Gary Stephen Shedlin (Board of Directors (CFO at BlackRock Financial Mgmt Inc))",
+      "file": "../output/stores/gary_stephen_shedlin_output.json",
+      "digest": "../output/digests/gary_stephen_shedlin_digest.json"
+    },
+    {
+      "key": "gaurav_khare",
+      "name": "Gaurav Khare (Global Head of Analytics Data Engineering)",
+      "file": "../output/stores/gaurav_khare_output.json",
+      "digest": "../output/digests/gaurav_khare_digest.json"
+    },
+    {
+      "key": "gaurav_taneja",
+      "name": "Gaurav Taneja (Managing Director)",
+      "file": "../output/stores/gaurav_taneja_output.json",
+      "digest": "../output/digests/gaurav_taneja_digest.json"
+    },
+    {
+      "key": "gavin_b",
+      "name": "Gavin B (Executive Vice President)",
+      "file": "../output/stores/gavin_b_output.json",
+      "digest": "../output/digests/gavin_b_digest.json"
+    },
+    {
+      "key": "gavin_lewis",
+      "name": "Gavin Lewis (Managing Director)",
+      "file": "../output/stores/gavin_lewis_output.json",
+      "digest": "../output/digests/gavin_lewis_digest.json"
+    },
+    {
+      "key": "gayatri_p",
+      "name": "Gayatri P. (Vice President, BlackRock)",
+      "file": "../output/stores/gayatri_p_output.json",
+      "digest": "../output/digests/gayatri_p_digest.json"
+    },
+    {
+      "key": "geoff_grove",
+      "name": "Geoff Grove (Chief Compliance Officer, Canada)",
+      "file": "../output/stores/geoff_grove_output.json",
+      "digest": "../output/digests/geoff_grove_digest.json"
+    },
+    {
+      "key": "george_r",
+      "name": "George R. (Vice President, BlackRock)",
+      "file": "../output/stores/george_r_output.json",
+      "digest": "../output/digests/george_r_digest.json"
+    },
+    {
+      "key": "georgie_merson",
+      "name": "Georgie Merson (Managing Director)",
+      "file": "../output/stores/georgie_merson_output.json",
+      "digest": "../output/digests/georgie_merson_digest.json"
+    },
+    {
+      "key": "gerald_garvey",
+      "name": "Gerald Garvey (Managing Director)",
+      "file": "../output/stores/gerald_garvey_output.json",
+      "digest": "../output/digests/gerald_garvey_digest.json"
+    },
+    {
+      "key": "girayhan_ulusoy",
+      "name": "Girayhan Ulusoy (Financial Affairs Coordinator CFO)",
+      "file": "../output/stores/girayhan_ulusoy_output.json",
+      "digest": "../output/digests/girayhan_ulusoy_digest.json"
+    },
+    {
+      "key": "godlyse_mahungu",
+      "name": "Godlyse Mahungu (COO Strategy Associate)",
+      "file": "../output/stores/godlyse_mahungu_output.json",
+      "digest": "../output/digests/godlyse_mahungu_digest.json"
+    },
+    {
+      "key": "gordon_nixon",
+      "name": "Gordon Nixon (Board of Directors (Canadian businessman))",
+      "file": "../output/stores/gordon_nixon_output.json",
+      "digest": "../output/digests/gordon_nixon_digest.json"
+    },
+    {
+      "key": "graham_t.",
+      "name": "Graham T. (Managing Director)",
+      "file": "../output/stores/graham_t._output.json",
+      "digest": "../output/digests/graham_t._digest.json"
+    },
+    {
+      "key": "greg_adams",
+      "name": "Greg Adams (Managing Director)",
+      "file": "../output/stores/greg_adams_output.json",
+      "digest": "../output/digests/greg_adams_digest.json"
+    },
+    {
+      "key": "gregoire_s.",
+      "name": "Gregoire S. (Strategic Initiatives Lead, BlackRock Transformation Office (COO Office))",
+      "file": "../output/stores/gregoire_s._output.json",
+      "digest": "../output/digests/gregoire_s._digest.json"
+    },
+    {
+      "key": "gregor_carle",
+      "name": "Gregor Carle (Managing Director)",
+      "file": "../output/stores/gregor_carle_output.json",
+      "digest": "../output/digests/gregor_carle_digest.json"
+    },
+    {
+      "key": "gregory_j_fleming",
+      "name": "Gregory J Fleming (Board of Directors (American business executive and investment banker))",
+      "file": "../output/stores/gregory_j_fleming_output.json",
+      "digest": "../output/digests/gregory_j_fleming_digest.json"
+    },
+    {
+      "key": "gregory_rosta",
+      "name": "Gregory Rosta (Managing Director)",
+      "file": "../output/stores/gregory_rosta_output.json",
+      "digest": "../output/digests/gregory_rosta_digest.json"
+    },
+    {
+      "key": "gretchen_goodall",
+      "name": "Gretchen Goodall (Chief Compliance Officer)",
+      "file": "../output/stores/gretchen_goodall_output.json",
+      "digest": "../output/digests/gretchen_goodall_digest.json"
+    },
+    {
+      "key": "gurkan_tasoren",
+      "name": "Gurkan Tasoren (Managing Director)",
+      "file": "../output/stores/gurkan_tasoren_output.json",
+      "digest": "../output/digests/gurkan_tasoren_digest.json"
+    },
+    {
+      "key": "gus_bartuska",
+      "name": "Gus Bartuska (Managing Director)",
+      "file": "../output/stores/gus_bartuska_output.json",
+      "digest": "../output/digests/gus_bartuska_digest.json"
+    },
+    {
+      "key": "hamish_m.",
+      "name": "Hamish M. (Managing Director - Head and Chief Investment Officer of APAC Real Estate)",
+      "file": "../output/stores/hamish_m._output.json",
+      "digest": "../output/digests/hamish_m._digest.json"
+    },
+    {
+      "key": "hans_vestberg",
+      "name": "Hans Vestberg (Board of Directors (Swedish businessman))",
+      "file": "../output/stores/hans_vestberg_output.json",
+      "digest": "../output/digests/hans_vestberg_digest.json"
+    },
+    {
+      "key": "harald_mährle",
+      "name": "Harald Mährle (Board of Directors (Founder at TCG Corporate Finance))",
+      "file": "../output/stores/harald_mährle_output.json",
+      "digest": "../output/digests/harald_mährle_digest.json"
+    },
+    {
+      "key": "haryati_v.",
+      "name": "Haryati V. (Regional Business Manager, APAC COO Office)",
+      "file": "../output/stores/haryati_v._output.json",
+      "digest": "../output/digests/haryati_v._digest.json"
+    },
+    {
+      "key": "heather_christie",
+      "name": "Heather Christie (Managing Director)",
+      "file": "../output/stores/heather_christie_output.json",
+      "digest": "../output/digests/heather_christie_digest.json"
     }
   ]
 }

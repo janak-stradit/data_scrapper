@@ -83,6 +83,21 @@ python main.py list --person
 python main.py run robin_vince --person --limit 20
 ```
 
+Every person also gets four **free public-records channels**, worked out
+from their name, title and company (`person_identity.py`), so they need no
+extra target fields:
+
+| Channel | Source | Runs when |
+|---|---|---|
+| `web_search` | DuckDuckGo web results (bios, interviews, speaker pages, LinkedIn URL) | always; an abbreviated name ("Carl B.") searches with its title too, which often surfaces the full name |
+| `sec_proxy` | SEC DEF 14A proxy statements naming them, with bio/compensation excerpts from the newest | full name only |
+| `brokercheck` | FINRA BrokerCheck: employment history, licences, disclosures | employer known; a record is kept **only** if one of its employers matches the person's company |
+| `uk_directorships` | UK Companies House officer appointments | full name + free `COMPANIES_HOUSE_API_KEY` in `.env` |
+
+Set `"full_name"` on a target once you know an abbreviated person's real
+surname, and every name-based channel improves. Set e.g.
+`"web_search_query": ""` or `"brokercheck": false` to switch one off.
+
 `list` and `status` also show targets that only exist in Postgres (tagged
 `[db only]`) — anything scraped ad-hoc via `POST /api/run` gets mirrored to
 the database (see `db.py`) even if it was never explicitly saved into
@@ -179,9 +194,11 @@ as a collection failure, never as a quiet account.
 Provider-agnostic (`digest/llm_client.py`) — set in `.env`:
 
 ```bash
-LLM_PROVIDER=anthropic     # anthropic | openai | ollama | dry-run
+LLM_PROVIDER=anthropic     # anthropic | openai | openrouter | heyroute | ollama | dry-run
 ANTHROPIC_API_KEY=sk-...   # or OPENAI_API_KEY; ollama needs no key
 # LLM_MODEL=claude-sonnet-5   # optional override
+# DIGEST_MODE=single          # single (default): one call writes the email from raw posts
+                              # per_channel: summarise each channel + storylines, then roll up
 ```
 
 **Without a key the pipeline still runs**, emitting clearly-marked `[DRY RUN]`
@@ -249,16 +266,21 @@ print(digest["email"]["subject"])
 | Channel   | Actor | Purpose |
 |-----------|-------|---------|
 | LinkedIn  | `harvestapi/linkedin-company-posts` | Company page posts (no cookies) |
-| Reddit    | `trudax/reddit-scraper-lite` | Search-based mention tracking |
 | Twitter/X | `apidojo/twitter-scraper-lite` | Profile tweets |
 | Blog      | `apify/website-content-crawler` | Insights articles |
 | Newsroom  | `apify/website-content-crawler` | Press releases |
 | SEC EDGAR | *none* — free `data.sec.gov` API | 8-K / 10-K / 10-Q / 13F filings |
 | Google News | *none* — free Google News RSS | Third-party press coverage |
+| Reddit    | *none* — free `reddit.com/*.rss` feeds | Search-based mention tracking |
 
-SEC and Google News cost nothing and need no token. EDGAR wants a contact address
-in the User-Agent — override it with `SEC_USER_AGENT` in `.env`. CIKs live in
-`targets.py` (`sec_cik`).
+SEC, Google News, and Reddit cost nothing and need no token. EDGAR wants a
+contact address in the User-Agent — override it with `SEC_USER_AGENT` in
+`.env`. CIKs live in `targets.py` (`sec_cik`). Reddit's JSON API
+(`reddit.com/*.json`) is blocked for unauthenticated clients as of
+2026 — its older `.rss`/Atom feeds still work and are what
+`scrapers/reddit_scraper.py` uses; no score/upvote/comment counts are
+available that way (Atom has no fields for them), everything else
+(title, body, author, subreddit, permalink, timestamp) comes through fine.
 
 ## ⚠️ Requirements
 

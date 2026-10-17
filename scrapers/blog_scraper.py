@@ -1,4 +1,21 @@
-"""Blog post scraper using Apify's Website Content Crawler."""
+"""Blog post scraper using a local headless browser (page_fetcher.py).
+
+Migrated off Apify's Website Content Crawler actor (see git history for
+the old version) to cut per-run cost to zero. Article discovery (finding
+which URLs are recent posts) still runs over plain aiohttp when possible
+— cheap and fast — and only falls back to a rendered browser fetch of the
+index page when that turns up no links, which happens on JS-heavy nav.
+
+Behavior change from the Apify version: that actor's default (no
+seed_from_index, no sitemap_url) crawled the site up to 2 links deep.
+This version always seeds from links found directly on the index page
+(rendered if needed) — no multi-level crawl. That was already the
+documented preferred behavior for seed_from_index targets ("Reading the
+links ourselves lets us sort by the date in the slug"); it just now
+applies unconditionally. A target whose recent articles aren't linked
+from the index page itself will need blog_sitemap set instead.
+"""
+import asyncio
 import re
 from fnmatch import fnmatch
 from typing import List, Dict, Any
@@ -6,9 +23,9 @@ from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree
 
 import aiohttp
-from apify_client import ApifyClientAsync
 
-from config import APIFY_TOKEN, ACTORS, TIMEOUTS, DEFAULT_POST_LIMIT
+from config import TIMEOUTS, DEFAULT_POST_LIMIT
+from . import page_fetcher
 from .base_scraper import BaseScraper
 
 BROWSER_UA = (
@@ -22,8 +39,6 @@ class BlogScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("blog")
-        self.client = ApifyClientAsync(APIFY_TOKEN)
-        self.actor_id = ACTORS["blog"]
 
     @staticmethod
     def _path_depth(url: str) -> int:
@@ -63,16 +78,25 @@ class BlogScraper(BaseScraper):
                 return await resp.text()
 
     async def _seed_from_index(
-        self, index_url: str, url_glob: str, limit: int
+        self,
+        index_url: str,
+        url_glob: str,
+        limit: int,
+        min_path_segments: int = None,
+        render: bool = False,
     ) -> List[str]:
         """Read article links off an index page, newest first.
 
         Crawlers follow links in document order, which on a long press-release
         archive means the oldest entries. Reading the links ourselves lets us
         sort by the date in the slug and take the genuinely recent ones.
+
+        render=True renders the page in a headless browser first — needed
+        when the plain-HTTP HTML has no article links because the nav is
+        built with JavaScript.
         """
         try:
-            html = await self._fetch(index_url)
+            html = await page_fetcher.get_html(index_url) if render else await self._fetch(index_url)
         except Exception as e:
             print(f"⚠️  [Blog] Could not read index page ({type(e).__name__}): {e}")
             return []
@@ -84,6 +108,8 @@ class BlogScraper(BaseScraper):
             if pattern and not fnmatch(absolute, pattern):
                 continue
             if absolute.rstrip("/") == index_url.rstrip("/"):
+                continue
+            if min_path_segments and self._path_depth(absolute) < min_path_segments:
                 continue
             found.setdefault(absolute, self._slug_date(absolute))
 
@@ -171,8 +197,9 @@ class BlogScraper(BaseScraper):
                 filters out section hubs that match the article glob
             skip_urls: URLs already stored from earlier runs — never crawled
                 again, which is where the per-run cost saving comes from
-            seed_from_index: read article links off the index page and take the
-                newest by slug date, instead of crawling in document order
+            seed_from_index: kept for call-site compatibility; index-page
+                seeding is now always how article URLs are found when no
+                sitemap_url is given (see module docstring)
 
         Returns:
             List of standardized post dictionaries
@@ -182,20 +209,9 @@ class BlogScraper(BaseScraper):
 
             skip = {u.split("?")[0].rstrip("/") for u in (skip_urls or set())}
 
-            seeds = []
-            if seed_from_index and not sitemap_url:
-                found = await self._seed_from_index(
-                    blog_url, url_glob, limit + len(skip)
-                )
-                fresh = [u for u in found if u.split("?")[0].rstrip("/") not in skip]
-                seeds = fresh[:limit]
-                print(
-                    f"🗂️  [Blog] Seeded {len(seeds)} newest article URLs from the index"
-                    + (f" ({len(found) - len(fresh)} already stored, skipped)" if skip else "")
-                )
-            elif sitemap_url:
-                # Over-fetch, then drop what we already stored, so a run still
-                # returns `limit` genuinely new articles.
+            # Over-fetch, then drop what we already stored, so a run still
+            # returns `limit` genuinely new articles.
+            if sitemap_url:
                 found = await self._seed_from_sitemap(
                     sitemap_url, url_glob, min_path_segments, limit + len(skip)
                 )
@@ -205,60 +221,57 @@ class BlogScraper(BaseScraper):
                     f"🗺️  [Blog] Seeded {len(seeds)} article URLs from sitemap"
                     + (f" ({len(found) - len(fresh)} already stored, skipped)" if skip else "")
                 )
+            else:
+                found = await self._seed_from_index(
+                    blog_url, url_glob, limit + len(skip), min_path_segments
+                )
+                if not found:
+                    print(
+                        "🎭 [Blog] No links found over plain HTTP — "
+                        "retrying the index page with a rendered browser"
+                    )
+                    found = await self._seed_from_index(
+                        blog_url, url_glob, limit + len(skip), min_path_segments, render=True
+                    )
+                fresh = [u for u in found if u.split("?")[0].rstrip("/") not in skip]
+                seeds = fresh[:limit]
+                print(
+                    f"🗂️  [Blog] Seeded {len(seeds)} newest article URLs from the index"
+                    + (f" ({len(found) - len(fresh)} already stored, skipped)" if skip else "")
+                )
 
-            run_input = {
-                "startUrls": [{"url": u} for u in seeds] or [{"url": blog_url}],
-                "crawlerType": "playwright:adaptive",
-                # Seeded URLs are already articles, so no link-following needed.
-                "maxCrawlDepth": 0 if seeds else 2,
-                "maxCrawlPages": limit + 2,
-                "maxResults": limit + 2,
-                "saveMarkdown": True,
-                "removeCookieWarnings": True,
-                "blockMedia": True,
-                "proxyConfiguration": {"useApifyProxy": True},
-            }
-            if url_glob and not seeds:
-                run_input["includeUrlGlobs"] = [{"glob": url_glob}]
-            if skip and not seeds:
-                # Cap the exclusion list: the actor rejects very large inputs.
-                run_input["excludeUrlGlobs"] = [{"glob": u} for u in list(skip)[:200]]
+            targets = seeds or [blog_url]
 
-            # 4 GB keeps parallel crawls inside the account memory quota.
-            items = await self._run_actor(
-                self.client, self.actor_id, run_input, TIMEOUTS["blog"],
-                memory_mbytes=4096,
-            )
+            # Cap concurrent browser contexts — unbounded gather() here
+            # would open one Chromium tab per article at once.
+            sem = asyncio.Semaphore(4)
 
-            # Drop the landing page itself; keep the article pages it links to.
-            articles = [i for i in items if (i.get("url") or "").rstrip("/") != blog_url.rstrip("/")]
-            if min_path_segments:
-                deep = [
-                    i for i in articles
-                    if self._path_depth(i.get("url") or "") >= min_path_segments
-                ]
-                articles = deep or articles
-            articles = articles or items
+            async def _fetch_one(u: str):
+                async with sem:
+                    try:
+                        return await page_fetcher.fetch_article(u, TIMEOUTS["blog"])
+                    except Exception as e:
+                        print(f"⚠️  [Blog] Could not fetch {u} ({type(e).__name__}): {e}")
+                        return None
+
+            fetched = await asyncio.gather(*[_fetch_one(u) for u in targets[:limit]])
 
             posts = []
-            for idx, item in enumerate(articles[:limit], start=1):
-                meta = item.get("metadata") or {}
-                text = item.get("markdown") or item.get("text") or ""
-
+            for item in fetched:
+                if not item:
+                    continue
+                text = item["markdown"]
                 extra = {
-                    "title": item.get("title") or meta.get("title") or meta.get("h1", ""),
+                    "title": item["title"],
                     "source": blog_url,
                     "word_count": len(text.split()),
                 }
-
                 post = self._format_post(
-                    rank=idx,
-                    post_url=item.get("url") or blog_url,
+                    rank=len(posts) + 1,
+                    post_url=item["url"],
                     text=text[:5000],
-                    author=meta.get("author", ""),
-                    published_at=item.get("crawl", {}).get("loadedTime")
-                    or meta.get("publishedTime")
-                    or meta.get("date"),
+                    author=item["author"],
+                    published_at=item["published_at"],
                     engagement={},
                     media=[],
                     extra=extra,

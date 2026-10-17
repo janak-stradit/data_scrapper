@@ -11,12 +11,18 @@ Schema is created lazily on first successful connection — no separate
 migration step.
 """
 import json
+import threading
 from typing import Any, Dict
 
 from config import DATABASE_URL
 from store import post_key
 
 _SCHEMA_READY = False
+# Serializes _ensure_schema() across the HTTP server's request threads.
+_SCHEMA_LOCK = threading.Lock()
+# Arbitrary constant key for pg_advisory_lock — same serialization across
+# separate processes (the server plus a CLI run) hitting one database.
+_SCHEMA_ADVISORY_KEY = 727_340_001
 
 # Fields already broken out into their own columns — everything else on a
 # post goes into the `extra` JSONB column instead of being dropped.
@@ -115,6 +121,112 @@ _SCHEMA_STATEMENTS = [
         entry JSONB NOT NULL
     )
     """,
+    # ── Migrations for databases created before the constraints/types
+    # above existed — `CREATE TABLE IF NOT EXISTS` is a no-op once a table
+    # already exists, so an older deployment's schema never gets upgraded
+    # without an explicit ALTER. Each of these is safe to run on every
+    # process start: the ADD CONSTRAINT ones catch "already exists" and
+    # no-op, and the type-fix ones check the live column type first.
+    # (If a live DB somehow already has duplicate targets.key /
+    # posts(target_key,channel,post_key) rows from having run without
+    # these constraints, ADD CONSTRAINT will fail with a real
+    # unique_violation — that needs a manual dedup, not something this
+    # lazy-migration approach can safely resolve on its own.)
+    """
+    DO $$
+    BEGIN
+        ALTER TABLE targets ADD CONSTRAINT targets_key_unique UNIQUE (key);
+    EXCEPTION
+        -- A named UNIQUE constraint's backing index shares its name, so
+        -- Postgres raises duplicate_table (42P07) for "already exists"
+        -- here, not duplicate_object (42710) — confirmed live: the first
+        -- run of this statement succeeds and adds the constraint, every
+        -- restart after that was hitting this exact case uncaught.
+        WHEN duplicate_object OR duplicate_table THEN NULL;
+    END $$;
+    """,
+    """
+    DO $$
+    BEGIN
+        ALTER TABLE posts ADD CONSTRAINT posts_target_channel_postkey_unique
+            UNIQUE (target_key, channel, post_key);
+    EXCEPTION
+        WHEN duplicate_object OR duplicate_table THEN NULL;
+    END $$;
+    """,
+    """
+    DO $$
+    BEGIN
+        ALTER TABLE linkedin_jobs ADD CONSTRAINT linkedin_jobs_target_jobkey_unique
+            UNIQUE (target_key, job_key);
+    EXCEPTION
+        WHEN duplicate_object OR duplicate_table THEN NULL;
+    END $$;
+    """,
+    """
+    DO $$
+    BEGIN
+        IF (SELECT data_type FROM information_schema.columns
+            WHERE table_name = 'run_history' AND column_name = 'platforms_scraped') = 'ARRAY' THEN
+            ALTER TABLE run_history ALTER COLUMN platforms_scraped
+                TYPE JSONB USING to_jsonb(platforms_scraped);
+        END IF;
+    END $$;
+    """,
+    """
+    DO $$
+    BEGIN
+        IF (SELECT data_type FROM information_schema.columns
+            WHERE table_name = 'run_history' AND column_name = 'platforms_failed') = 'ARRAY' THEN
+            ALTER TABLE run_history ALTER COLUMN platforms_failed
+                TYPE JSONB USING to_jsonb(platforms_failed);
+        END IF;
+    END $$;
+    """,
+] + [
+    # Same drift pattern for `id` on every BIGSERIAL-PRIMARY-KEY table: a
+    # live column created before `BIGSERIAL` was in the code has no
+    # sequence-backed default, so an INSERT that (correctly) omits `id`
+    # hits "null value in column id violates not-null constraint" — seen
+    # live for run_history once the platforms_* fix above got far enough
+    # for this to be the next thing INSERT hit. Checked proactively for
+    # posts/linkedin_jobs too rather than waiting to hit each one in turn.
+    f"""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_attrdef ad
+            JOIN pg_attribute a ON a.attrelid = ad.adrelid AND a.attnum = ad.adnum
+            WHERE ad.adrelid = '{table}'::regclass AND a.attname = 'id'
+        ) THEN
+            CREATE SEQUENCE IF NOT EXISTS {table}_id_seq OWNED BY {table}.id;
+            PERFORM setval('{table}_id_seq', COALESCE((SELECT MAX(id) FROM {table}), 0) + 1, false);
+            ALTER TABLE {table} ALTER COLUMN id SET DEFAULT nextval('{table}_id_seq');
+        END IF;
+    END $$;
+    """
+    for table in ("posts", "linkedin_jobs", "run_history")
+] + [
+    # Sequence drift: rows written with explicit ids (imports, or another
+    # app sharing this DB) don't advance {table}_id_seq, so a later INSERT
+    # that omits id gets one that's already taken — seen live as
+    # "duplicate key ... posts_pkey (id)=(54251)" with the sequence at
+    # 54251 and MAX(id) at 97254. Moves the sequence past MAX(id); never
+    # moves it backwards.
+    f"""
+    DO $$
+    DECLARE m BIGINT;
+    BEGIN
+        IF to_regclass('{table}_id_seq') IS NOT NULL THEN
+            SELECT MAX(id) INTO m FROM {table};
+            IF m IS NOT NULL THEN
+                PERFORM setval('{table}_id_seq',
+                               GREATEST(m, (SELECT last_value FROM {table}_id_seq)));
+            END IF;
+        END IF;
+    END $$;
+    """
+    for table in ("posts", "linkedin_jobs", "run_history")
 ]
 
 
@@ -130,14 +242,56 @@ def _connect():
 
 
 def _ensure_schema(conn) -> None:
+    """Runs each CREATE TABLE / migration statement in its OWN transaction
+    (commit or rollback per-statement), not one big all-or-nothing batch.
+    One statement failing — e.g. an ADD CONSTRAINT hitting genuine
+    duplicate data on an old, unmigrated table — used to roll back every
+    other statement in the same call along with it, silently discarding
+    unrelated fixes that would otherwise have gone through fine, and
+    leaving only a downstream symptom (the next INSERT's error) to debug
+    from instead of the real statement that failed. Only sets
+    _SCHEMA_READY once every statement has actually succeeded, so a
+    partial failure keeps retrying on the next call instead of being
+    forgotten — already-applied statements just no-op again quickly.
+
+    Serialized (thread lock + Postgres advisory lock) because `CREATE
+    INDEX IF NOT EXISTS` isn't race-safe: concurrent first requests on the
+    threaded server each saw the index missing, both tried to create it,
+    and the loser failed with a duplicate pg_class_relname_nsp_index key.
+    """
     global _SCHEMA_READY
     if _SCHEMA_READY:
         return
-    with conn.cursor() as cur:
-        for statement in _SCHEMA_STATEMENTS:
-            cur.execute(statement)
-    conn.commit()
-    _SCHEMA_READY = True
+    with _SCHEMA_LOCK:
+        if _SCHEMA_READY:  # another thread finished while we waited
+            return
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT pg_advisory_lock(%s)", (_SCHEMA_ADVISORY_KEY,))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"⚠️  [DB] Could not take schema lock, continuing ({e})")
+        all_ok = True
+        try:
+            for statement in _SCHEMA_STATEMENTS:
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute(statement)
+                    conn.commit()
+                except Exception as e:
+                    conn.rollback()
+                    print(f"⚠️  [DB] Schema statement failed, continuing ({e})")
+                    all_ok = False
+        finally:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT pg_advisory_unlock(%s)", (_SCHEMA_ADVISORY_KEY,))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+        if all_ok:
+            _SCHEMA_READY = True
 
 
 def upsert_target(kind: str, target: Dict[str, Any]) -> None:
@@ -488,6 +642,44 @@ def get_digest(target_key: str):
         conn.close()
 
 
+def get_list_info(target_keys: list) -> dict:
+    """Batched get_summary() + has_digest() for the list endpoints: one
+    connection and two queries for every key at once, instead of a fresh
+    Neon connection per key — with ~500 people that per-key pattern made
+    GET /api/people take ~34s.
+
+    Returns {"summaries": {key: {"total_posts", "last_run"}}, "digests": set(keys)}.
+    """
+    out = {"summaries": {}, "digests": set()}
+    keys = list(target_keys or [])
+    if not keys:
+        return out
+    conn = _connect()
+    if conn is None:
+        return out
+    try:
+        _ensure_schema(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT target_key, count(*), max(last_seen) FROM posts "
+                "WHERE target_key = ANY(%s) GROUP BY target_key",
+                (keys,),
+            )
+            for key, total, last_seen in cur.fetchall():
+                if total:
+                    out["summaries"][key] = {
+                        "total_posts": total,
+                        "last_run": last_seen.isoformat() if last_seen else None,
+                    }
+            cur.execute("SELECT target_key FROM digests WHERE target_key = ANY(%s)", (keys,))
+            out["digests"] = {row[0] for row in cur.fetchall()}
+    except Exception as e:
+        print(f"⚠️  [DB] Could not read list info ({e})")
+    finally:
+        conn.close()
+    return out
+
+
 def get_summary(target_key: str):
     """Cheap total_posts/last_run for the list endpoint — avoids pulling
     every post's full JSON just to count them.
@@ -538,7 +730,8 @@ def list_personas() -> list:
                 """
                 SELECT p.key, p.display_name, p.title, a.display_name AS company,
                        p.linkedin_url, p.twitter_handle, p.reddit_query,
-                       p.sec_cik, p.news_query, p.patents_query
+                       p.sec_cik, p.news_query, p.patents_query,
+                       p.osint_feed_manifest
                 FROM personas p
                 LEFT JOIN accounts a ON a.id = p.account_id
                 WHERE p.key IS NOT NULL
@@ -550,6 +743,47 @@ def list_personas() -> list:
         return [dict(zip(cols, row)) for row in rows]
     except Exception as e:
         print(f"⚠️  [DB] Could not list personas ({e})")
+        return []
+    finally:
+        conn.close()
+
+
+def list_accounts() -> list:
+    """Every company in the `accounts` table — the sales_agent-ai CRM's
+    firmographic registry, shared via this same Neon database but
+    otherwise unrelated to this app's own `targets` (kind=company)
+    registry (see MERGE_PLAN.md §7.3: accounts is "do we track this
+    company at all", targets is scrape config — deliberately kept
+    separate, not merged).
+
+    Read-only and best-effort like every other function here: used only
+    so `main.py list`/the frontend sidebar can surface CRM accounts that
+    aren't yet registered as scrape targets, for discovery. Never wired
+    into resolve()/scrape/digest — an account isn't a scrape target
+    until it's added to targets.py (or saved via /api/save-target).
+    """
+    conn = _connect()
+    if conn is None:
+        return []
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT key, display_name, stock_symbol, domain,
+                       linkedin_url, twitter_handle, reddit_query,
+                       sec_cik, news_query, blog_url, rss_url,
+                       employee_count_range, headquarters_location,
+                       osint_feed_manifest
+                FROM accounts
+                WHERE key IS NOT NULL
+                ORDER BY key
+                """
+            )
+            cols = [d.name for d in cur.description]
+            rows = cur.fetchall()
+        return [dict(zip(cols, row)) for row in rows]
+    except Exception as e:
+        print(f"⚠️  [DB] Could not list accounts ({e})")
         return []
     finally:
         conn.close()

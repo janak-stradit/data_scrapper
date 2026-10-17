@@ -4,7 +4,7 @@ The digest pipeline only needs one operation — send a prompt, get text back �
 so each provider is a small adapter behind `LLMClient.complete()`. Pick the
 provider with `LLM_PROVIDER` in .env; each reads its own API key.
 
-Supported: anthropic (default), openai, openrouter, ollama (local, no key), dry-run.
+Supported: anthropic (default), openai, openrouter, heyroute, ollama (local, no key), dry-run.
 """
 import json
 import os
@@ -35,6 +35,14 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         # OpenRouter mirrors each provider's own model ids under a
         # "<provider>/" prefix — see https://openrouter.ai/models.
         "default_model": "anthropic/claude-sonnet-5",
+    },
+    "heyroute": {
+        # OpenAI-compatible relay. Which model ids a key can call depends on
+        # the groups enabled for it in the HeyRoute console, so there is no
+        # safe built-in default — set LLM_MODEL (and CHANNEL_LLM_MODEL).
+        "url": os.getenv("HEYROUTE_URL", "https://heyroute.ai/v1/chat/completions"),
+        "key_env": "HEYROUTE_API_KEY",
+        "default_model": None,
     },
     "ollama": {
         "url": os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat"),
@@ -67,6 +75,10 @@ def channel_model(provider: str = None) -> str:
     if override:
         return override
     return _CHEAP_MODELS.get(provider) or PROVIDERS.get(provider, {}).get("default_model")
+
+
+# Providers that speak the OpenAI chat-completions request/response shape.
+_OPENAI_COMPATIBLE = ("openai", "openrouter", "heyroute")
 
 
 class LLMError(RuntimeError):
@@ -114,6 +126,9 @@ class LLMClient:
         """Send one prompt, return the model's text."""
         if self.provider == "dry-run" or not self.configured:
             return self._dry_run(system, user)
+
+        if not self.model:
+            raise LLMError(f"No model set for {self.provider}: set LLM_MODEL in .env")
 
         body, headers = self._build_request(system, user)
         req = urllib.request.Request(
@@ -195,7 +210,7 @@ class LLMClient:
                 {"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
             )
 
-        if self.provider in ("openai", "openrouter"):
+        if self.provider in _OPENAI_COMPATIBLE:
             return (
                 {
                     "model": self.model,
@@ -225,7 +240,7 @@ class LLMClient:
         if self.provider == "anthropic":
             blocks = payload.get("content", [])
             return "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
-        if self.provider in ("openai", "openrouter"):
+        if self.provider in _OPENAI_COMPATIBLE:
             return payload["choices"][0]["message"]["content"]
         return payload.get("message", {}).get("content", "")
 
@@ -236,7 +251,7 @@ class LLMClient:
         if self.provider == "anthropic":
             u = payload.get("usage") or {}
             return {"input_tokens": u.get("input_tokens") or 0, "output_tokens": u.get("output_tokens") or 0}
-        if self.provider in ("openai", "openrouter"):
+        if self.provider in _OPENAI_COMPATIBLE:
             u = payload.get("usage") or {}
             return {"input_tokens": u.get("prompt_tokens") or 0, "output_tokens": u.get("completion_tokens") or 0}
         # ollama
