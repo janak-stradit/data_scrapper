@@ -9,9 +9,11 @@ from .prompts import (
     CHANNEL_GUIDANCE,
     CHANNEL_LABELS,
     CHANNEL_SYSTEM,
+    EMAIL_DIRECT_SYSTEM,
     EMAIL_SYSTEM,
     PERSON_CHANNEL_GUIDANCE,
     PERSON_CHANNEL_SYSTEM,
+    PERSON_EMAIL_DIRECT_SYSTEM,
     PERSON_EMAIL_SYSTEM,
 )
 
@@ -21,7 +23,7 @@ from .prompts import (
 # for short-form chatter cuts off exactly the quotes and named-vendor detail
 # a "double-click" pitch needs. Chatter channels stay short since there's
 # rarely more than a headline's worth of signal in them anyway.
-_LONG_TEXT_CHANNELS = {"newsroom", "blog", "rss", "linkedin_jobs", "cxo_news"}
+_LONG_TEXT_CHANNELS = {"newsroom", "blog", "rss", "linkedin_jobs", "cxo_news", "sec_proxy", "brokercheck"}
 
 # Capability matching ("does this map to one of our offerings?") only pays
 # off on channels where a company actually announces vendors, technology, or
@@ -31,7 +33,7 @@ _LONG_TEXT_CHANNELS = {"newsroom", "blog", "rss", "linkedin_jobs", "cxo_news"}
 # match is plausible. linkedin_jobs is often the *best* fit here — a role
 # posting for a specific technology is an earlier, cleaner signal than a
 # press release.
-_CAPABILITY_CHANNELS = {"newsroom", "blog", "news", "rss", "linkedin_jobs"}
+_CAPABILITY_CHANNELS = {"newsroom", "blog", "news", "rss", "linkedin_jobs", "bloomberg"}
 
 # These two channels routinely carry 20 posts (the CLI/API default cap), most
 # of which never get cited in the final digest anyway. Capping input here
@@ -183,6 +185,46 @@ def build_email(
         f"{label}: {subject}" + (f" ({ticker})" if ticker else "") + "\n"
         f"Date: {datetime.now(timezone.utc):%d %B %Y}\n\n"
         "Channel summaries:\n\n" + "\n\n".join(blocks)
+    )
+    return client.complete_json(system, prompt)
+
+
+def build_email_direct(
+    client: LLMClient,
+    subject: str,
+    ticker: str,
+    channel_posts: Dict[str, List[Dict[str, Any]]],
+    kind: str = "company",
+) -> Dict[str, Any]:
+    """Write the briefing straight from the raw posts in ONE model call.
+
+    The token-saving alternative to summarize_channel() + build_email():
+    no per-channel analysis or storyline, the capability table is sent once
+    instead of once per channel, and there is a single output instead of one
+    per channel plus the rollup. Returns the same email schema as
+    build_email().
+    """
+    is_person = kind == "person"
+    system = PERSON_EMAIL_DIRECT_SYSTEM if is_person else EMAIL_DIRECT_SYSTEM
+    guidance_table = PERSON_CHANNEL_GUIDANCE if is_person else CHANNEL_GUIDANCE
+    label = "Contact" if is_person else "Account"
+
+    blocks = []
+    for channel, posts in channel_posts.items():
+        guidance = guidance_table.get(channel)
+        blocks.append(
+            f"## {CHANNEL_LABELS.get(channel, channel)} ({len(posts)} posts, newest first)\n"
+            + (f"How to read this channel: {guidance}\n" if guidance else "")
+            + "\n".join(_post_line(p, channel) for p in posts)
+        )
+
+    wants_capabilities = not is_person and any(c in _CAPABILITY_CHANNELS for c in channel_posts)
+    prompt = (
+        f"{label}: {subject}" + (f" ({ticker})" if ticker else "") + "\n"
+        f"Date: {datetime.now(timezone.utc):%d %B %Y}\n\n"
+        "Posts by channel. Cite these source_urls exactly as given:\n\n"
+        + "\n\n".join(blocks)
+        + (f"\n\n{capabilities.context_block()}" if wants_capabilities else "")
     )
     return client.complete_json(system, prompt)
 

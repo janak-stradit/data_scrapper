@@ -1,25 +1,21 @@
 """Google News scraper via the public News RSS feed, plus full-article
-content fetched through Apify's website-content-crawler.
+content fetched through a local headless browser (page_fetcher.py).
 
 The RSS feed itself is free — Google's own endpoint, no actor, no token —
 and gives only headlines; Google doesn't syndicate article bodies via RSS
 at all, regardless of how the feed is parsed. Getting real content means
-fetching each article's own page, which is what the Apify pass below is
-for. That part is NOT free — it runs the same actor blog_scraper.py uses,
-billed against APIFY_TOKEN, once per article per scrape.
+fetching each article's own page, which is what the pass below is for.
 
-Two things confirmed by testing against live Google News links before
-writing this:
-1. Google News redirect links land on a cookie-consent interstitial when
-   Apify's proxy exits from an EU/GDPR region — apifyProxyCountry="US"
-   avoids that.
-2. Even with that fixed, individual publishers can still block the
-   crawler outright (Cloudflare, paywalls, bot-detection) — this is
-   inherent to scraping arbitrary third-party sites, not fixable in
-   general. So extraction is best-effort per article: on success the
-   post's text is replaced with the real article content; on failure
-   (blocked, or Apify itself fails/times out) it silently keeps the
-   RSS-only headline/summary instead of erroring the whole scrape.
+Migrated off Apify's website-content-crawler actor (the same one
+blog_scraper.py used to use — see git history) to cut per-run cost to
+zero. One tradeoff from dropping Apify: its proxy let every fetch exit
+from a fixed US region (apifyProxyCountry="US"), which avoided a GDPR
+cookie-consent interstitial that Google News redirect links otherwise
+show to EU-region traffic. Without a proxy, that interstitial can show up
+again depending on where this process actually runs — `_looks_blocked`
+already catches it and just leaves that post headline-only, same as any
+other publisher block (Cloudflare, paywall, bot-detection), which was
+always best-effort and inherent to scraping arbitrary third-party sites.
 """
 import asyncio
 import re
@@ -28,9 +24,9 @@ from urllib.parse import quote
 from xml.etree import ElementTree
 
 import aiohttp
-from apify_client import ApifyClientAsync
 
-from config import ACTORS, APIFY_TOKEN, DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
+from config import DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
+from . import page_fetcher
 from .base_scraper import BaseScraper
 
 RSS_URL = (
@@ -74,8 +70,6 @@ class GoogleNewsScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("news")
-        self.client = ApifyClientAsync(APIFY_TOKEN)
-        self.actor_id = ACTORS["blog"]  # generic website-content-crawler
 
     @staticmethod
     def _looks_blocked(title: str, markdown: str) -> bool:
@@ -90,60 +84,36 @@ class GoogleNewsScraper(BaseScraper):
 
     async def _fetch_full_content(self, posts: List[Dict[str, Any]]) -> None:
         """Best-effort: replace each post's text with its real article
-        content. Mutates `posts` in place; never raises — any failure here
-        (actor error, timeout, every article blocked) just leaves the
-        RSS-only headline/summary already on each post.
+        content. Mutates `posts` in place; never raises — any single
+        article's fetch/extraction failure just leaves the RSS-only
+        headline/summary already on that post. Playwright follows the
+        Google News redirect chain itself, so each post is fetched
+        directly by its own post_url — no referrer correlation needed.
         """
         if not posts:
             return
-        try:
-            run_input = {
-                "startUrls": [{"url": p["post_url"]} for p in posts if p.get("post_url")],
-                "crawlerType": "playwright:adaptive",
-                "maxCrawlDepth": 0,
-                "maxCrawlPages": len(posts),
-                "maxResults": len(posts),
-                "saveMarkdown": True,
-                "removeCookieWarnings": True,
-                "blockMedia": True,
-                # US avoids the GDPR cookie-consent interstitial Google
-                # News redirects show to EU-region proxy exits — confirmed
-                # by testing directly against live links before this was
-                # written; without it every result is a consent page, not
-                # the article.
-                "proxyConfiguration": {"useApifyProxy": True, "apifyProxyCountry": "US"},
-            }
-            items = await self._run_actor(
-                self.client, self.actor_id, run_input, TIMEOUTS["news_content"],
-                memory_mbytes=4096,
-            )
-        except Exception as e:
-            print(f"⚠️  [Google News] Full-content fetch failed, keeping headlines only ({e})")
-            return
 
-        # crawl.referrerUrl is the original start URL (the Google redirect
-        # link) each result came from — that's what correlates a result
-        # back to the post it belongs to, since the *loaded* URL is
-        # whatever the redirect chain ends up at.
-        by_referrer = {
-            item.get("crawl", {}).get("referrerUrl"): item
-            for item in items
-            if isinstance(item, dict)
-        }
+        # Cap concurrent browser contexts — unbounded gather() here would
+        # open one Chromium tab per article at once.
+        sem = asyncio.Semaphore(4)
 
-        filled = 0
-        for post in posts:
-            item = by_referrer.get(post.get("post_url"))
-            if not item:
-                continue
-            title = (item.get("metadata", {}) or {}).get("title", "")
-            markdown = item.get("markdown") or ""
-            if self._looks_blocked(title, markdown):
-                continue
-            post["text"] = markdown[:5000]
+        async def _fetch_one(post: Dict[str, Any]) -> None:
+            url = post.get("post_url")
+            if not url:
+                return
+            async with sem:
+                try:
+                    item = await page_fetcher.fetch_article(url, TIMEOUTS["news_content"])
+                except Exception:
+                    return
+            if self._looks_blocked(item["title"], item["markdown"]):
+                return
+            post["text"] = item["markdown"][:5000]
             post["full_content"] = True
-            filled += 1
 
+        await asyncio.gather(*[_fetch_one(p) for p in posts])
+
+        filled = sum(1 for p in posts if p.get("full_content"))
         print(f"   [Google News] Full content: {filled}/{len(posts)} articles (rest kept headline-only)")
 
     @staticmethod

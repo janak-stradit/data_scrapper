@@ -34,12 +34,23 @@ from scrapers import (
     RegulatoryScraper,
     LinkedInJobsScraper,
     CxoNewsScraper,
+    BloombergScraper,
+    WebSearchScraper,
+    SECProxyScraper,
+    BrokerCheckScraper,
+    UKDirectorshipsScraper,
 )
+import person_identity
 from targets import resolve as resolve_company, COMPANY_TARGETS
 from people_targets import resolve as resolve_person, PEOPLE_TARGETS
 from paths import store_path
 from store import ScrapeStore
 import db
+
+# Backstop for a single channel inside one run — well above any channel's
+# own timeouts (the slowest, blog, is 300s per page with 4 in parallel), so
+# it only fires when something is genuinely wedged.
+CHANNEL_HARD_TIMEOUT_SECS = 900
 
 
 class ApifyScraperEngine:
@@ -64,6 +75,11 @@ class ApifyScraperEngine:
         self.regulatory = RegulatoryScraper()
         self.linkedin_jobs = LinkedInJobsScraper()
         self.cxo_news = CxoNewsScraper()
+        self.bloomberg = BloombergScraper()
+        self.web_search = WebSearchScraper()
+        self.sec_proxy = SECProxyScraper()
+        self.brokercheck = BrokerCheckScraper()
+        self.uk_directorships = UKDirectorshipsScraper()
 
     async def scrape_all(
         self,
@@ -90,6 +106,11 @@ class ApifyScraperEngine:
         regulatory_query: Optional[str] = None,
         linkedin_jobs_query: Optional[str] = None,
         cxo_news_query: Optional[str] = None,
+        bloomberg_query: Optional[str] = None,
+        web_search_query: Optional[str] = None,
+        sec_proxy_query: Optional[str] = None,
+        brokercheck_person: Optional[Dict[str, Any]] = None,
+        uk_directorships_person: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Scrape all specified platforms in parallel.
@@ -114,6 +135,15 @@ class ApifyScraperEngine:
             cxo_news_query: Search query targeting executive-movement
                 news (joins/resigns/appointed/promoted) — distinct from
                 news_query, which is general company coverage
+            bloomberg_query: Search query for Bloomberg coverage specifically
+                (site:bloomberg.com-scoped Google News search) — most
+                articles come back headline-only since Bloomberg is paywalled
+            web_search_query: DuckDuckGo web search query (person channel)
+            sec_proxy_query: Full name to find in SEC DEF 14A proxy
+                statements (person channel)
+            brokercheck_person / uk_directorships_person: a
+                person_identity.parse() dict — these match on name AND
+                employer, so they need structure, not a query string
             limit: Number of posts per platform (default: 10)
 
         Returns:
@@ -137,6 +167,9 @@ class ApifyScraperEngine:
                 "regulatory_query": regulatory_query,
                 "linkedin_jobs_query": linkedin_jobs_query,
                 "cxo_news_query": cxo_news_query,
+                "bloomberg_query": bloomberg_query,
+                "web_search_query": web_search_query,
+                "sec_proxy_query": sec_proxy_query,
                 "limit": limit,
                 "requested_at": datetime.utcnow().isoformat() + "Z",
             },
@@ -222,13 +255,43 @@ class ApifyScraperEngine:
             tasks.append(self.cxo_news.scrape(cxo_news_query, limit))
             task_map[len(tasks) - 1] = "cxo_news"
 
+        if bloomberg_query:
+            tasks.append(self.bloomberg.scrape(bloomberg_query, limit, news_days, news_exclude))
+            task_map[len(tasks) - 1] = "bloomberg"
+
+        if web_search_query:
+            tasks.append(self.web_search.scrape(web_search_query, limit))
+            task_map[len(tasks) - 1] = "web_search"
+
+        if sec_proxy_query:
+            tasks.append(self.sec_proxy.scrape(sec_proxy_query, limit))
+            task_map[len(tasks) - 1] = "sec_proxy"
+
+        if brokercheck_person:
+            tasks.append(self.brokercheck.scrape(brokercheck_person, limit))
+            task_map[len(tasks) - 1] = "brokercheck"
+
+        if uk_directorships_person:
+            tasks.append(self.uk_directorships.scrape(uk_directorships_person, limit))
+            task_map[len(tasks) - 1] = "uk_directorships"
+
         if not tasks:
             result["success"] = False
             result["data"]["error"] = "No platforms specified for scraping."
             return result
 
-        # Execute all scrapers in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Execute all scrapers in parallel. Each channel gets a hard cap on
+        # top of its own internal timeouts, so one channel that never
+        # returns can't leave the whole run stuck "running" forever.
+        results = await asyncio.gather(
+            *[asyncio.wait_for(t, CHANNEL_HARD_TIMEOUT_SECS) for t in tasks],
+            return_exceptions=True,
+        )
+        results = [
+            TimeoutError(f"channel exceeded {CHANNEL_HARD_TIMEOUT_SECS}s hard timeout")
+            if isinstance(r, (asyncio.TimeoutError, TimeoutError)) and not str(r) else r
+            for r in results
+        ]
 
         # Process results
         for idx, platform in task_map.items():
@@ -349,6 +412,11 @@ class ApifyScraperEngine:
             regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
             linkedin_jobs_query=target.get("linkedin_jobs_query") if want("linkedin_jobs") else None,
             cxo_news_query=target.get("cxo_news_query") if want("cxo_news") else None,
+            bloomberg_query=(
+                target.get("bloomberg_query") or target.get("news_query") or target.get("reddit_query")
+            )
+            if want("bloomberg")
+            else None,
         )
 
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
@@ -424,6 +492,7 @@ class ApifyScraperEngine:
             Same unified JSON as scrape_all, plus a "person" block.
         """
         target = target or resolve_person(person)
+        records = person_identity.channel_inputs(target)
         wanted = set(only) if only else None
 
         news_days = (
@@ -457,6 +526,17 @@ class ApifyScraperEngine:
             youtube_channel_id=target.get("youtube_channel_id") if want("youtube") else None,
             sec_mentions_query=target.get("sec_mentions_query") if want("sec_mentions") else None,
             regulatory_query=target.get("regulatory_query") if want("regulatory") else None,
+            bloomberg_query=(
+                target.get("bloomberg_query") or target.get("news_query") or target.get("reddit_query")
+            )
+            if want("bloomberg")
+            else None,
+            # Free public-records channels, derived from the person's name,
+            # title and company — see person_identity.channel_inputs().
+            web_search_query=records["web_search"] if want("web_search") else None,
+            sec_proxy_query=records["sec_proxy"] if want("sec_proxy") else None,
+            brokercheck_person=records["brokercheck"] if want("brokercheck") else None,
+            uk_directorships_person=records["uk_directorships"] if want("uk_directorships") else None,
         )
 
         # store.merge() keys the stored identity block off result["company"];
@@ -506,16 +586,22 @@ async def scrape_and_store(
             print(f"🗑️   [Store] Cleared {dropped} stored {channel} posts")
 
     engine = ApifyScraperEngine()
-    if kind == "person":
-        result = await engine.scrape_person(limit=limit, only=only, store=store, target=target)
-    else:
-        result = await engine.scrape_company(
-            limit=limit,
-            include_newsroom=include_newsroom,
-            only=only,
-            store=store,
-            target=target,
-        )
+    try:
+        if kind == "person":
+            result = await engine.scrape_person(limit=limit, only=only, store=store, target=target)
+        else:
+            result = await engine.scrape_company(
+                limit=limit,
+                include_newsroom=include_newsroom,
+                only=only,
+                store=store,
+                target=target,
+            )
+    finally:
+        # The headless browser is bound to this event loop (see
+        # scrapers/page_fetcher.py) — release it before the loop ends.
+        from scrapers import page_fetcher
+        await page_fetcher.close_browser()
 
     if store is None:
         with open(path, "w", encoding="utf-8") as fh:
@@ -581,7 +667,8 @@ async def main():
         "--only",
         help="comma-separated channels to scrape "
         "(linkedin,reddit,twitter,blog,newsroom,sec,news,patents,rss,"
-        "youtube,sec_mentions,regulatory,linkedin_jobs,cxo_news)",
+        "youtube,sec_mentions,regulatory,linkedin_jobs,cxo_news,bloomberg; "
+        "people also: web_search,sec_proxy,brokercheck,uk_directorships)",
     )
     parser.add_argument(
         "--reset-channel",

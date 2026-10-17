@@ -12,6 +12,11 @@ from .sec_fulltext_scraper import SECFullTextScraper
 from .regulatory_scraper import RegulatoryScraper
 from .linkedin_jobs_scraper import LinkedInJobsScraper
 from .cxo_news_scraper import CxoNewsScraper
+from .bloomberg_scraper import BloombergScraper
+from .web_search_scraper import WebSearchScraper
+from .sec_proxy_scraper import SECProxyScraper
+from .brokercheck_scraper import BrokerCheckScraper
+from .uk_directorships_scraper import UKDirectorshipsScraper
 
 __all__ = [
     "LinkedInScraper",
@@ -27,4 +32,9 @@ __all__ = [
     "RegulatoryScraper",
     "LinkedInJobsScraper",
     "CxoNewsScraper",
+    "BloombergScraper",
+    "WebSearchScraper",
+    "SECProxyScraper",
+    "BrokerCheckScraper",
+    "UKDirectorshipsScraper",
 ]

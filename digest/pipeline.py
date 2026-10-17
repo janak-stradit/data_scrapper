@@ -12,8 +12,9 @@ import db
 
 from . import cache
 from .llm_client import LLMClient, LLMError, channel_model, describe_config
+from .prompts import CHANNEL_LABELS
 from .renderer import render_markdown
-from .selection import build_email, select_posts, summarize_channel
+from .selection import build_email, build_email_direct, select_posts, summarize_channel
 
 
 def run(
@@ -47,6 +48,10 @@ def run(
             f"No store at {path}. Run: python main.py scrape {key}{cli_flag} --limit 20"
         )
 
+    # DIGEST_MODE=single (default): one model call writes the email from the
+    # raw posts, no per-channel summaries/storylines. DIGEST_MODE=per_channel:
+    # the original summarise-each-channel-then-roll-up flow.
+    single_pass = os.getenv("DIGEST_MODE", "single").lower() != "per_channel"
     channel_client = LLMClient(model=channel_model())
     # The email step aggregates every channel's output in one call, so it
     # needs more output headroom than any single channel does — this is what
@@ -59,14 +64,29 @@ def run(
     use_cache = channel_client.provider != "dry-run" and channel_client.configured
     print(
         f"🧠  {target['display_name']} — LLM: {describe_config()} "
-        f"(channels: {channel_client.model})"
+        + ("(single-pass email)" if single_pass else f"(channels: {channel_client.model})")
     )
 
     channels, considered = [], 0
+    channel_posts: Dict[str, list] = {}
     for channel in store.doc.get("data", {}):
         posts = select_posts(store, channel, new_only, since_days, cap)
         if not posts:
             print(f"   {channel:<9} no posts in scope, skipped")
+            continue
+
+        if single_pass:
+            # No per-channel model call — just record what goes into the
+            # one email call below. `channels` keeps metadata only (no
+            # summary/storyline), which the renderer and frontend skip.
+            channel_posts[channel] = posts
+            channels.append({
+                "channel": channel,
+                "channel_label": CHANNEL_LABELS.get(channel, channel),
+                "posts_considered": len(posts),
+            })
+            considered += len(posts)
+            print(f"   {channel:<9} {len(posts)} posts → email")
             continue
 
         sig = cache.signature(channel, posts)
@@ -93,10 +113,22 @@ def run(
         raise RuntimeError("Nothing to summarise — no posts in scope.")
 
     try:
-        email = build_email(
-            email_client, target["display_name"], target.get("ticker"), channels, kind=kind
-        )
+        if single_pass:
+            print(f"   email     writing from {considered} posts in one call…")
+            email = build_email_direct(
+                email_client, target["display_name"], target.get("ticker"),
+                channel_posts, kind=kind,
+            )
+        else:
+            email = build_email(
+                email_client, target["display_name"], target.get("ticker"), channels, kind=kind
+            )
     except LLMError as e:
+        if single_pass:
+            # Only one call was made, so there is no paid-for channel work
+            # to salvage — fail the digest outright rather than save a
+            # placeholder over the last good one.
+            raise
         # Every channel above already made (and paid for) a real LLM call —
         # discarding all of that because only the final rollup call failed
         # is the single most expensive failure mode in this pipeline. Write

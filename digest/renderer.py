@@ -59,9 +59,13 @@ def render_markdown(digest: Dict[str, Any]) -> str:
         if items:
             lines += [f"### {label}", ""] + [f"- {i}" for i in items] + [""]
 
-    lines += ["## Channel storylines (social media team)", ""]
+    # Single-pass digests (DIGEST_MODE=single) carry channel metadata only —
+    # no per-channel analysis, so no storyline section to render.
+    analysed = [ch for ch in digest["channels"] if ch.get("summary") or ch.get("storyline")]
+    if analysed:
+        lines += ["## Channel storylines (social media team)", ""]
 
-    for ch in digest["channels"]:
+    for ch in analysed:
         story = ch.get("storyline", {}) or {}
         strength = ch.get("evidence_strength", "unrated")
         lines += [

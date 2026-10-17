@@ -27,11 +27,11 @@ def post_key(channel: str, post: Dict[str, Any]) -> str:
     if channel == "sec" and post.get("accession"):
         return f"sec:{post['accession']}"
 
-    if channel == "news":
+    if channel in ("news", "bloomberg"):
         # Google News RSS links carry a per-request token, so the same article
         # arrives with a different URL every fetch — key on the headline.
         headline = post.get("title") or post.get("text") or ""
-        return f"news:{re.sub(r'[^a-z0-9]+', '', headline.lower())[:120]}"
+        return f"{channel}:{re.sub(r'[^a-z0-9]+', '', headline.lower())[:120]}"
 
     url = (post.get("post_url") or "").strip()
     if url:

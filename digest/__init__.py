@@ -7,6 +7,7 @@ for the social team.
     digest = run("bny", new_only=True)
 """
 from .llm_client import LLMClient, LLMError, describe_config
+from .news_brief import build as build_news_brief
 from .pipeline import run
 from .prompts import CHANNEL_LABELS
 from .renderer import render_markdown
@@ -18,4 +19,5 @@ __all__ = [
     "LLMClient",
     "LLMError",
     "CHANNEL_LABELS",
+    "build_news_brief",
 ]
