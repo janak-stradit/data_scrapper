@@ -440,23 +440,6 @@ def cmd_serve(args) -> int:
             self._store_summary_cache[path] = (st.st_mtime_ns, st.st_size, summary)
             return summary
 
-        def _require_api_key(self) -> bool:
-            """Gate on X-API-Key when API_KEY is set in .env; no-op locally.
-
-            Applies to every /api/* route (GET and POST) — /api/run can
-            trigger billed Apify scrapes and /api/send-email sends real
-            mail, so once this process is reachable by anything other than
-            the operator, those need a real check, not just obscurity.
-            """
-            from config import API_KEY
-
-            if not API_KEY:
-                return True
-            if self.headers.get("X-API-Key") == API_KEY:
-                return True
-            self._send_json(401, {"ok": False, "error": "Missing or invalid X-API-Key header"})
-            return False
-
         # Everything else on disk (.env, *.py source, custom_targets.json,
         # .git/, ...) is deliberately NOT reachable over HTTP — this list is
         # the complete set of what's safe to serve publicly.
@@ -467,8 +450,6 @@ def cmd_serve(args) -> int:
             path = self.path.split("?", 1)[0]
 
             if path.startswith("/api/"):
-                if not self._require_api_key():
-                    return
                 if path == "/api/accounts":
                     self._handle_list("company")
                 elif path.startswith("/api/accounts/"):
@@ -483,6 +464,9 @@ def cmd_serve(args) -> int:
                     self._handle_crm_list("company")
                 elif path == "/api/crm-people":
                     self._handle_crm_list("person")
+                elif path == "/api/scheduler":
+                    import scheduler
+                    self._send_json(200, scheduler.status())
                 else:
                     self.send_error(404)
                 return
@@ -737,9 +721,9 @@ def cmd_serve(args) -> int:
             })
 
         def do_POST(self):
-            if not self._require_api_key():
-                return
-            if self.path == "/api/send-email":
+            if self.path == "/api/scheduler/run":
+                self._handle_scheduler_run()
+            elif self.path == "/api/send-email":
                 self._handle_send_email()
             elif self.path == "/api/news-brief":
                 self._handle_news_brief()
@@ -803,6 +787,24 @@ def cmd_serve(args) -> int:
             except Exception as e:
                 self._send_json(200, {"ok": False, "error": f"Unexpected error: {e}"})
 
+        def _handle_scheduler_run(self):
+            """POST {"job": "news"|"people"} — start a scheduled job now,
+            in the background; its summary email goes out when it ends."""
+            import scheduler
+
+            try:
+                job = (self._read_json_body().get("job") or "").strip()
+            except (json.JSONDecodeError, AttributeError):
+                self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
+                return
+            if job not in scheduler.status()["jobs"]:
+                self._send_json(400, {"ok": False, "error": "job must be \"news\" or \"people\""})
+                return
+            if not scheduler.trigger(job):
+                self._send_json(409, {"ok": False, "error": f"{job} is already running"})
+                return
+            self._send_json(202, {"ok": True, "started": job})
+
         def _handle_run(self):
             """Kicks off a scrape (optionally + digest) in a background
             thread and returns immediately — a run can take from seconds
@@ -814,13 +816,9 @@ def cmd_serve(args) -> int:
             that same `run_id` — its `status` flips to "success"/"failed"
             (history.finish()) once the thread completes.
             """
-            import asyncio as _asyncio
             import threading
 
-            from engine import scrape_and_store
-            from digest.pipeline import run as run_digest
-            from digest.llm_client import LLMError
-            import history
+            import runner
 
             try:
                 payload = self._read_json_body()
@@ -850,54 +848,13 @@ def cmd_serve(args) -> int:
                 self._send_json(400, {"ok": False, "error": "limit must be a number"})
                 return
 
-            entry = {
-                "kind": kind,
-                "key": target["key"],
-                "display_name": target["display_name"],
-                "limit": limit,
-            }
-            if only:
-                entry["only"] = only
-            started_entry = history.start(entry)
+            started_entry = runner.start(kind, target, limit, only=only)
             run_id = started_entry["run_id"]
-
-            def worker():
-                t0 = time.time()
-                updates = {}
-                try:
-                    stored = _asyncio.run(
-                        scrape_and_store(limit=limit, kind=kind, target=target, only=only)
-                    )
-                    meta = stored.get("metadata", {})
-                    updates["new_posts"] = meta.get("new_last_run")
-                    updates["total_posts"] = meta.get("total_posts")
-                    updates["platforms_scraped"] = meta.get("platforms_scraped", [])
-                    updates["platforms_failed"] = meta.get("platforms_failed", [])
-                    updates["cost_usd"] = meta.get("total_cost_usd", 0.0)
-
-                    if generate_digest:
-                        try:
-                            digest = run_digest(kind=kind, target=target)
-                            updates["digest"] = {
-                                "llm": digest.get("llm"),
-                                "posts_considered": digest.get("posts_considered"),
-                                "input_tokens": digest.get("input_tokens", 0),
-                                "output_tokens": digest.get("output_tokens", 0),
-                            }
-                        except (LLMError, RuntimeError, FileNotFoundError) as e:
-                            updates["digest"] = {"error": str(e)}
-
-                    updates["success"] = True
-                    updates["status"] = "success"
-                except Exception as e:
-                    updates["success"] = False
-                    updates["error"] = str(e)
-                    updates["status"] = "failed"
-
-                updates["duration_ms"] = int((time.time() - t0) * 1000)
-                history.finish(run_id, updates)
-
-            threading.Thread(target=worker, daemon=True, name=f"run-{run_id}").start()
+            threading.Thread(
+                target=runner.execute,
+                args=(run_id, kind, target, limit, only, generate_digest),
+                daemon=True, name=f"run-{run_id}",
+            ).start()
             self._send_json(202, {"ok": True, "started": True, "entry": started_entry})
 
         def _handle_digest(self):
@@ -1008,8 +965,6 @@ def cmd_serve(args) -> int:
             self._send_json(200, {"ok": True, "target": saved})
 
         def do_DELETE(self):
-            if not self._require_api_key():
-                return
             path = self.path.split("?", 1)[0]
             if path.startswith("/api/accounts/"):
                 self._handle_delete("company", path[len("/api/accounts/"):])
@@ -1071,14 +1026,13 @@ def cmd_serve(args) -> int:
     class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
         daemon_threads = True
 
-    # Local default stays 127.0.0.1 — the path allowlist above and the
-    # optional API_KEY gate make binding 0.0.0.0 safe (e.g. inside a
-    # container, where SERVE_HOST=0.0.0.0 lets Docker's port mapping
-    # reach it), but there's no reason to widen the local dev default.
+    # Local default stays 127.0.0.1 — the path allowlist above keeps
+    # binding 0.0.0.0 from exposing source/.env (e.g. inside a container,
+    # where SERVE_HOST=0.0.0.0 lets Docker's port mapping reach it), but
+    # /api/* has no auth, so there's no reason to widen the local default.
     host = os.getenv("SERVE_HOST", "127.0.0.1")
     port = int(os.getenv("PORT", args.port))
 
-    from config import API_KEY
     import functools
     # Anchored to PROJECT_ROOT, not cwd — otherwise running `serve` from
     # outside this project's directory (e.g. a monorepo root one level up)
@@ -1088,6 +1042,10 @@ def cmd_serve(args) -> int:
 
     import history
     reaped = history.reap_orphaned_running()
+
+    import scheduler
+    import config
+    scheduler_on = scheduler.start()
 
     try:
         with Server((host, port), ServeHandler) as httpd:
@@ -1100,7 +1058,12 @@ def cmd_serve(args) -> int:
                 "  Bound to localhost only, so .env stays private" if host == "127.0.0.1"
                 else f"  Bound to {host} — only /frontend, /output, /API.md, and /api/* are servable"
             )
-            print("  API_KEY required on /api/*" if API_KEY else "  API_KEY not set — /api/* is open to anyone who can reach this port")
+            print("  /api/* has no authentication — anyone who can reach this port can use it")
+            if scheduler_on:
+                print(f"  Scheduler ON: news every {config.SCHEDULE_NEWS_HOURS:g}h, people every "
+                      f"{config.SCHEDULE_PEOPLE_DAYS:g}d, summaries to {config.SCHEDULE_NOTIFY_TO or '(nobody)'}")
+            else:
+                print("  Scheduler off (set SCHEDULER_ENABLED=true to turn it on)")
             print("  Ctrl+C to stop\n")
             httpd.serve_forever()
     except KeyboardInterrupt:

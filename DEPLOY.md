@@ -87,9 +87,10 @@ swapped in later; it's a `Caddyfile` change back to ACME-based issuance.
      disables SSH passwords by default) makes this an accepted tradeoff
      for a single small box — it's the standard pattern for CI-to-a-VM
      deploys.
-   - **HTTP (80)**: source `0.0.0.0/0` — this is fine because `/api/*`
-     is gated by `API_KEY` (see step 3) and everything else served is
-     already meant to be public (frontend, `output/*.json`, `API.md`).
+   - **HTTP (80)**: source `0.0.0.0/0` opens the app to anyone.
+     **`/api/*` has no authentication** — anyone who can reach the box can
+     trigger billed Apify runs (`/api/run`) and send mail
+     (`/api/send-email`). Prefer restricting 80/443 to your own IP(s).
      Caddy redirects it to HTTPS rather than serving over it directly.
    - **HTTPS (443)**: source `0.0.0.0/0` — same reasoning as port 80.
 6. Storage: default 8-30GB gp3 is plenty.
@@ -130,12 +131,15 @@ SMTP_USERNAME=...
 SMTP_PASSWORD=...
 SEC_USER_AGENT=...
 
-# New for this deployment — generate a long random string, e.g.:
-#   python -c "import secrets; print(secrets.token_urlsafe(32))"
-API_KEY=<a long random secret you generate>
-
 SERVE_HOST=0.0.0.0
 PORT=8080
+
+# Scheduled runs (scheduler.py) — off unless this is true
+SCHEDULER_ENABLED=true
+SCHEDULE_NEWS_HOURS=3                          # news channels, every company
+SCHEDULE_NEWS_CHANNELS=news,bloomberg,cxo_news
+SCHEDULE_PEOPLE_DAYS=3                         # full run, every person, one at a time
+SCHEDULE_NOTIFY_TO=Janak@stradit.com           # one summary email per batch
 ```
 
 **Never commit this file** — it lives only in the `PROD_ENV_FILE` secret,
@@ -179,13 +183,8 @@ for the build/deploy log.
 
 - `https://<EC2_PUBLIC_IP>/frontend/` should load the app, after clicking
   through the self-signed cert warning once (see "HTTPS" above).
-- `curl -k https://<EC2_PUBLIC_IP>/api/accounts` should 401 without a key
-  (`-k` skips cert verification, since it's self-signed), and return data
-  with `-H "X-API-Key: <your API_KEY>"` added.
-- In the frontend itself, paste the same `API_KEY` into the small field
-  next to the theme toggle (top right) — it's saved in that browser's
-  `localStorage` and sent automatically on Run Pipeline / Save as Target
-  / Send Mail from then on.
+- `curl -k https://<EC2_PUBLIC_IP>/api/accounts` should return data
+  (`-k` skips cert verification, since it's self-signed).
 
 ## Updating later
 
