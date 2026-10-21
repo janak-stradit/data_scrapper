@@ -138,6 +138,7 @@ PORT=8080
 SCHEDULER_ENABLED=true
 SCHEDULE_NEWS_HOURS=3                          # news channels, every company
 SCHEDULE_NEWS_CHANNELS=news,bloomberg,cxo_news
+SCHEDULE_COMPANIES_DAYS=3                      # full run (all channels), every company
 SCHEDULE_PEOPLE_DAYS=3                         # full run, every person, one at a time
 SCHEDULE_NOTIFY_TO=Janak@stradit.com           # one summary email per batch
 ```

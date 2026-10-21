@@ -4276,8 +4276,8 @@ $(function () {
   }
   $(document).on('click', '.sched-run-btn', function () {
     var job = $(this).data('job');
-    var big = job === 'people';
-    if (!confirm('Start the "' + job + '" schedule now?' + (big ? ' This runs every person one at a time (several hours, billed Apify calls).' : '') +
+    var big = job === 'people' || job === 'companies';
+    if (!confirm('Start the "' + job + '" schedule now?' + (big ? ' This runs every ' + (job === 'people' ? 'person' : 'company') + ' one at a time across all channels (billed Apify calls).' : '') +
                  ' A summary email is sent when it finishes.')) return;
     $(this).prop('disabled', true).html('<span class="btn-spinner"></span>');
     $.ajax({ url: '/api/scheduler/run', method: 'POST', contentType: 'application/json', data: JSON.stringify({ job: job }) })

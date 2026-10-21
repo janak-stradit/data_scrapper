@@ -1060,7 +1060,8 @@ def cmd_serve(args) -> int:
             )
             print("  /api/* has no authentication — anyone who can reach this port can use it")
             if scheduler_on:
-                print(f"  Scheduler ON: news every {config.SCHEDULE_NEWS_HOURS:g}h, people every "
+                print(f"  Scheduler ON: news every {config.SCHEDULE_NEWS_HOURS:g}h, companies every "
+                      f"{config.SCHEDULE_COMPANIES_DAYS:g}d, people every "
                       f"{config.SCHEDULE_PEOPLE_DAYS:g}d, summaries to {config.SCHEDULE_NOTIFY_TO or '(nobody)'}")
             else:
                 print("  Scheduler off (set SCHEDULER_ENABLED=true to turn it on)")
