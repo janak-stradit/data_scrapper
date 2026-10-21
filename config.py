@@ -121,6 +121,8 @@ DATABASE_URL = DATABASE_URL_LOCAL if DB_USE_LOCAL else DATABASE_URL_NEON
 # own — set SCHEDULER_ENABLED=true in the production env file only.
 #   news job:   every SCHEDULE_NEWS_HOURS, the news channels below for
 #               every company target.
+#   companies job: every SCHEDULE_COMPANIES_DAYS, a full scrape (all
+#               configured channels) of every company target.
 #   people job: every SCHEDULE_PEOPLE_DAYS, a full scrape of every
 #               person target, one at a time.
 # One summary email per finished batch goes to SCHEDULE_NOTIFY_TO
@@ -140,6 +142,8 @@ SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "false").strip().lower() in (
 SCHEDULE_NEWS_HOURS = _env_float("SCHEDULE_NEWS_HOURS", 3)
 SCHEDULE_NEWS_CHANNELS = _env_list("SCHEDULE_NEWS_CHANNELS", "news,bloomberg,cxo_news")
 SCHEDULE_NEWS_LIMIT = int(_env_float("SCHEDULE_NEWS_LIMIT", 20))
+SCHEDULE_COMPANIES_DAYS = _env_float("SCHEDULE_COMPANIES_DAYS", 3)
+SCHEDULE_COMPANIES_LIMIT = int(_env_float("SCHEDULE_COMPANIES_LIMIT", 20))
 SCHEDULE_PEOPLE_DAYS = _env_float("SCHEDULE_PEOPLE_DAYS", 3)
 SCHEDULE_PEOPLE_LIMIT = int(_env_float("SCHEDULE_PEOPLE_LIMIT", 20))
 SCHEDULE_NOTIFY_TO = os.getenv("SCHEDULE_NOTIFY_TO", "Janak@stradit.com").strip()

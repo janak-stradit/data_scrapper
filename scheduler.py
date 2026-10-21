@@ -1,9 +1,10 @@
 """Background scheduler for `python main.py serve`.
 
-Two recurring jobs (intervals and recipients come from config.py):
+Three recurring jobs (intervals and recipients come from config.py):
 
-  news    every SCHEDULE_NEWS_HOURS — the news channels for every company
-  people  every SCHEDULE_PEOPLE_DAYS — a full scrape of every person
+  news       every SCHEDULE_NEWS_HOURS — the news channels for every company
+  companies  every SCHEDULE_COMPANIES_DAYS — a full scrape of every company
+  people     every SCHEDULE_PEOPLE_DAYS — a full scrape of every person
 
 Each job runs its targets one at a time through runner.py, so every run
 shows up in Run history exactly like a manual one (tagged
@@ -16,8 +17,10 @@ batch (~500 runs) overlapping a news batch would otherwise trip that.
 
 Last-run times persist in output/scheduler_state.json, so a restart or
 redeploy doesn't re-trigger a batch that just ran. On a brand-new
-install the news job runs shortly after startup and the first people
-batch is one interval later — not hundreds of runs on first deploy.
+install the news and companies jobs run shortly after startup (only a
+handful of companies, and the full run is what gives a fresh server its
+non-news channel cards) and the first people batch is one interval
+later — not hundreds of runs on first deploy.
 """
 import json
 import os
@@ -47,6 +50,13 @@ def _jobs() -> dict:
             "every_secs": config.SCHEDULE_NEWS_HOURS * 3600,
             "only": config.SCHEDULE_NEWS_CHANNELS,
             "limit": config.SCHEDULE_NEWS_LIMIT,
+        },
+        "companies": {
+            "label": "Full run — every company",
+            "kind": "company",
+            "every_secs": config.SCHEDULE_COMPANIES_DAYS * 86400,
+            "only": None,
+            "limit": config.SCHEDULE_COMPANIES_LIMIT,
         },
         "people": {
             "label": "Full run — every person",
