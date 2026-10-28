@@ -5,8 +5,10 @@ scheduler (scheduler.py), so a scheduled run is recorded and behaves
 exactly like one started from the frontend.
 """
 import asyncio
+import threading
 import time
 
+import config
 import history
 
 
@@ -28,12 +30,48 @@ def start(kind: str, target: dict, limit: int, only=None, trigger: str = None) -
 def execute(run_id: str, kind: str, target: dict, limit: int, only=None, generate_digest: bool = False) -> dict:
     """Runs the scrape (and digest if asked), finishes the history entry,
     and returns the updates written to it. Never raises — a failure is
-    recorded as status "failed" with its error, same as a manual run."""
+    recorded as status "failed" with its error, same as a manual run.
+
+    The work runs in its own thread, joined for at most
+    config.RUN_HARD_TIMEOUT_SECS. Past that the run is recorded as failed
+    and this returns, so the scheduler moves on to its next target — a
+    blocking call that never returns (seen live: a run stuck ~2 days in a
+    database write after its scrape had finished) can't be cancelled from
+    asyncio, only walked away from. The abandoned thread is a daemon; if
+    it ever does finish, its result is simply dropped."""
+    t0 = time.time()
+    box = {}
+
+    def work():
+        box["updates"] = _work(kind, target, limit, only, generate_digest)
+
+    worker = threading.Thread(target=work, daemon=True, name=f"run-work-{run_id[:8]}")
+    worker.start()
+    worker.join(config.RUN_HARD_TIMEOUT_SECS)
+
+    if worker.is_alive():
+        print(f"⏱️  [runner] {target['key']}: exceeded {config.RUN_HARD_TIMEOUT_SECS}s — recorded as failed")
+        updates = {
+            "success": False,
+            "status": "failed",
+            "error": f"Run exceeded the {config.RUN_HARD_TIMEOUT_SECS}s hard timeout and was abandoned",
+        }
+    else:
+        updates = box.get("updates") or {
+            "success": False, "status": "failed", "error": "Run thread ended without a result",
+        }
+
+    updates["duration_ms"] = int((time.time() - t0) * 1000)
+    history.finish(run_id, updates)
+    return updates
+
+
+def _work(kind: str, target: dict, limit: int, only, generate_digest: bool) -> dict:
+    """The actual scrape (+ digest) — execute()'s worker thread body."""
     from engine import scrape_and_store
     from digest.pipeline import run as run_digest
     from digest.llm_client import LLMError
 
-    t0 = time.time()
     updates = {}
     try:
         stored = asyncio.run(scrape_and_store(limit=limit, kind=kind, target=target, only=only))
@@ -62,7 +100,4 @@ def execute(run_id: str, kind: str, target: dict, limit: int, only=None, generat
         updates["success"] = False
         updates["error"] = str(e)
         updates["status"] = "failed"
-
-    updates["duration_ms"] = int((time.time() - t0) * 1000)
-    history.finish(run_id, updates)
     return updates

@@ -11,9 +11,12 @@ shows up in Run history exactly like a manual one (tagged
 trigger="schedule:<job>"), then sends ONE summary email for the whole
 batch — successes and failures — to SCHEDULE_NOTIFY_TO.
 
-Only one scheduled target runs at a time across both jobs: Apify rejects
-more than a handful of concurrent actor runs on this plan, and a people
-batch (~500 runs) overlapping a news batch would otherwise trip that.
+Scheduled targets run one at a time per lane: the news job has its own
+lane, companies and people share the other. So at most two scheduled
+targets run at once — Apify rejects more than a handful of concurrent
+actor runs on this plan — while a people batch (~500 runs, a day or
+more) can no longer hold the 3-hourly news fetch back for its whole
+duration, which a single shared lock did.
 
 Last-run times persist in output/scheduler_state.json, so a restart or
 redeploy doesn't re-trigger a batch that just ran. On a brand-new
@@ -37,7 +40,8 @@ TICK_SECS = 60
 STARTUP_DELAY_SECS = 120   # let the server settle before the first batch
 
 _state_lock = threading.Lock()
-_run_lock = threading.Lock()       # one scheduled target at a time, across jobs
+# One scheduled target at a time per lane (see module docstring).
+_lane_locks = {"news": threading.Lock(), "full": threading.Lock()}
 _running = {}                      # job name -> {"started_at", "done", "total"}
 _thread = None
 
@@ -50,6 +54,7 @@ def _jobs() -> dict:
             "every_secs": config.SCHEDULE_NEWS_HOURS * 3600,
             "only": config.SCHEDULE_NEWS_CHANNELS,
             "limit": config.SCHEDULE_NEWS_LIMIT,
+            "lane": "news",
         },
         "companies": {
             "label": "Full run — every company",
@@ -57,6 +62,7 @@ def _jobs() -> dict:
             "every_secs": config.SCHEDULE_COMPANIES_DAYS * 86400,
             "only": None,
             "limit": config.SCHEDULE_COMPANIES_LIMIT,
+            "lane": "full",
         },
         "people": {
             "label": "Full run — every person",
@@ -64,6 +70,7 @@ def _jobs() -> dict:
             "every_secs": config.SCHEDULE_PEOPLE_DAYS * 86400,
             "only": None,
             "limit": config.SCHEDULE_PEOPLE_LIMIT,
+            "lane": "full",
         },
     }
 
@@ -129,7 +136,7 @@ def run_job(name: str) -> None:
         _running[name]["total"] = len(targets)
         print(f"⏰ [scheduler] {name}: starting {len(targets)} {job['kind']} run(s)")
         for t in targets:
-            with _run_lock:
+            with _lane_locks[job["lane"]]:
                 entry = runner.start(job["kind"], t, job["limit"], only=job["only"], trigger=f"schedule:{name}")
                 updates = runner.execute(entry["run_id"], job["kind"], t, job["limit"], only=job["only"])
             results.append({"target": t, "run_id": entry["run_id"], **updates})

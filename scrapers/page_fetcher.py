@@ -32,6 +32,8 @@ from typing import Any, Dict, Optional
 import trafilatura
 from playwright.async_api import Browser, Playwright, async_playwright
 
+from config import BROWSER_MAX_PAGES
+
 BROWSER_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -40,6 +42,28 @@ BROWSER_UA = (
 # Resources that never affect extracted article text but cost real load
 # time — same intent as the old actor's blockMedia:True.
 _BLOCKED_RESOURCE_TYPES = {"image", "media", "font"}
+
+# Chromium flags for a small Docker host: /dev/shm is only 64MB in a
+# container by default and Chromium crashes tabs that outgrow it; the GPU
+# and extension machinery just costs memory headless.
+_LAUNCH_ARGS = ["--disable-dev-shm-usage", "--disable-gpu", "--disable-extensions"]
+
+# Cleanup calls get a bound — if the OOM killer took the browser or its
+# driver, close() can otherwise wait forever on a process that's gone.
+_CLOSE_TIMEOUT_SECS = 15
+
+# Open pages across EVERY run in this process, not per channel: blog,
+# news and bloomberg each cap themselves at 4, but they run in parallel
+# (and the scheduler can run two targets at once), which used to mean 12+
+# Chromium tabs on a 2GB box — confirmed OOM kills. A threading semaphore
+# because each run has its own event loop; acquired by polling so a
+# cancelled waiter never leaks a slot.
+_page_slots = threading.BoundedSemaphore(BROWSER_MAX_PAGES)
+
+
+async def _acquire_page_slot() -> None:
+    while not _page_slots.acquire(blocking=False):
+        await asyncio.sleep(0.25)
 
 class _LoopState:
     def __init__(self) -> None:
@@ -77,7 +101,9 @@ async def _get_browser() -> Browser:
             # live: "BrowserType.launch: Executable doesn't exist ...
             # chrome-headless-shell.exe" even right after `playwright
             # install chromium`).
-            st.browser = await st.playwright.chromium.launch(headless=True, channel="chromium")
+            st.browser = await st.playwright.chromium.launch(
+                headless=True, channel="chromium", args=_LAUNCH_ARGS
+            )
         return st.browser
 
 
@@ -92,12 +118,12 @@ async def close_browser() -> None:
     async with st.lock:
         if st.browser is not None:
             try:
-                await st.browser.close()
+                await asyncio.wait_for(st.browser.close(), _CLOSE_TIMEOUT_SECS)
             except Exception:
                 pass
         if st.playwright is not None:
             try:
-                await st.playwright.stop()
+                await asyncio.wait_for(st.playwright.stop(), _CLOSE_TIMEOUT_SECS)
             except Exception:
                 pass
 
@@ -111,21 +137,28 @@ async def _block_non_content(route) -> None:
 
 async def get_html(url: str, timeout_secs: int = 60) -> str:
     """Render a URL in a headless browser and return its final HTML."""
-    browser = await _get_browser()
-    context = await browser.new_context(user_agent=BROWSER_UA)
-    page = await context.new_page()
+    await _acquire_page_slot()
     try:
-        await page.route("**/*", _block_non_content)
-        await page.goto(url, timeout=timeout_secs * 1000, wait_until="domcontentloaded")
+        browser = await _get_browser()
+        context = await browser.new_context(user_agent=BROWSER_UA)
         try:
-            # Best-effort: pages with continuous polling/analytics never go
-            # fully idle — domcontentloaded is already enough content.
-            await page.wait_for_load_state("networkidle", timeout=8000)
-        except Exception:
-            pass
-        return await page.content()
+            page = await context.new_page()
+            await page.route("**/*", _block_non_content)
+            await page.goto(url, timeout=timeout_secs * 1000, wait_until="domcontentloaded")
+            try:
+                # Best-effort: pages with continuous polling/analytics never go
+                # fully idle — domcontentloaded is already enough content.
+                await page.wait_for_load_state("networkidle", timeout=8000)
+            except Exception:
+                pass
+            return await page.content()
+        finally:
+            try:
+                await asyncio.wait_for(context.close(), _CLOSE_TIMEOUT_SECS)
+            except Exception:
+                pass
     finally:
-        await context.close()
+        _page_slots.release()
 
 
 async def fetch_article(url: str, timeout_secs: int = 60) -> Dict[str, Any]:

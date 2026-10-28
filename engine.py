@@ -422,15 +422,24 @@ class ApifyScraperEngine:
         if include_newsroom and want("newsroom") and target.get("newsroom_url"):
             # scrape_all flags "no platforms" when newsroom is the only channel.
             result["data"].pop("error", None)
-            news = await self.blog.scrape(
-                target.get("newsroom_url"),
-                limit,
-                target.get("newsroom_glob"),
-                target.get("newsroom_sitemap"),
-                target.get("newsroom_min_segments"),
-                skip_newsroom,
-                bool(target.get("newsroom_seed_from_index")),
-            )
+            # Same hard cap scrape_all() puts on every other channel.
+            try:
+                news = await asyncio.wait_for(
+                    self.blog.scrape(
+                        target.get("newsroom_url"),
+                        limit,
+                        target.get("newsroom_glob"),
+                        target.get("newsroom_sitemap"),
+                        target.get("newsroom_min_segments"),
+                        skip_newsroom,
+                        bool(target.get("newsroom_seed_from_index")),
+                    ),
+                    CHANNEL_HARD_TIMEOUT_SECS,
+                )
+            except asyncio.TimeoutError:
+                news = self.blog._error_response(
+                    f"channel exceeded {CHANNEL_HARD_TIMEOUT_SECS}s hard timeout"
+                )
             if isinstance(news, list) and news and news[0].get("error"):
                 result["data"]["newsroom"] = {
                     "success": False,
