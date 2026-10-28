@@ -72,6 +72,11 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          # The action's default is 10m, and the build runs on the small
+          # instance itself — a cold build (pip deps + Chromium and its
+          # system packages) takes longer than that. Hitting the limit
+          # drops the SSH session, which kills the build mid-way.
+          command_timeout: 30m
           script: |
             set -e
             # One-time cleanup: earlier deploys ran a standalone
@@ -98,4 +103,9 @@ jobs:
             cd ~/data_scrapper
             mkdir -p ~/data_scrapper_output
             docker compose up -d --build
+            # Old images and build cache otherwise pile up on every deploy
+            # until the disk fills ("no space left on device"). Cache newer
+            # than a week is kept, so unchanged layers (pip deps, Chromium)
+            # still build from cache next time.
             docker image prune -f
+            docker builder prune -f --filter until=168h

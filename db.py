@@ -12,6 +12,7 @@ migration step.
 """
 import json
 import threading
+import time
 from typing import Any, Dict
 
 from config import DATABASE_URL
@@ -23,6 +24,21 @@ _SCHEMA_LOCK = threading.Lock()
 # Arbitrary constant key for pg_advisory_lock — same serialization across
 # separate processes (the server plus a CLI run) hitting one database.
 _SCHEMA_ADVISORY_KEY = 727_340_001
+# When a schema statement fails, _ensure_schema() retries — but at most
+# this often, not on every single DB call (each attempt re-runs every
+# migration statement against the remote database).
+_SCHEMA_RETRY_SECS = 600
+_schema_last_attempt = 0.0
+
+# Every connection gets these, so a dead socket or a lock held by some
+# other session (a dev machine, a DB GUI left mid-transaction) fails fast
+# instead of hanging the calling run forever — seen live: a scheduled run
+# stuck ~2 days after its scrape had already finished, blocking every
+# schedule behind it.
+_CONNECT_TIMEOUT_SECS = 10
+_STATEMENT_TIMEOUT_MS = 120_000
+_LOCK_TIMEOUT_MS = 15_000
+_UPSERT_PAGE_SIZE = 500
 
 # Fields already broken out into their own columns — everything else on a
 # post goes into the `extra` JSONB column instead of being dropped.
@@ -235,7 +251,23 @@ def _connect():
         return None
     import psycopg2
     try:
-        return psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            connect_timeout=_CONNECT_TIMEOUT_SECS,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=3,
+        )
+        # SET rather than an `options` startup parameter — connection
+        # poolers (Neon's included) reject unknown startup parameters.
+        with conn.cursor() as cur:
+            cur.execute(
+                "SET statement_timeout = %s; SET lock_timeout = %s",
+                (_STATEMENT_TIMEOUT_MS, _LOCK_TIMEOUT_MS),
+            )
+        conn.commit()
+        return conn
     except Exception as e:
         print(f"⚠️  [DB] Could not connect ({e}); continuing with JSON only")
         return None
@@ -258,20 +290,34 @@ def _ensure_schema(conn) -> None:
     INDEX IF NOT EXISTS` isn't race-safe: concurrent first requests on the
     threaded server each saw the index missing, both tried to create it,
     and the loser failed with a duplicate pg_class_relname_nsp_index key.
+
+    Never waits: the advisory lock is only tried (another session holding
+    it means someone else is migrating right now — skip and retry later),
+    and a partial failure is retried at most every _SCHEMA_RETRY_SECS
+    rather than on every call. The statements are all IF NOT EXISTS-style,
+    so the callers' own queries work against an already-migrated schema.
     """
-    global _SCHEMA_READY
-    if _SCHEMA_READY:
+    global _SCHEMA_READY, _schema_last_attempt
+    if _SCHEMA_READY or time.time() - _schema_last_attempt < _SCHEMA_RETRY_SECS:
         return
-    with _SCHEMA_LOCK:
-        if _SCHEMA_READY:  # another thread finished while we waited
+    if not _SCHEMA_LOCK.acquire(blocking=False):
+        return  # another thread of this process is migrating right now
+    try:
+        if _SCHEMA_READY:
             return
+        _schema_last_attempt = time.time()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT pg_advisory_lock(%s)", (_SCHEMA_ADVISORY_KEY,))
+                cur.execute("SELECT pg_try_advisory_lock(%s)", (_SCHEMA_ADVISORY_KEY,))
+                got_lock = cur.fetchone()[0]
             conn.commit()
         except Exception as e:
             conn.rollback()
-            print(f"⚠️  [DB] Could not take schema lock, continuing ({e})")
+            print(f"⚠️  [DB] Could not take schema lock, skipping migrations for now ({e})")
+            return
+        if not got_lock:
+            print("⚠️  [DB] Another session holds the schema lock — skipping migrations for now")
+            return
         all_ok = True
         try:
             for statement in _SCHEMA_STATEMENTS:
@@ -292,6 +338,8 @@ def _ensure_schema(conn) -> None:
                 conn.rollback()
         if all_ok:
             _SCHEMA_READY = True
+    finally:
+        _SCHEMA_LOCK.release()
 
 
 def upsert_target(kind: str, target: Dict[str, Any]) -> None:
@@ -385,49 +433,66 @@ def list_targets(kind: str) -> list:
 def upsert_posts(target_key: str, kind: str, data: Dict[str, Any]) -> None:
     """Mirror one scrape's posts. `data` is a store document's "data" block:
     {channel: {"posts": [...]}, ...} — same shape store.py writes to JSON.
+
+    Batched (execute_values, _UPSERT_PAGE_SIZE rows per statement): `data`
+    is the whole merged store, not just this run's new posts, and one
+    INSERT round trip per post against a remote database added minutes to
+    every run as stores grew.
     """
     conn = _connect()
     if conn is None:
         return
+    from psycopg2.extras import execute_values
+
+    # Keyed by the conflict target so one batch never carries the same row
+    # twice — ON CONFLICT DO UPDATE rejects a statement that would update
+    # a row a second time, which per-row inserts used to tolerate.
+    rows, jobs = {}, []
+    for channel, block in (data or {}).items():
+        if not isinstance(block, dict):
+            continue
+        for post in block.get("posts", []):
+            extra = {k: v for k, v in post.items() if k not in _CORE_POST_FIELDS}
+            key = post_key(channel, post)
+            rows[(channel, key)] = (
+                target_key, kind, channel, key,
+                post.get("rank"), post.get("post_url"),
+                post.get("text"), post.get("author"), post.get("published_at"),
+                json.dumps(post.get("engagement") or {}),
+                json.dumps(post.get("media") or []),
+                json.dumps(extra),
+                post.get("first_seen"), post.get("last_seen"),
+                post.get("new_in_last_run"),
+                json.dumps(post),
+            )
+            if channel == "linkedin_jobs":
+                jobs.append(post)
     try:
         _ensure_schema(conn)
         with conn.cursor() as cur:
-            for channel, block in (data or {}).items():
-                if not isinstance(block, dict):
-                    continue
-                for post in block.get("posts", []):
-                    extra = {k: v for k, v in post.items() if k not in _CORE_POST_FIELDS}
-                    cur.execute(
-                        """
-                        INSERT INTO posts (
-                            target_key, kind, channel, post_key, rank, post_url,
-                            body, author, published_at, engagement, media, extra,
-                            first_seen, last_seen, new_in_last_run, raw
-                        )
-                        VALUES (
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                            %s::timestamptz, %s::timestamptz, %s, %s
-                        )
-                        ON CONFLICT (target_key, channel, post_key) DO UPDATE SET
-                            rank = EXCLUDED.rank,
-                            last_seen = EXCLUDED.last_seen,
-                            new_in_last_run = EXCLUDED.new_in_last_run,
-                            raw = EXCLUDED.raw
-                        """,
-                        (
-                            target_key, kind, channel, post_key(channel, post),
-                            post.get("rank"), post.get("post_url"),
-                            post.get("text"), post.get("author"), post.get("published_at"),
-                            json.dumps(post.get("engagement") or {}),
-                            json.dumps(post.get("media") or []),
-                            json.dumps(extra),
-                            post.get("first_seen"), post.get("last_seen"),
-                            post.get("new_in_last_run"),
-                            json.dumps(post),
-                        ),
+            if rows:
+                execute_values(
+                    cur,
+                    """
+                    INSERT INTO posts (
+                        target_key, kind, channel, post_key, rank, post_url,
+                        body, author, published_at, engagement, media, extra,
+                        first_seen, last_seen, new_in_last_run, raw
                     )
-                    if channel == "linkedin_jobs":
-                        _upsert_linkedin_job(cur, target_key, post)
+                    VALUES %s
+                    ON CONFLICT (target_key, channel, post_key) DO UPDATE SET
+                        rank = EXCLUDED.rank,
+                        last_seen = EXCLUDED.last_seen,
+                        new_in_last_run = EXCLUDED.new_in_last_run,
+                        raw = EXCLUDED.raw
+                    """,
+                    list(rows.values()),
+                    template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,"
+                             " %s::timestamptz, %s::timestamptz, %s, %s)",
+                    page_size=_UPSERT_PAGE_SIZE,
+                )
+            for post in jobs:
+                _upsert_linkedin_job(cur, target_key, post)
         conn.commit()
     except Exception as e:
         print(f"⚠️  [DB] Could not save posts for '{target_key}' ({e})")

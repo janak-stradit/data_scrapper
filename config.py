@@ -64,6 +64,16 @@ TIMEOUTS = {
     "uk_directorships": 30,
 }
 
+# ─── Resource limits (sized for a 2GB EC2 instance) ──────────────
+# Headless-browser pages open at once across the whole process — every
+# channel and every concurrent run share this (scrapers/page_fetcher.py).
+BROWSER_MAX_PAGES = max(1, int(os.getenv("BROWSER_MAX_PAGES", "3")))
+
+# Wall-clock cap on one whole target run (scrape + store + DB mirror +
+# optional digest) — past this, runner.py records it as failed and the
+# scheduler moves on, instead of one wedged run freezing every schedule.
+RUN_HARD_TIMEOUT_SECS = max(60, int(os.getenv("RUN_HARD_TIMEOUT_SECS", "3600")))
+
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
 # SEC requires a descriptive User-Agent with a contact address.
 SEC_USER_AGENT = os.getenv(

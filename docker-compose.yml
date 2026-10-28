@@ -8,6 +8,19 @@ services:
       - ${HOME}/data_scrapper_output:/app/output
     expose:
       - "8080"
+    # Sized for a 2GB t3.small: the app (Python + headless Chromium) is
+    # capped so a memory spike kills only its own processes, not Caddy
+    # and the host's system services (confirmed OOM kills before this
+    # cap). memswap_limit lets a spike spill ~600MB into the host's swap
+    # file (DEPLOY.md) before anything gets killed.
+    mem_limit: 1400m
+    memswap_limit: 2000m
+    # Rotate logs — json-file is unbounded by default.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
 
   caddy:
     image: caddy:2-alpine
@@ -22,6 +35,7 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+    mem_limit: 128m
 
 volumes:
   caddy_data:
