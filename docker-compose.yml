@@ -1,21 +1,48 @@
 services:
+  # Web server + manual runs (POST /api/run). Scheduled runs happen in the
+  # scheduler service below, so redeploying this never interrupts them.
   app:
     build: .
+    image: data_scrapper-app
+    restart: unless-stopped
+    env_file:
+      - ${HOME}/data_scrapper.env
+    environment:
+      SCHEDULER_EXTERNAL: "true"
+    volumes:
+      - ${HOME}/data_scrapper_output:/app/output
+    expose:
+      - "8080"
+    # Sized for a 2GB t3.small (with the 2GB swap file from DEPLOY.md):
+    # each container is capped so a memory spike — headless Chromium
+    # during a scrape — kills only its own processes, not Caddy and the
+    # host's system services (confirmed OOM kills before these caps).
+    # memswap_limit lets a spike spill into swap before anything dies.
+    mem_limit: 900m
+    memswap_limit: 1500m
+    # Rotate logs — json-file is unbounded by default.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # Scheduled jobs (scheduler.py), same image as app. On `docker compose
+  # up` it gets SIGTERM, finishes the target in progress (up to
+  # stop_grace_period; past that it's killed and the target re-runs),
+  # and the new container resumes the batch where this one stopped.
+  scheduler:
+    image: data_scrapper-app
+    pull_policy: never
+    command: ["python", "main.py", "scheduler"]
     restart: unless-stopped
     env_file:
       - ${HOME}/data_scrapper.env
     volumes:
       - ${HOME}/data_scrapper_output:/app/output
-    expose:
-      - "8080"
-    # Sized for a 2GB t3.small: the app (Python + headless Chromium) is
-    # capped so a memory spike kills only its own processes, not Caddy
-    # and the host's system services (confirmed OOM kills before this
-    # cap). memswap_limit lets a spike spill ~600MB into the host's swap
-    # file (DEPLOY.md) before anything gets killed.
-    mem_limit: 1400m
-    memswap_limit: 2000m
-    # Rotate logs — json-file is unbounded by default.
+    stop_grace_period: 20m
+    mem_limit: 1200m
+    memswap_limit: 1800m
     logging:
       driver: json-file
       options:

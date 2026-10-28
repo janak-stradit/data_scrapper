@@ -74,6 +74,11 @@ BROWSER_MAX_PAGES = max(1, int(os.getenv("BROWSER_MAX_PAGES", "3")))
 # scheduler moves on, instead of one wedged run freezing every schedule.
 RUN_HARD_TIMEOUT_SECS = max(60, int(os.getenv("RUN_HARD_TIMEOUT_SECS", "3600")))
 
+# Days a scraped post stays in its JSON store (output/stores/) after it was
+# first stored — older posts are dropped on the target's next run (see
+# store.py). 0 keeps everything. The Postgres mirror is not pruned.
+STORE_RETENTION_DAYS = int(os.getenv("STORE_RETENTION_DAYS", "15"))
+
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
 # SEC requires a descriptive User-Agent with a contact address.
 SEC_USER_AGENT = os.getenv(
@@ -149,6 +154,10 @@ def _env_float(name: str, default: float) -> float:
 
 
 SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "false").strip().lower() in ("1", "true", "yes")
+# True when the scheduler runs as its own process (`python main.py
+# scheduler` — the scheduler container in docker-compose.yml): `serve` then
+# leaves the jobs to it instead of running them in a thread of its own.
+SCHEDULER_EXTERNAL = os.getenv("SCHEDULER_EXTERNAL", "false").strip().lower() in ("1", "true", "yes")
 SCHEDULE_NEWS_HOURS = _env_float("SCHEDULE_NEWS_HOURS", 3)
 SCHEDULE_NEWS_CHANNELS = _env_list("SCHEDULE_NEWS_CHANNELS", "news,bloomberg,cxo_news")
 SCHEDULE_NEWS_LIMIT = int(_env_float("SCHEDULE_NEWS_LIMIT", 20))
