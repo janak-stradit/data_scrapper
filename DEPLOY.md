@@ -108,6 +108,17 @@ newgrp docker    # or log out and back in
 
 docker compose version    # confirm the Compose plugin is present
 
+# Swap — a small instance has none by default, and headless Chromium
+# spikes then get processes OOM-killed (and the disk thrashes) instead
+# of spilling over. 2GB is enough for a t3.small.
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# fwupd (firmware updates) is useless on EC2 and was the OOM killer's
+# most frequent victim — stop it from ever starting.
+sudo systemctl disable --now fwupd fwupd-refresh.timer; sudo systemctl mask fwupd
+
 # Somewhere to persist scraped data across deploys (Postgres also
 # mirrors everything if DATABASE_URL is set, but this keeps the JSON
 # files — what the frontend actually reads — surviving a redeploy too)
