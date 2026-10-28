@@ -798,12 +798,15 @@ def cmd_serve(args) -> int:
                 self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
                 return
             if job not in scheduler.status()["jobs"]:
-                self._send_json(400, {"ok": False, "error": "job must be \"news\" or \"people\""})
+                self._send_json(400, {"ok": False, "error": "job must be \"news\", \"companies\" or \"people\""})
                 return
+            # Queued, not started here: whichever process runs the
+            # scheduler (possibly another container) picks it up within
+            # scheduler.TICK_SECS.
             if not scheduler.trigger(job):
-                self._send_json(409, {"ok": False, "error": f"{job} is already running"})
+                self._send_json(409, {"ok": False, "error": f"{job} is already running or queued"})
                 return
-            self._send_json(202, {"ok": True, "started": job})
+            self._send_json(202, {"ok": True, "started": job, "queued": True})
 
         def _handle_run(self):
             """Kicks off a scrape (optionally + digest) in a background
@@ -1041,10 +1044,11 @@ def cmd_serve(args) -> int:
     ServeHandler = functools.partial(Handler, directory=PROJECT_ROOT)
 
     import history
-    reaped = history.reap_orphaned_running()
+    import config
+    # With the scheduler in its own process, its runs aren't ours to reap.
+    reaped = history.reap_orphaned_running(scope="manual" if config.SCHEDULER_EXTERNAL else "all")
 
     import scheduler
-    import config
     scheduler_on = scheduler.start()
 
     try:
@@ -1059,12 +1063,14 @@ def cmd_serve(args) -> int:
                 else f"  Bound to {host} — only /frontend, /output, /API.md, and /api/* are servable"
             )
             print("  /api/* has no authentication — anyone who can reach this port can use it")
-            if scheduler_on:
+            if config.SCHEDULER_EXTERNAL:
+                print("  Scheduler runs in its own process (python main.py scheduler)")
+            elif scheduler_on and config.SCHEDULER_ENABLED:
                 print(f"  Scheduler ON: news every {config.SCHEDULE_NEWS_HOURS:g}h, companies every "
                       f"{config.SCHEDULE_COMPANIES_DAYS:g}d, people every "
                       f"{config.SCHEDULE_PEOPLE_DAYS:g}d, summaries to {config.SCHEDULE_NOTIFY_TO or '(nobody)'}")
             else:
-                print("  Scheduler off (set SCHEDULER_ENABLED=true to turn it on)")
+                print("  Scheduler timetable off (set SCHEDULER_ENABLED=true); Run now still works")
             print("  Ctrl+C to stop\n")
             httpd.serve_forever()
     except KeyboardInterrupt:
@@ -1234,6 +1240,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve = sub.add_parser("serve", help="serve the frontend on localhost")
     p_serve.add_argument("--port", type=int, default=DEFAULT_PORT)
 
+    sub.add_parser(
+        "scheduler",
+        help="run the scheduled jobs in this process until stopped "
+        "(production: its own container — see docker-compose.yml)",
+    )
+
     p_list = sub.add_parser("list", help="show configured accounts")
     p_list.add_argument("--person", action="store_true", help="show people instead of companies")
     return parser
@@ -1258,6 +1270,9 @@ def main() -> int:
         return cmd_serve(args)
     if args.command == "list":
         return cmd_list(args)
+    if args.command == "scheduler":
+        import scheduler
+        return scheduler.run_forever()
     return 1
 
 

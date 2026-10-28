@@ -21,6 +21,8 @@ COPY . .
 # DEPLOY.md). Caddy is what's actually reachable from outside,
 # on 80/443; this container is never directly exposed to the host.
 ENV SERVE_HOST=0.0.0.0
+# Print straight to `docker compose logs` instead of in buffered chunks.
+ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 EXPOSE 8080
 

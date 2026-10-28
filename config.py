@@ -149,6 +149,10 @@ def _env_float(name: str, default: float) -> float:
 
 
 SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "false").strip().lower() in ("1", "true", "yes")
+# True when the scheduler runs as its own process (`python main.py
+# scheduler` — the scheduler container in docker-compose.yml): `serve` then
+# leaves the jobs to it instead of running them in a thread of its own.
+SCHEDULER_EXTERNAL = os.getenv("SCHEDULER_EXTERNAL", "false").strip().lower() in ("1", "true", "yes")
 SCHEDULE_NEWS_HOURS = _env_float("SCHEDULE_NEWS_HOURS", 3)
 SCHEDULE_NEWS_CHANNELS = _env_list("SCHEDULE_NEWS_CHANNELS", "news,bloomberg,cxo_news")
 SCHEDULE_NEWS_LIMIT = int(_env_float("SCHEDULE_NEWS_LIMIT", 20))

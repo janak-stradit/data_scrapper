@@ -20,7 +20,10 @@ terminal until done.
 _LOCK guards read-modify-write on the JSON file — necessary now that
 multiple background threads can call start()/finish() concurrently;
 without it, two overlapping writes could each read a stale list and
-clobber the other's entry.
+clobber the other's entry. In production the scheduler runs in its own
+container writing this same file, so every read-modify-write also holds
+a cross-process file lock (file_lock.py), and saves are atomic so a
+lock-free reader (load_all) never sees a half-written file.
 """
 import json
 import os
@@ -31,8 +34,10 @@ from typing import Any, Dict, List, Optional
 
 from paths import OUTPUT_DIR
 import db
+import file_lock
 
 HISTORY_PATH = os.path.join(OUTPUT_DIR, "run_history.json")
+_LOCK_PATH = HISTORY_PATH + ".lock"
 MAX_ENTRIES = 200
 
 _LOCK = threading.Lock()
@@ -50,8 +55,10 @@ def _load() -> List[Dict[str, Any]]:
 
 def _save(entries: List[Dict[str, Any]]) -> None:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    with open(HISTORY_PATH, "w", encoding="utf-8") as fh:
+    tmp = HISTORY_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(entries, fh, indent=2, ensure_ascii=False)
+    os.replace(tmp, HISTORY_PATH)
 
 
 def load_all() -> List[Dict[str, Any]]:
@@ -72,7 +79,7 @@ def record(entry: Dict[str, Any]) -> Dict[str, Any]:
         "recorded_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         **entry,
     }
-    with _LOCK:
+    with _LOCK, file_lock.locked(_LOCK_PATH):
         entries = _load()
         entries.insert(0, entry)
         del entries[MAX_ENTRIES:]
@@ -97,7 +104,7 @@ def start(entry: Dict[str, Any]) -> Dict[str, Any]:
         "status": "running",
         **entry,
     }
-    with _LOCK:
+    with _LOCK, file_lock.locked(_LOCK_PATH):
         entries = _load()
         entries.insert(0, entry)
         del entries[MAX_ENTRIES:]
@@ -106,9 +113,16 @@ def start(entry: Dict[str, Any]) -> Dict[str, Any]:
     return entry
 
 
-def reap_orphaned_running() -> int:
-    """Mark every "running" entry as interrupted — call once at server
-    startup, before any new run can start.
+def reap_orphaned_running(scope: str = "all") -> int:
+    """Mark "running" entries as interrupted — call once at process
+    startup, before this process starts any new run.
+
+    scope says whose entries this process owns: "all" (serve running the
+    scheduler in-process), "manual" (the web server when the scheduler
+    is its own container) or "scheduled" (that scheduler container) — a
+    web restart must not fail runs the scheduler container is still
+    executing, and vice versa. Scheduled runs are the ones whose
+    `trigger` starts with "schedule:" (runner.start()).
 
     A "running" entry only exists because start() wrote it and the
     matching finish() hasn't run yet; if the process is only just
@@ -119,11 +133,15 @@ def reap_orphaned_running() -> int:
     would wait on until it times out, and which permanently misrenders
     in the history table. Returns how many entries were reaped.
     """
-    with _LOCK:
+    def owned(e):
+        scheduled = str(e.get("trigger") or "").startswith("schedule:")
+        return scope == "all" or (scope == "scheduled") == scheduled
+
+    with _LOCK, file_lock.locked(_LOCK_PATH):
         entries = _load()
         reaped = 0
         for e in entries:
-            if e.get("status") == "running":
+            if e.get("status") == "running" and owned(e):
                 e["status"] = "failed"
                 e["success"] = False
                 e["error"] = "Interrupted — server restarted (or crashed) while this run was in progress"
@@ -144,12 +162,17 @@ def finish(run_id: str, updates: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     has the full result to respond with even if history couldn't be
     updated.
     """
-    with _LOCK:
+    found = None
+    with _LOCK, file_lock.locked(_LOCK_PATH):
         entries = _load()
         for e in entries:
             if e.get("run_id") == run_id:
                 e.update(updates)
                 _save(entries)
-                db.insert_run_history(e)
-                return e
-    return None
+                found = e
+                break
+    # Outside the locks — a slow database must not hold up every other
+    # history write in both processes.
+    if found is not None:
+        db.insert_run_history(found)
+    return found

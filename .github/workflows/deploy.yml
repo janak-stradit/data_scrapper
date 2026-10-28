@@ -102,7 +102,13 @@ jobs:
 
             cd ~/data_scrapper
             mkdir -p ~/data_scrapper_output
-            docker compose up -d --build
+            docker compose build app
+            docker compose up -d app caddy
+            # The scheduler drains before it restarts — finishes the target
+            # in progress, up to its 20m stop_grace_period — so it's
+            # recreated in the background rather than holding this SSH
+            # session open. Progress lands in ~/scheduler-redeploy.log.
+            setsid nohup docker compose up -d scheduler               > ~/scheduler-redeploy.log 2>&1 < /dev/null &
             # Old images and build cache otherwise pile up on every deploy
             # until the disk fills ("no space left on device"). Cache newer
             # than a week is kept, so unchanged layers (pip deps, Chromium)
