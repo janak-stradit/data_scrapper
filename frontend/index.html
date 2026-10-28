@@ -150,6 +150,7 @@
       font-size: .68rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
       color: var(--text-3); padding: 8px 8px 6px;
     }
+    .nav-group { font-size: .66rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 12px 10px 4px; }
     .nav-item {
       display: flex; align-items: center; gap: 10px; width: 100%;
       padding: 7px 10px; margin-bottom: 1px;
@@ -281,12 +282,8 @@
       border: 1px solid var(--border); border-bottom-width: 2px;
       background: var(--surface-2); color: var(--text-2);
     }
-      width: 120px; height: 34px; padding: 0 10px;
-      border: 1px solid var(--border); border-radius: 8px;
-      background: var(--surface); font-size: .8rem; outline: none;
-    }
 
-    .main-pad { padding: 24px 28px 48px; width: 100%; max-width: 1440px; }
+    .main-pad { padding: 24px 32px 56px; width: 100%; max-width: 1520px; margin: 0 auto; }
 
     /* ══ Primitives ════════════════════════════════════════════════ */
     .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -386,7 +383,7 @@
     .inline-status { margin: 0 !important; padding: 0 !important; background: none !important; border: 0 !important; }
 
     /* Stat cards */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .stat-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow-sm);
@@ -425,18 +422,84 @@
     .fade-in { animation: fadeIn .2s var(--ease) both; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-    /* ══ Home ══════════════════════════════════════════════════════ */
-    .home-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .quick-action {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-      padding: 12px; border-radius: var(--radius);
-      border: 1px solid var(--border); background: var(--surface-2); text-align: left;
-      transition: border-color .12s, background .12s;
+    /* ══ Overview (pipeline dashboard) ═════════════════════════════ */
+    .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+    .home-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .home-section { margin-bottom: 16px; }
+    .health-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    /* Health KPIs — clickable, coloured by how healthy the number is */
+    .health-card { text-align: left; cursor: pointer; position: relative; transition: border-color .12s var(--ease), box-shadow .12s var(--ease); }
+    .health-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow); }
+    .health-card::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--border-strong); }
+    .health-card.tone-ok::before { background: var(--ok); }
+    .health-card.tone-warn::before { background: var(--warn); }
+    .health-card.tone-bad::before { background: var(--danger); }
+    .health-card.tone-info::before { background: var(--info); }
+    .health-card.tone-bad .stat-value { color: var(--danger); }
+
+    /* Pipeline flow: CRM -> targets -> scraped -> posts -> digests */
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .flow-node {
+      position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+      padding: 14px 18px 16px; border: 0; background: none; text-align: left;
+      transition: background .12s var(--ease);
     }
-    .quick-action:hover { border-color: var(--accent-border); background: var(--accent-soft); }
-    .quick-action b { font-size: .84rem; font-weight: 600; }
-    .quick-action span { font-size: .74rem; color: var(--text-3); }
+    .flow-node + .flow-node { border-left: 1px solid var(--border); }
+    .flow-node:hover { background: var(--surface-2); }
+    .flow-node + .flow-node::before {
+      content: ''; position: absolute; left: -6px; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+      background: var(--surface); border-top: 1px solid var(--border); border-right: 1px solid var(--border);
+      transform: rotate(45deg);
+    }
+    .flow-step { font-size: .66rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+    .flow-value { font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--text); }
+    .flow-sub { font-size: .74rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .flow-bar { height: 4px; border-radius: 99px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
+    .flow-bar span { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .4s var(--ease); }
+    .flow-node.flow-backlog .flow-bar span { background: var(--warn); }
+
+    /* Runs card */
+    .seg-sm { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-3); border-radius: 8px; }
+    .seg-sm button { height: 24px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: var(--text-2); font-size: .74rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+    .seg-sm button.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    .seg-sm .seg-n { font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums; }
+    .trigger-tag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: .68rem; font-weight: 600; background: var(--surface-3); color: var(--text-2); white-space: nowrap; }
+    .trigger-tag.sched { background: var(--info-soft); color: var(--info); }
+    .ch-result { font-size: .76rem; white-space: nowrap; }
+    .ch-result .bad { color: var(--danger); font-weight: 600; }
+    .card-foot { padding: 10px 18px; border-top: 1px solid var(--border); font-size: .78rem; color: var(--text-3); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .link-btn { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; font-size: .78rem; }
+    .link-btn:hover { text-decoration: underline; }
+
+    /* Schedules */
+    .sched-item { padding: 12px 0; }
+    .sched-item + .sched-item { border-top: 1px solid var(--border); }
+    .sched-top { display: flex; align-items: center; gap: 10px; }
+    .sched-name { font-weight: 600; font-size: .84rem; flex: 1; min-width: 0; }
+    .sched-meta { font-size: .74rem; color: var(--text-3); margin-top: 2px; }
+    .sched-progress { height: 5px; border-radius: 99px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
+    .sched-progress span { display: block; height: 100%; background: var(--info); border-radius: 99px; transition: width .4s var(--ease); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; background: var(--border-strong); }
+    .status-dot.ok { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+    .status-dot.bad { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+
+    /* Needs attention */
+    .attn-list { list-style: none; margin: 0; padding: 0; }
+    .attn-item { display: flex; gap: 10px; padding: 10px 0; align-items: flex-start; }
+    .attn-item + .attn-item { border-top: 1px solid var(--border); }
+    .attn-icon { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; display: grid; place-items: center; font-size: .72rem; font-weight: 800; }
+    .attn-icon.bad { background: var(--danger-soft); color: var(--danger); }
+    .attn-icon.warn { background: var(--warn-soft); color: var(--warn); }
+    .attn-body { flex: 1; min-width: 0; font-size: .8rem; }
+    .attn-title { font-weight: 600; color: var(--text); }
+    .attn-title button { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; }
+    .attn-title button:hover { color: var(--accent); }
+    .attn-sub { color: var(--text-3); font-size: .74rem; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .all-clear { display: flex; align-items: center; gap: 10px; padding: 14px 0; font-size: .82rem; color: var(--text-2); }
+    .all-clear .attn-icon { background: var(--ok-soft); color: var(--ok); }
+
     .recent-list { list-style: none; margin: 0; padding: 0; }
     .recent-list li + li { border-top: 1px solid var(--border); }
     .recent-item {
@@ -839,8 +902,12 @@
     .cmdk-foot { display: flex; gap: 14px; padding: 8px 14px; border-top: 1px solid var(--border); font-size: .72rem; color: var(--text-3); background: var(--surface-2); }
 
     /* ══ Responsive ════════════════════════════════════════════════ */
-    @media (max-width: 1100px) {
-      .run-layout, .home-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1180px) {
+      .run-layout, .home-grid { grid-template-columns: minmax(0, 1fr); }
+      .flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .flow-node:nth-child(4) { border-left: 0; }
+      .flow-node:nth-child(n+4) { border-top: 1px solid var(--border); }
+      .flow-node:nth-child(4)::before { display: none; }
     }
     @media (max-width: 860px) {
       .sidebar { position: fixed; left: 0; top: 0; height: 100%; transform: translateX(-100%); transition: transform .22s var(--ease); box-shadow: var(--shadow-lg); }
@@ -849,6 +916,11 @@
       .sidebar-toggle { display: grid; }
       .topbar { padding: 0 14px; }
       .main-pad { padding: 18px 16px 40px; }
+      .flow { grid-template-columns: minmax(0, 1fr); }
+      .health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow-caption { display: none; }
+      .flow-node + .flow-node { border-left: 0; border-top: 1px solid var(--border); }
+      .flow-node + .flow-node::before { display: none; }
       .search-trigger { min-width: 0; }
       .search-trigger .st-label, .search-trigger kbd { display: none; }
       .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -876,16 +948,24 @@
     <nav class="side-nav" aria-label="Pages">
       <button type="button" class="nav-item active" id="homeNav" data-nav="home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Overview</button>
+
+      <div class="nav-group">Run</div>
       <button type="button" class="nav-item" id="pipelineNav" data-nav="pipeline">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>Pipeline</button>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>Fetch &amp; digest</button>
       <button type="button" class="nav-item" id="runPipelineNav" data-nav="run">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>Run pipeline</button>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>New target</button>
+
+      <div class="nav-group">Monitor</div>
+      <button type="button" class="nav-item" id="historyNav" data-nav="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Run history</button>
+
+      <div class="nav-group">Data</div>
       <button type="button" class="nav-item" id="peopleNav" data-nav="people">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>People</button>
       <button type="button" class="nav-item" id="crmNav" data-nav="crm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>CRM — not tracked<span class="nav-count d-none" id="crmNavCount"></span></button>
-      <button type="button" class="nav-item" id="historyNav" data-nav="history">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Run history</button>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>CRM import<span class="nav-count d-none" id="crmNavCount"></span></button>
+
+      <div class="nav-group">Reference</div>
       <button type="button" class="nav-item" id="apiDocsNav" data-nav="docs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>API docs</button>
     </nav>
@@ -932,37 +1012,54 @@
       <div id="emptyState" class="fade-in">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Overview</h1>
-            <p class="page-sub">What's tracked, what ran recently, and where to go next.</p>
+            <h1 class="page-title">Pipeline overview</h1>
+            <p class="page-sub">Run health over the last 24 hours, data coverage, and anything that needs a look.</p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn" data-go="run">New target</button>
+            <button type="button" class="btn btn-primary" data-go="pipeline">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Fetch &amp; digest</button>
           </div>
         </div>
-        <div class="stat-grid" id="homeStats">
-          <div class="skeleton" style="height:78px;border-radius:10px;"></div>
-          <div class="skeleton" style="height:78px;border-radius:10px;"></div>
-          <div class="skeleton" style="height:78px;border-radius:10px;"></div>
-          <div class="skeleton" style="height:78px;border-radius:10px;"></div>
+
+        <!-- 1. Health: is the pipeline working right now? -->
+        <div class="stat-grid health-grid" id="homeStats">
+          <div class="skeleton" style="height:84px;border-radius:10px;"></div>
+          <div class="skeleton" style="height:84px;border-radius:10px;"></div>
+          <div class="skeleton" style="height:84px;border-radius:10px;"></div>
+          <div class="skeleton" style="height:84px;border-radius:10px;"></div>
         </div>
+
+        <!-- 2. Coverage: how far each record has made it through the pipeline -->
+        <div class="card home-section">
+          <div class="card-head">
+            <h2 class="card-title">Data pipeline</h2>
+            <span class="flow-sub flow-caption">CRM → targets → scraped → stored → digest</span>
+          </div>
+          <div class="flow" id="homeFlow"><div class="card-body" style="grid-column:1/-1;"><span class="skeleton sk-line"></span></div></div>
+        </div>
+
+        <!-- 3. Activity + what to act on -->
         <div class="home-grid">
           <div class="card">
             <div class="card-head">
-              <h2 class="card-title">Recent runs</h2>
-              <button type="button" class="btn btn-sm" id="homeAllRunsBtn">View all</button>
+              <h2 class="card-title">Runs</h2>
+              <div class="seg-sm" id="homeRunFilter" role="tablist"></div>
             </div>
             <div id="homeRecentRuns"><div class="card-body"><span class="skeleton sk-line"></span><span class="skeleton sk-line"></span><span class="skeleton sk-line"></span></div></div>
+            <div class="card-foot">
+              <span id="homeRunsFoot"></span>
+              <button type="button" class="link-btn" id="homeAllRunsBtn">Full run history →</button>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="home-side">
+            <div class="card" id="homeAttention">
+              <div class="card-head"><h2 class="card-title">Needs attention</h2><span class="pill" id="homeAttentionCount"></span></div>
+              <div class="card-body" style="padding-top:2px;padding-bottom:4px;" id="homeAttentionBody"><span class="skeleton sk-line"></span></div>
+            </div>
             <div class="card d-none" id="homeSchedules">
               <div class="card-head"><h2 class="card-title">Schedules</h2><span class="pill" id="homeSchedulesState"></span></div>
-              <div class="card-body" style="padding-top:4px;padding-bottom:6px;" id="homeSchedulesBody"></div>
-            </div>
-            <div class="card">
-              <div class="card-head"><h2 class="card-title">Quick actions</h2></div>
-              <div class="card-body quick-actions">
-                <button type="button" class="quick-action" data-go="pipeline"><b>Fetch &amp; digest</b><span>Run an existing target</span></button>
-                <button type="button" class="quick-action" data-go="run"><b>New target</b><span>Ad-hoc run from JSON</span></button>
-                <button type="button" class="quick-action" data-go="people"><b>Refresh people</b><span>Re-run stale contacts</span></button>
-                <button type="button" class="quick-action" data-go="crm"><b>Import from CRM</b><span>Untracked records</span></button>
-              </div>
+              <div class="card-body" style="padding-top:2px;padding-bottom:4px;" id="homeSchedulesBody"></div>
             </div>
             <div class="card">
               <div class="card-head"><h2 class="card-title">Recently scraped</h2></div>
@@ -1031,7 +1128,7 @@
       <div id="stagedPipelineSection" class="d-none">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Pipeline</h1>
+            <h1 class="page-title">Fetch &amp; digest</h1>
             <p class="page-sub">Fetch fresh posts and build a digest for a target that's already registered.</p>
           </div>
         </div>
@@ -1089,7 +1186,7 @@
       <div id="runSection" class="d-none">
         <div class="page-head">
           <div>
-            <h1 class="page-title">Run pipeline</h1>
+            <h1 class="page-title">New target</h1>
             <p class="page-sub">Scrape any target from a JSON definition — save it to keep it in the sidebar.</p>
           </div>
         </div>
@@ -1154,7 +1251,7 @@
       <div id="crmPageSection" class="d-none">
         <div class="page-head">
           <div>
-            <h1 class="page-title">CRM — not yet tracked</h1>
+            <h1 class="page-title">CRM import</h1>
             <p class="page-sub">Accounts and contacts in the shared CRM that aren't scrape targets yet.</p>
           </div>
         </div>
@@ -2293,7 +2390,7 @@ $(function () {
 
   /* ─── Run Pipeline ─────────────────────────────────────── */
   function showRunSection() {
-    showPage('#runSection', 'Run pipeline', 'run');
+    showPage('#runSection', 'New target', 'run');
 
     if (!$('#runTargetJson').val().trim()) {
       $('#runTargetJson').val(JSON.stringify(RUN_EXAMPLES[state.runKind], null, 2));
@@ -2333,7 +2430,7 @@ $(function () {
   }
 
   function showStagedPipelineSection() {
-    showPage('#stagedPipelineSection', 'Pipeline', 'pipeline');
+    showPage('#stagedPipelineSection', 'Fetch & digest', 'pipeline');
 
     populatePipelineAccountSelect();
     loadRunHistory();
@@ -3221,7 +3318,7 @@ $(function () {
   var _crmTitleTimer = null;
 
   function showCrmPageSection() {
-    showPage('#crmPageSection', 'CRM — not tracked', 'crm');
+    showPage('#crmPageSection', 'CRM import', 'crm');
 
     if (crmPageState.kind === 'company' && !state.crmAccountsTotal && state.crmPeopleTotal) {
       $('.crm-kind-btn[data-crm-kind="person"]').trigger('click');
@@ -4167,7 +4264,13 @@ $(function () {
     try { localStorage.setItem('scraperTheme', next); } catch(e) {}
   });
 
-  /* ─── Overview (home) ──────────────────────────────────── */
+  /* ─── Overview (pipeline dashboard) ────────────────────── */
+  // Four questions, top to bottom: is the pipeline healthy right now
+  // (health cards), how far has each record got (flow), what ran
+  // (runs table), and what should I act on (needs attention, schedules).
+  var STUCK_AFTER_MS = 60 * 60 * 1000;   // runner.py's default hard limit
+  state.homeRunFilter = 'all';
+
   function showHome() {
     showPage('#emptyState', 'Overview', 'home');
     renderHome();
@@ -4175,55 +4278,181 @@ $(function () {
   }
   $('#homeNav').on('click', showHome);
   $('#homeAllRunsBtn').on('click', showHistoryPageSection);
-  $(document).on('click', '.quick-action', function () {
+  $(document).on('click', '[data-go]', function () {
     var go = $(this).data('go');
-    ({ pipeline: showStagedPipelineSection, run: showRunSection, people: showPeoplePageSection,
-       crm: showCrmPageSection, history: showHistoryPageSection })[go]();
+    var page = ({ pipeline: showStagedPipelineSection, run: showRunSection, people: showPeoplePageSection,
+                  crm: showCrmPageSection, history: showHistoryPageSection })[go];
+    if (page) page();
   });
+
+  function pct(n, d) { return d ? Math.round(n / d * 100) : 0; }
+  function isScheduled(e) { return String(e.trigger || '').indexOf('schedule:') === 0; }
+  function runAgeMs(e) { return e.recorded_at ? Date.now() - new Date(e.recorded_at).getTime() : 0; }
+  function fmtDuration(ms) {
+    if (ms == null || isNaN(ms)) return '—';
+    var s = Math.round(ms / 1000);
+    if (s < 60) return s + 's';
+    var m = Math.round(s / 60);
+    if (m < 60) return m + 'm';
+    var h = Math.floor(m / 60);
+    return h < 48 ? h + 'h ' + (m % 60) + 'm' : Math.round(h / 24) + 'd';
+  }
+
+  function healthCard(label, value, hint, tone, go) {
+    return '<button type="button" class="stat-card health-card fade-in tone-' + tone + '"' + (go ? ' data-go="' + go + '"' : '') + '>' +
+      '<div class="stat-label">' + esc(label) + '</div>' +
+      '<div class="stat-value">' + esc(value) + '</div>' +
+      (hint ? '<div class="stat-hint">' + esc(hint) + '</div>' : '') +
+    '</button>';
+  }
+
+  function flowNode(step, value, sub, fill, go, extraClass) {
+    return '<button type="button" class="flow-node ' + (extraClass || '') + '"' + (go ? ' data-go="' + go + '"' : '') + '>' +
+      '<span class="flow-step">' + esc(step) + '</span>' +
+      '<span class="flow-value">' + esc(value) + '</span>' +
+      '<span class="flow-sub" title="' + esc(sub) + '">' + esc(sub) + '</span>' +
+      '<span class="flow-bar"><span style="width:' + Math.max(0, Math.min(100, fill)) + '%"></span></span>' +
+    '</button>';
+  }
+
+  function runStatusPill(e) {
+    if (e.status === 'running') {
+      return runAgeMs(e) > STUCK_AFTER_MS
+        ? '<span class="pill pill-warning" title="Running longer than the 1h hard limit">stuck?</span>'
+        : '<span class="pill pill-running">running</span>';
+    }
+    if (!e.success) return '<span class="pill pill-danger" title="' + esc(e.error || '') + '">failed</span>';
+    return (e.platforms_failed || []).length
+      ? '<span class="pill pill-warning" title="Some channels failed">partial</span>'
+      : '<span class="pill pill-success">ok</span>';
+  }
 
   // Cheap to call often (after manifest/history loads and on every poll
   // tick) — it only touches the DOM while the Overview page is visible.
   function renderHome() {
     if ($('#emptyState').hasClass('d-none') || !state.manifestLoaded) return;
     var all = state.accounts.concat(state.people);
-    var scraped = all.filter(function (a) { return a.has_store; }).length;
+    var scraped = all.filter(function (a) { return a.has_store; });
     var digests = all.filter(function (a) { return a.has_digest; }).length;
+    var posts = scraped.reduce(function (n, a) { return n + (Number(a.total_posts) || 0); }, 0);
     var runs = state.runHistoryEntries || [];
     var dayAgo = Date.now() - 86400000;
     var runs24 = runs.filter(function (e) { return e.recorded_at && new Date(e.recorded_at).getTime() > dayAgo; });
-    var running = runs.filter(function (e) { return e.status === 'running'; }).length;
-    var failed24 = runs24.filter(function (e) { return e.status !== 'running' && !e.success; }).length;
+    var running = runs.filter(function (e) { return e.status === 'running'; });
+    var stuck = running.filter(function (e) { return runAgeMs(e) > STUCK_AFTER_MS; });
+    var done24 = runs24.filter(function (e) { return e.status !== 'running'; });
+    var ok24 = done24.filter(function (e) { return e.success; }).length;
+    var failed24 = done24.length - ok24;
+    var new24 = done24.reduce(function (n, e) { return n + (Number(e.new_posts) || 0); }, 0);
+    var cost24 = done24.reduce(function (n, e) { return n + (Number(e.cost_usd) || 0); }, 0);
     var crmTotal = (state.crmAccountsTotal || 0) + (state.crmPeopleTotal || 0);
+    var rate = pct(ok24, done24.length);
 
+    // 1. Health
     $('#homeStats').html(
-      statCard('Companies', state.accounts.length.toLocaleString(), '', state.accounts.filter(function (a) { return a.has_store; }).length + ' with data') +
-      statCard('People', state.people.length.toLocaleString(), '', state.people.filter(function (a) { return a.has_store; }).length + ' with data') +
-      statCard('Digests ready', digests.toLocaleString(), '', all.length ? Math.round(digests / all.length * 100) + '% of targets' : '') +
-      statCard('Runs, last 24h', runs24.length.toLocaleString(), '',
-        running ? running + ' running now' : (failed24 ? failed24 + ' failed' : 'no failures')) +
-      (crmTotal ? statCard('CRM not tracked', crmTotal.toLocaleString(), '', 'ready to import') : '')
+      healthCard('Success rate · 24h', done24.length ? rate + '%' : '—',
+        done24.length ? ok24 + ' of ' + done24.length + ' runs succeeded' : 'No finished runs in 24h',
+        !done24.length ? 'muted' : (rate >= 90 ? 'ok' : (rate >= 70 ? 'warn' : 'bad')), 'history') +
+      healthCard('Running now', running.length.toLocaleString(),
+        stuck.length ? stuck.length + ' running over 1h — may be stuck' : (running.length ? 'longest ' + fmtDuration(Math.max.apply(null, running.map(runAgeMs))) : 'Idle'),
+        stuck.length ? 'warn' : (running.length ? 'info' : 'muted'), 'history') +
+      healthCard('Failed · 24h', failed24.toLocaleString(),
+        failed24 ? 'Review in Needs attention' : 'No failures', failed24 ? 'bad' : 'ok', 'history') +
+      healthCard('New posts · 24h', new24.toLocaleString(),
+        'Apify cost $' + cost24.toFixed(2), new24 ? 'ok' : 'muted', 'history')
     );
 
-    var recent = runs.slice(0, 8);
-    $('#homeRecentRuns').html(recent.length
+    // 2. Pipeline flow
+    $('#homeFlow').html(
+      flowNode('CRM backlog', crmTotal.toLocaleString(), 'not yet tracked',
+        crmTotal ? 100 : 0, 'crm', 'flow-backlog') +
+      flowNode('Tracked', all.length.toLocaleString(),
+        state.accounts.length + ' companies · ' + state.people.length + ' people', all.length ? 100 : 0, 'people') +
+      flowNode('Scraped', scraped.length.toLocaleString(),
+        pct(scraped.length, all.length) + '% of tracked have data', pct(scraped.length, all.length), 'pipeline') +
+      flowNode('Posts stored', posts.toLocaleString(),
+        scraped.length ? 'avg ' + Math.round(posts / scraped.length) + ' per scraped target' : 'nothing stored yet',
+        posts ? 100 : 0, 'history') +
+      flowNode('Digests', digests.toLocaleString(),
+        pct(digests, scraped.length) + '% of scraped targets', pct(digests, scraped.length), 'pipeline')
+    );
+
+    // 3. Runs, filterable
+    var filters = [
+      ['all', 'All', runs],
+      ['running', 'Running', running],
+      ['failed', 'Failed', runs.filter(function (e) { return e.status !== 'running' && !e.success; })],
+      ['scheduled', 'Scheduled', runs.filter(isScheduled)]
+    ];
+    $('#homeRunFilter').html(filters.map(function (f) {
+      return '<button type="button" data-run-filter="' + f[0] + '" class="' + (state.homeRunFilter === f[0] ? 'active' : '') + '">' +
+        esc(f[1]) + (f[0] !== 'all' ? ' <span class="seg-n">' + f[2].length + '</span>' : '') + '</button>';
+    }).join(''));
+    var shown = filters.filter(function (f) { return f[0] === state.homeRunFilter; })[0][2].slice(0, 10);
+    $('#homeRecentRuns').html(shown.length
       ? '<div class="table-wrap no-max"><table class="run-history-table"><thead><tr>' +
-          '<th>Target</th><th class="num">New / Total</th><th>Status</th><th class="num">When</th></tr></thead><tbody>' +
-          recent.map(function (e) {
-            var st = e.status === 'running' ? '<span class="pill pill-running">running</span>'
-              : (e.success ? '<span class="pill pill-success">ok</span>' : '<span class="pill pill-danger" title="' + esc(e.error || '') + '">failed</span>');
-            var what = e.platforms_scraped && e.platforms_scraped.length ? e.platforms_scraped.join(', ') : (e.digest ? 'digest' : '');
+          '<th>Target</th><th>Trigger</th><th>Channels</th><th class="num">New / total</th><th class="num">Duration</th><th>Status</th><th class="num">When</th></tr></thead><tbody>' +
+          shown.map(function (e) {
+            var okCh = (e.platforms_scraped || []).length, badCh = e.platforms_failed || [];
+            var chans = e.status === 'running' ? '<span class="cell-sub">in progress</span>'
+              : (okCh || badCh.length
+                  ? '<span class="ch-result">' + okCh + ' ok' + (badCh.length ? ' · <span class="bad" title="' + esc(badCh.join(', ')) + '">' + badCh.length + ' failed</span>' : '') + '</span>'
+                  : '<span class="cell-sub">' + (e.digest ? 'digest only' : '—') + '</span>');
+            var trig = isScheduled(e)
+              ? '<span class="trigger-tag sched">' + esc(String(e.trigger).slice(9)) + '</span>'
+              : '<span class="trigger-tag">manual</span>';
+            var dur = e.status === 'running' ? fmtDuration(runAgeMs(e)) : fmtDuration(e.duration_ms);
             return '<tr class="rh-row"><td class="rh-target">' +
                 '<button type="button" class="people-name-link recent-run-open" data-key="' + esc(e.key || '') + '">' + esc(e.display_name || e.key || '') + '</button>' +
-                (what ? '<div class="cell-sub cell-ellipsis" title="' + esc(what) + '">' + esc(what) + '</div>' : '') + '</td>' +
+                (e.error && !e.success && e.status !== 'running' ? '<div class="rh-error-note cell-ellipsis" title="' + esc(e.error) + '">' + esc(e.error) + '</div>' : '') + '</td>' +
+              '<td>' + trig + '</td>' +
+              '<td>' + chans + '</td>' +
               '<td class="num">' + (e.status === 'running' ? '…' : esc((e.new_posts != null ? e.new_posts : '—') + ' / ' + (e.total_posts != null ? e.total_posts : '—'))) + '</td>' +
-              '<td>' + st + '</td>' +
+              '<td class="num">' + esc(dur) + '</td>' +
+              '<td>' + runStatusPill(e) + '</td>' +
               '<td class="num" title="' + esc(fmtDate(e.recorded_at)) + '">' + esc(fmtAgo(e.recorded_at)) + '</td></tr>';
           }).join('') + '</tbody></table></div>'
-      : emptyNote('No runs yet.', 'Start one from Pipeline or Run pipeline.'));
+      : emptyNote(state.homeRunFilter === 'all' ? 'No runs yet.' : 'Nothing here.',
+                  state.homeRunFilter === 'all' ? 'Start one from Fetch & digest.' : ''));
+    $('#homeRunsFoot').text(runs.length ? 'Showing ' + shown.length + ' of the last ' + runs.length + ' runs' : '');
 
+    // 4. Needs attention: failed runs, stuck runs, channels failing repeatedly
+    var items = [];
+    stuck.forEach(function (e) {
+      items.push({ tone: 'warn', icon: '!', key: e.key, title: e.display_name || e.key,
+        sub: 'Running for ' + fmtDuration(runAgeMs(e)) + ' — past the 1h limit, likely stuck' });
+    });
+    runs24.filter(function (e) { return e.status !== 'running' && !e.success; }).slice(0, 5).forEach(function (e) {
+      items.push({ tone: 'bad', icon: '×', key: e.key, title: e.display_name || e.key,
+        sub: (e.error || 'Failed') + ' · ' + fmtAgo(e.recorded_at) });
+    });
+    var chFails = {}, chRuns = {};
+    var recentDone = runs.filter(function (e) { return e.status !== 'running'; }).slice(0, 20);
+    recentDone.forEach(function (e) {
+      (e.platforms_scraped || []).forEach(function (c) { chRuns[c] = (chRuns[c] || 0) + 1; });
+      (e.platforms_failed || []).forEach(function (c) { chRuns[c] = (chRuns[c] || 0) + 1; chFails[c] = (chFails[c] || 0) + 1; });
+    });
+    Object.keys(chFails).filter(function (c) { return chFails[c] >= 2; })
+      .sort(function (a, b) { return chFails[b] - chFails[a]; }).slice(0, 4)
+      .forEach(function (c) {
+        items.push({ tone: 'warn', icon: '!', title: c + ' channel',
+          sub: 'Failed in ' + chFails[c] + ' of its last ' + chRuns[c] + ' runs' });
+      });
+    $('#homeAttentionCount').text(items.length ? items.length : 'clear')
+      .attr('class', 'pill ' + (items.length ? 'pill-danger' : 'pill-success'));
+    $('#homeAttentionBody').html(items.length
+      ? '<ul class="attn-list">' + items.map(function (it) {
+          return '<li class="attn-item"><span class="attn-icon ' + it.tone + '">' + it.icon + '</span>' +
+            '<div class="attn-body"><div class="attn-title">' +
+              (it.key ? '<button type="button" class="recent-run-open" data-key="' + esc(it.key) + '">' + esc(it.title) + '</button>' : esc(it.title)) +
+            '</div><div class="attn-sub" title="' + esc(it.sub) + '">' + esc(it.sub) + '</div></div></li>';
+        }).join('') + '</ul>'
+      : '<div class="all-clear"><span class="attn-icon">✓</span>No failed or stuck runs, and no channel failing repeatedly.</div>');
+
+    // 5. Recently scraped
     var latest = all.filter(function (a) { return a.last_run; })
       .sort(function (a, b) { return new Date(b.last_run) - new Date(a.last_run); })
-      .slice(0, 6);
+      .slice(0, 5);
     $('#homeRecentTargets').html(latest.length
       ? '<ul class="recent-list">' + latest.map(function (a) {
           var label = a.short || a.name;
@@ -4237,33 +4466,43 @@ $(function () {
       : emptyNote('Nothing scraped yet.', ''));
   }
   $(document).on('click', '.recent-item', function () { openTargetByKey($(this).data('key')); });
+  $(document).on('click', '[data-run-filter]', function () {
+    state.homeRunFilter = $(this).data('run-filter');
+    renderHome();
+  });
 
-  // Scheduled jobs (scheduler.py) — last result, next run, "Run now".
-  // Polled every 30s while Overview is open so a running batch's
-  // progress counts move without a refresh.
+  // Scheduled jobs (scheduler.py, its own container in production) —
+  // whether the scheduler is alive, each job's progress, last result and
+  // next run, and "Run now". Polled every 30s while Overview is open.
   function loadSchedules() {
     if ($('#emptyState').hasClass('d-none')) return;
     $.ajax({ url: '/api/scheduler' }).done(function (res) {
       var jobs = res.jobs || {};
+      var alive = res.alive !== false;   // older servers don't report it
       $('#homeSchedules').removeClass('d-none');
-      $('#homeSchedulesState').text(res.enabled ? 'on' : 'off')
-        .attr('class', 'pill ' + (res.enabled ? 'pill-success' : 'pill-muted'))
-        .attr('title', res.enabled ? 'Summary emails go to ' + (res.notify_to || 'nobody') : 'Set SCHEDULER_ENABLED=true on the server to turn on');
-      $('#homeSchedulesBody').html('<ul class="recent-list">' + Object.keys(jobs).map(function (name) {
+      $('#homeSchedulesState')
+        .html('<span class="status-dot ' + (alive ? 'ok' : 'bad') + '"></span>' +
+              (!alive ? 'offline' : (res.enabled ? 'on' : 'manual only')))
+        .attr('class', 'pill ' + (!alive ? 'pill-danger' : (res.enabled ? 'pill-success' : 'pill-muted')))
+        .attr('title', !alive ? 'No scheduler process has checked in for over a minute — check the scheduler container'
+          : (res.enabled ? 'Summary emails go to ' + (res.notify_to || 'nobody') : 'Set SCHEDULER_ENABLED=true on the server to run on a timetable'));
+      $('#homeSchedulesBody').html(Object.keys(jobs).map(function (name) {
         var j = jobs[name], r = j.running;
         var every = j.every_hours >= 24 ? (j.every_hours / 24) + ' days' : j.every_hours + ' h';
         var last = j.last_finished
           ? (j.last_failed ? '<span style="color:var(--danger)">' + j.last_failed + ' failed</span>, ' : '') + (j.last_ok || 0) + ' ok · ' + fmtAgo(j.last_finished)
-          : 'never run';
+          : 'never finished';
         var right = r
-          ? '<span class="pill pill-running">' + r.done + ' / ' + (r.total || '…') + '</span>'
+          ? (r.queued ? '<span class="pill pill-muted">queued</span>'
+                      : '<span class="pill pill-running">' + r.done + ' / ' + (r.total || '…') + '</span>')
           : '<button type="button" class="btn btn-sm sched-run-btn" data-job="' + esc(name) + '">Run now</button>';
-        return '<li><div class="recent-item" style="cursor:default;">' +
-          '<div class="acct-info"><div class="acct-name">' + esc(j.label) + '</div>' +
-          '<div class="acct-ticker">Every ' + esc(every) + ' · last: ' + last +
-            (res.enabled && j.next_run && !r ? ' · next ' + esc(fmtUntil(j.next_run)) : '') + '</div></div>' +
-          '<div class="recent-meta">' + right + '</div></div></li>';
-      }).join('') + '</ul>');
+        return '<div class="sched-item">' +
+          '<div class="sched-top"><div class="sched-name">' + esc(j.label) + '</div>' + right + '</div>' +
+          '<div class="sched-meta">Every ' + esc(every) + ' · last: ' + last +
+            (res.enabled && j.next_run && !r ? ' · next ' + esc(fmtUntil(j.next_run)) : '') + '</div>' +
+          (r && !r.queued && r.total ? '<div class="sched-progress"><span style="width:' + pct(r.done, r.total) + '%"></span></div>' : '') +
+        '</div>';
+      }).join(''));
     });
   }
   function fmtUntil(v) {
@@ -4289,10 +4528,10 @@ $(function () {
   /* ─── Command palette (Ctrl+K) ─────────────────────────── */
   var CMDK_PAGES = [
     { label: 'Overview', hint: 'Page', run: function () { showHome(); } },
-    { label: 'Pipeline', hint: 'Fetch & digest an existing target', run: function () { showStagedPipelineSection(); } },
-    { label: 'Run pipeline', hint: 'Ad-hoc target from JSON', run: function () { showRunSection(); } },
+    { label: 'Fetch & digest', hint: 'Scrape and summarise an existing target', run: function () { showStagedPipelineSection(); } },
+    { label: 'New target', hint: 'Ad-hoc target from JSON', run: function () { showRunSection(); } },
     { label: 'People', hint: 'Re-run people', run: function () { showPeoplePageSection(); } },
-    { label: 'CRM — not tracked', hint: 'Import from CRM', run: function () { showCrmPageSection(); } },
+    { label: 'CRM import', hint: 'Accounts and contacts not yet tracked', run: function () { showCrmPageSection(); } },
     { label: 'Run history', hint: 'Page', run: function () { showHistoryPageSection(); } },
     { label: 'API docs', hint: 'Page', run: function () { showApiDocsSection(); } }
   ];
