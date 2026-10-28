@@ -74,6 +74,11 @@ BROWSER_MAX_PAGES = max(1, int(os.getenv("BROWSER_MAX_PAGES", "3")))
 # scheduler moves on, instead of one wedged run freezing every schedule.
 RUN_HARD_TIMEOUT_SECS = max(60, int(os.getenv("RUN_HARD_TIMEOUT_SECS", "3600")))
 
+# Days a scraped post stays in its JSON store (output/stores/) after it was
+# first stored — older posts are dropped on the target's next run (see
+# store.py). 0 keeps everything. The Postgres mirror is not pruned.
+STORE_RETENTION_DAYS = int(os.getenv("STORE_RETENTION_DAYS", "15"))
+
 # ─── Free public APIs (no Apify actor, no compute units) ─────────
 # SEC requires a descriptive User-Agent with a contact address.
 SEC_USER_AGENT = os.getenv(

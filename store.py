@@ -4,6 +4,13 @@ The output file per company is the store: re-running the pipeline adds only
 posts that were not seen before, and never rewrites a post that is already
 there. It also records what was seen, so the next run can narrow what it asks
 the paid actors for instead of re-fetching the same posts.
+
+Retention: posts first stored more than config.STORE_RETENTION_DAYS ago are
+dropped from the file on the next merge, so stores don't grow forever. Each
+dropped post's key is remembered (store.expired_keys, for EXPIRED_KEY_DAYS)
+so a source that still lists it doesn't bring it back as "new" — no repeat
+digest entry, no re-fetching the article. JSON only: the Postgres mirror
+(db.py) keeps every post it was ever sent.
 """
 import json
 import os
@@ -11,11 +18,23 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from config import STORE_RETENTION_DAYS
 from profanity_filter import is_abusive
+
+# How long an expired post's key is remembered after it's dropped. Sources
+# rarely resurface anything older; past this, the key list would only grow.
+EXPIRED_KEY_DAYS = 180
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _parse_ts(value: Optional[str]) -> Optional[datetime]:
+    try:
+        return datetime.fromisoformat((value or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def post_key(channel: str, post: Dict[str, Any]) -> str:
@@ -67,17 +86,26 @@ class ScrapeStore:
 
     # ── What we already have ─────────────────────────────────────
 
+    def _expired_keys(self, channel: str) -> Dict[str, str]:
+        return self.doc.get("store", {}).get("expired_keys", {}).get(channel, {})
+
     def seen_keys(self, channel: str) -> set:
         posts = self.doc.get("data", {}).get(channel, {}).get("posts", [])
-        return {post_key(channel, p) for p in posts}
+        return {post_key(channel, p) for p in posts} | set(self._expired_keys(channel))
 
     def seen_urls(self, channel: str) -> set:
         posts = self.doc.get("data", {}).get(channel, {}).get("posts", [])
-        return {
+        urls = {
             (p.get("post_url") or "").split("?")[0].rstrip("/")
             for p in posts
             if p.get("post_url")
         }
+        # Expired posts too, so they aren't crawled again. URL-keyed
+        # channels' keys are "<channel>:<normalized url>" (post_key).
+        prefix = f"{channel}:"
+        urls |= {k[len(prefix):] for k in self._expired_keys(channel)
+                 if k.startswith(prefix + "http")}
+        return urls
 
     def last_run(self) -> Optional[str]:
         return self.doc.get("store", {}).get("last_run")
@@ -145,6 +173,42 @@ class ScrapeStore:
             )
         return removed
 
+    def expire(self, retention_days: int = STORE_RETENTION_DAYS) -> int:
+        """Drop posts first stored more than `retention_days` ago, remembering
+        their keys (see module docstring); 0 or less keeps everything. Posts
+        from before first_seen existed get stamped now, so their clock starts
+        today. Returns how many posts were dropped. Doesn't save()."""
+        if retention_days <= 0 or not self.doc:
+            return 0
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(days=retention_days)
+        expired = self.doc.setdefault("store", {}).setdefault("expired_keys", {})
+        dropped = 0
+        for channel, block in self.doc.get("data", {}).items():
+            if not isinstance(block, dict):
+                continue
+            kept = []
+            for post in block.get("posts", []):
+                seen = _parse_ts(post.get("first_seen"))
+                if seen is None:
+                    post["first_seen"] = _now()
+                elif seen < cutoff:
+                    expired.setdefault(channel, {})[post_key(channel, post)] = _now()
+                    dropped += 1
+                    continue
+                kept.append(post)
+            block["posts"] = kept
+            block["count"] = len(kept)
+
+        forget_before = now - timedelta(days=EXPIRED_KEY_DAYS)
+        for channel in list(expired):
+            keys = expired[channel]
+            for key in [k for k, at in keys.items() if (_parse_ts(at) or now) < forget_before]:
+                del keys[key]
+            if not keys:
+                del expired[channel]
+        return dropped
+
     def merge(self, result: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Dict[str, int]]]:
         """Fold a fresh scrape into the store, keeping one copy of each post.
 
@@ -156,6 +220,9 @@ class ScrapeStore:
         collapsed = self.dedupe()
         if collapsed:
             print(f"🧹  [Store] Collapsed {collapsed} duplicate posts already on file")
+        dropped = self.expire()
+        if dropped:
+            print(f"🗓️   [Store] Dropped {dropped} post(s) stored more than {STORE_RETENTION_DAYS} days ago")
 
         merged = self.doc if self.doc else {
             "success": True,
@@ -176,6 +243,7 @@ class ScrapeStore:
             existing_block = merged["data"].get(channel, {"posts": []})
             existing_posts = existing_block.get("posts", [])
             index = {post_key(channel, p): p for p in existing_posts}
+            expired = merged.get("store", {}).get("expired_keys", {}).get(channel, {})
 
             new_count = 0
             filtered_count = 0
@@ -189,6 +257,8 @@ class ScrapeStore:
                     index[key]["last_seen"] = run_at
                     index[key]["new_in_last_run"] = False
                     continue
+                if key in expired:
+                    continue  # stored before and aged out — not new again
                 post["first_seen"] = run_at
                 post["last_seen"] = run_at
                 post["new_in_last_run"] = True
@@ -242,8 +312,11 @@ class ScrapeStore:
         return merged, stats
 
     def save(self) -> None:
-        with open(self.path, "w", encoding="utf-8") as fh:
+        # Atomic, so the web server never serves a half-written store.
+        tmp = self.path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
             json.dump(self.doc, fh, indent=2, ensure_ascii=False)
+        os.replace(tmp, self.path)
 
     def new_posts(self, channel: str = None) -> List[Dict[str, Any]]:
         """Posts added by the most recent run — the input to the digest."""

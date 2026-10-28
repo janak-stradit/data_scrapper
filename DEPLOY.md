@@ -152,7 +152,18 @@ SCHEDULE_NEWS_CHANNELS=news,bloomberg,cxo_news
 SCHEDULE_COMPANIES_DAYS=3                      # full run (all channels), every company
 SCHEDULE_PEOPLE_DAYS=3                         # full run, every person, one at a time
 SCHEDULE_NOTIFY_TO=Janak@stradit.com           # one summary email per batch
+
+# JSON stores keep posts for this many days after they were first stored
+# (0 = forever). Postgres keeps everything regardless.
+STORE_RETENTION_DAYS=15
 ```
+
+Scheduled jobs run in their own `scheduler` container (docker-compose.yml),
+not inside the web server, so a deploy restarting the web server doesn't
+interrupt a batch. The scheduler itself is restarted in the background
+after each deploy: it finishes the target in progress first, then the new
+container resumes the batch — see `docker compose logs scheduler` and
+`~/scheduler-redeploy.log`.
 
 **Never commit this file** — it lives only in the `PROD_ENV_FILE` secret,
 on the instance, and in your local `.env`. Only set `DATABASE_URL` in it:
