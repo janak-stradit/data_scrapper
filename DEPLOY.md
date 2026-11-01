@@ -151,6 +151,8 @@ SCHEDULE_NEWS_HOURS=3                          # news channels, every company
 SCHEDULE_NEWS_CHANNELS=news,bloomberg,cxo_news
 SCHEDULE_COMPANIES_DAYS=3                      # full run (all channels), every company
 SCHEDULE_PEOPLE_DAYS=3                         # full run, every person, one at a time
+SCHEDULE_DIGEST_DAYS=7                         # digest email, every company
+SCHEDULE_DIGEST_SINCE_DAYS=7                   # ...built from its last 7 days of posts
 SCHEDULE_NOTIFY_TO=Janak@stradit.com           # one summary email per batch
 
 # JSON stores keep posts for this many days after they were first stored

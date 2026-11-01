@@ -39,11 +39,28 @@ def execute(run_id: str, kind: str, target: dict, limit: int, only=None, generat
     database write after its scrape had finished) can't be cancelled from
     asyncio, only walked away from. The abandoned thread is a daemon; if
     it ever does finish, its result is simply dropped."""
+    return _bounded(run_id, target, lambda: _work(kind, target, limit, only, generate_digest))
+
+
+def execute_digest_mail(run_id: str, target: dict, since_days: int) -> dict:
+    """The scheduler's digest job for one company: digest of the last
+    `since_days` of posts, mailed to its recipients (digest_mail.py).
+    Same time limit and history handling as execute()."""
+    import digest_mail
+    return _bounded(run_id, target, lambda: digest_mail.send_digest(target, since_days))
+
+
+def _bounded(run_id: str, target: dict, fn) -> dict:
+    """Runs fn() in a worker thread for at most RUN_HARD_TIMEOUT_SECS (see
+    execute()), then finishes the history entry with its updates."""
     t0 = time.time()
     box = {}
 
     def work():
-        box["updates"] = _work(kind, target, limit, only, generate_digest)
+        try:
+            box["updates"] = fn()
+        except Exception as e:
+            box["updates"] = {"success": False, "status": "failed", "error": str(e)}
 
     worker = threading.Thread(target=work, daemon=True, name=f"run-work-{run_id[:8]}")
     worker.start()
