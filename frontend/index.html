@@ -485,6 +485,23 @@
     .status-dot.ok { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
     .status-dot.bad { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
 
+    /* Digest emails page */
+    .digest-sched { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; }
+    .digest-sched > div { padding: 14px 18px; min-width: 0; }
+    .digest-sched > div + div { border-left: 1px solid var(--border); }
+    .digest-sched .flow-value { font-size: 1.05rem; }
+    .recip-editor { padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .recip-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; }
+    .recip-editor .toolbar-input { width: 100%; min-width: 0; flex: none; }
+    .recip-companies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .recip-companies label { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid var(--border); border-radius: 99px; background: var(--surface); font-size: .78rem; font-weight: 500; cursor: pointer; }
+    .recip-companies label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); }
+    .recip-companies input { accent-color: var(--accent); }
+    .recip-actions { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    .recip-scope { display: flex; gap: 16px; flex-wrap: wrap; }
+    .recip-row.inactive td { opacity: .55; }
+    .recip-co { display: flex; flex-wrap: wrap; gap: 4px; white-space: normal; }
+
     /* Needs attention */
     .attn-list { list-style: none; margin: 0; padding: 0; }
     .attn-item { display: flex; gap: 10px; padding: 10px 0; align-items: flex-start; }
@@ -917,6 +934,8 @@
       .topbar { padding: 0 14px; }
       .main-pad { padding: 18px 16px 40px; }
       .flow { grid-template-columns: minmax(0, 1fr); }
+      .recip-editor-grid { grid-template-columns: minmax(0, 1fr); }
+      .digest-sched > div + div { border-left: 0; border-top: 1px solid var(--border); }
       .health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .flow-caption { display: none; }
       .flow-node + .flow-node { border-left: 0; border-top: 1px solid var(--border); }
@@ -954,6 +973,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>Fetch &amp; digest</button>
       <button type="button" class="nav-item" id="runPipelineNav" data-nav="run">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>New target</button>
+      <button type="button" class="nav-item" id="digestEmailsNav" data-nav="digest-emails">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Digest emails<span class="nav-count d-none" id="digestNavCount"></span></button>
 
       <div class="nav-group">Monitor</div>
       <button type="button" class="nav-item" id="historyNav" data-nav="history">
@@ -1335,6 +1356,60 @@
         </div>
       </div>
 
+      <!-- Digest emails (scheduler "digest" job + its recipients) -->
+      <div id="digestEmailsSection" class="d-none">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Digest emails</h1>
+            <p class="page-sub" id="digestEmailsSub">Each company's digest of the last 7 days, emailed on a schedule to the people below.</p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn btn-primary" id="digestSendNowBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Send now</button>
+          </div>
+        </div>
+
+        <div class="card home-section">
+          <div class="card-head"><h2 class="card-title">Schedule</h2><span class="pill" id="digestSchedState"></span></div>
+          <div class="digest-sched" id="digestSchedBody"><div><span class="skeleton sk-line"></span></div></div>
+        </div>
+
+        <div class="history-panel">
+          <div class="history-toolbar">
+            <div class="history-toolbar-title">Recipients</div>
+            <span class="run-status inline-status" id="recipStatus"></span>
+            <button type="button" class="btn btn-sm btn-primary" id="recipAddBtn">+ Add recipient</button>
+          </div>
+          <div class="recip-editor d-none" id="recipEditor">
+            <div class="recip-editor-grid">
+              <div>
+                <label class="run-field-label" for="recipEmail">Email</label>
+                <input type="email" id="recipEmail" class="toolbar-input" placeholder="name@company.com" autocomplete="off">
+              </div>
+              <div>
+                <label class="run-field-label" for="recipName">Name <span style="font-weight:400;color:var(--text-3);">(optional)</span></label>
+                <input type="text" id="recipName" class="toolbar-input" placeholder="Jane Doe" autocomplete="off">
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <span class="run-field-label">Companies</span>
+              <div class="recip-scope">
+                <label class="run-checkbox"><input type="radio" name="recipScope" value="all" checked> Every company</label>
+                <label class="run-checkbox"><input type="radio" name="recipScope" value="some"> Only selected</label>
+              </div>
+              <div class="recip-companies d-none" id="recipCompanies"></div>
+            </div>
+            <div class="recip-actions">
+              <label class="run-checkbox"><input type="checkbox" id="recipActive" checked> Active (receives emails)</label>
+              <span class="spacer" style="flex:1;"></span>
+              <button type="button" class="btn btn-sm" id="recipCancelBtn">Cancel</button>
+              <button type="button" class="btn btn-sm btn-primary" id="recipSaveBtn">Save recipient</button>
+            </div>
+          </div>
+          <div id="recipTable"></div>
+        </div>
+      </div>
+
       <!-- API docs -->
       <div id="apiDocsSection" class="d-none">
         <div class="md-panel">
@@ -1445,7 +1520,7 @@ $(function () {
     '#emptyState', '#accountHeader', '#channelSection', '#digestSection',
     '#newsBriefSection', '#postSection', '#apiDocsSection', '#runSection',
     '#stagedPipelineSection', '#historyPageSection', '#peoplePageSection',
-    '#crmPageSection'
+    '#crmPageSection', '#digestEmailsSection'
   ];
   function showPage(sectionId, crumbLabel, navKey) {
     $(PAGE_SECTIONS.join(',')).addClass('d-none');
@@ -4523,12 +4598,179 @@ $(function () {
       .always(function () { setTimeout(loadSchedules, 800); });
   });
   setInterval(loadSchedules, 30000);
+
+  /* ─── Digest emails (scheduler "digest" job) ───────────── */
+  // The recipient list is saved whole (POST /api/digest-recipients) after
+  // every add/edit/remove; the server validates and returns what it stored.
+  var recip = { list: [], editing: -1 };
+
+  function showDigestEmailsSection() {
+    showPage('#digestEmailsSection', 'Digest emails', 'digest-emails');
+    closeRecipEditor();
+    loadRecipients();
+    loadDigestSchedule();
+  }
+  $('#digestEmailsNav').on('click', showDigestEmailsSection);
+
+  function loadRecipients() {
+    $('#recipTable').html('<div class="card-body"><span class="skeleton sk-line"></span><span class="skeleton sk-line"></span></div>');
+    $.getJSON('/api/digest-recipients').done(function (res) {
+      recip.list = res.recipients || [];
+      renderRecipients();
+    }).fail(function () {
+      $('#recipTable').html(emptyNote('Could not load recipients.', 'Is the server running?'));
+    });
+  }
+
+  function companyName(key) {
+    var a = state.accounts.filter(function (x) { return x.key === key; })[0];
+    return a ? (a.short || a.name) : key;
+  }
+
+  function renderRecipients() {
+    var active = recip.list.filter(function (r) { return r.active; }).length;
+    $('#digestNavCount').text(active).toggleClass('d-none', !active);
+    if (!recip.list.length) {
+      $('#recipTable').html(emptyNote('No recipients yet.', 'Add someone to start receiving the weekly digest.'));
+      return;
+    }
+    $('#recipTable').html('<div class="table-wrap no-max"><table class="run-history-table"><thead><tr>' +
+      '<th>Recipient</th><th>Companies</th><th>Status</th><th class="num"></th></tr></thead><tbody>' +
+      recip.list.map(function (r, i) {
+        var cos = r.companies && r.companies.length
+          ? '<div class="recip-co">' + r.companies.map(function (k) { return '<span class="pill">' + esc(companyName(k)) + '</span>'; }).join('') + '</div>'
+          : '<span class="pill pill-brand">All companies</span>';
+        return '<tr class="rh-row recip-row' + (r.active ? '' : ' inactive') + '">' +
+          '<td class="rh-target">' + esc(r.name || r.email) + (r.name ? '<div class="cell-sub">' + esc(r.email) + '</div>' : '') + '</td>' +
+          '<td>' + cos + '</td>' +
+          '<td>' + (r.active ? '<span class="pill pill-success">active</span>' : '<span class="pill pill-muted">paused</span>') + '</td>' +
+          '<td class="num"><div class="people-run-cell">' +
+            '<button type="button" class="ghost-btn" data-recip-toggle="' + i + '">' + (r.active ? 'Pause' : 'Resume') + '</button>' +
+            '<button type="button" class="ghost-btn" data-recip-edit="' + i + '">Edit</button>' +
+            '<button type="button" class="ghost-btn" style="color:var(--danger);" data-recip-remove="' + i + '">Remove</button>' +
+          '</div></td></tr>';
+      }).join('') + '</tbody></table></div>');
+  }
+
+  function saveRecipients(list, okMsg) {
+    var $st = $('#recipStatus').attr('class', 'run-status inline-status').text('Saving…');
+    return $.ajax({ url: '/api/digest-recipients', method: 'POST', contentType: 'application/json',
+                    data: JSON.stringify({ recipients: list }) })
+      .done(function (res) {
+        recip.list = res.recipients || [];
+        renderRecipients();
+        loadDigestSchedule();
+        $st.attr('class', 'run-status inline-status ok').text(okMsg);
+        setTimeout(function () { if ($st.text() === okMsg) $st.text(''); }, 3000);
+      })
+      .fail(function (xhr) {
+        $st.attr('class', 'run-status inline-status err')
+          .text((xhr.responseJSON && xhr.responseJSON.error) || 'Could not save — is the server running?');
+      });
+  }
+
+  function openRecipEditor(i) {
+    recip.editing = i;
+    var r = i >= 0 ? recip.list[i] : { email: '', name: '', active: true, companies: [] };
+    $('#recipEmail').val(r.email);
+    $('#recipName').val(r.name || '');
+    $('#recipActive').prop('checked', r.active !== false);
+    $('input[name="recipScope"][value="' + (r.companies && r.companies.length ? 'some' : 'all') + '"]').prop('checked', true);
+    $('#recipCompanies').html(state.accounts.map(function (a) {
+      return '<label><input type="checkbox" value="' + esc(a.key) + '"' +
+        ((r.companies || []).indexOf(a.key) >= 0 ? ' checked' : '') + '> ' + esc(a.short || a.name) + '</label>';
+    }).join('') || '<span class="cell-sub">No companies configured.</span>')
+      .toggleClass('d-none', !(r.companies && r.companies.length));
+    $('#recipSaveBtn').text(i >= 0 ? 'Save changes' : 'Add recipient');
+    $('#recipEditor').removeClass('d-none');
+    $('#recipEmail').trigger('focus');
+  }
+  function closeRecipEditor() { recip.editing = -1; $('#recipEditor').addClass('d-none'); }
+
+  $('#recipAddBtn').on('click', function () { openRecipEditor(-1); });
+  $('#recipCancelBtn').on('click', closeRecipEditor);
+  $(document).on('change', 'input[name="recipScope"]', function () {
+    $('#recipCompanies').toggleClass('d-none', this.value !== 'some');
+  });
+  $('#recipSaveBtn').on('click', function () {
+    var some = $('input[name="recipScope"]:checked').val() === 'some';
+    var companies = some ? $('#recipCompanies input:checked').map(function () { return this.value; }).get() : [];
+    if (some && !companies.length) {
+      $('#recipStatus').attr('class', 'run-status inline-status err').text('Pick at least one company, or choose Every company.');
+      return;
+    }
+    var entry = { email: $('#recipEmail').val().trim(), name: $('#recipName').val().trim(),
+                  active: $('#recipActive').is(':checked'), companies: companies };
+    var list = recip.list.slice();
+    if (recip.editing >= 0) list[recip.editing] = entry; else list.push(entry);
+    saveRecipients(list, recip.editing >= 0 ? 'Saved' : 'Added ' + entry.email).done(closeRecipEditor);
+  });
+  $(document).on('click', '[data-recip-edit]', function () { openRecipEditor(+$(this).data('recip-edit')); });
+  $(document).on('click', '[data-recip-toggle]', function () {
+    var i = +$(this).data('recip-toggle'), list = recip.list.slice();
+    list[i] = $.extend({}, list[i], { active: !list[i].active });
+    saveRecipients(list, list[i].active ? 'Resumed' : 'Paused');
+  });
+  $(document).on('click', '[data-recip-remove]', function () {
+    var i = +$(this).data('recip-remove'), r = recip.list[i];
+    if (!confirm('Stop sending the digest to ' + r.email + '?')) return;
+    var list = recip.list.slice(); list.splice(i, 1);
+    closeRecipEditor();
+    saveRecipients(list, 'Removed ' + r.email);
+  });
+
+  function loadDigestSchedule() {
+    $.getJSON('/api/scheduler').done(function (res) {
+      var j = (res.jobs || {}).digest;
+      if (!j) { $('#digestSchedBody').html('<div class="cell-sub">This server has no digest schedule — redeploy to get it.</div>'); return; }
+      var alive = res.alive !== false, r = j.running;
+      var every = j.every_hours >= 24 ? (j.every_hours / 24) + ' days' : j.every_hours + ' h';
+      $('#digestEmailsSub').text('Every ' + every + ', each company\'s digest of its recent posts is emailed to the people below.');
+      $('#digestSchedState')
+        .html('<span class="status-dot ' + (alive ? 'ok' : 'bad') + '"></span>' + (!alive ? 'scheduler offline' : (res.enabled ? 'on' : 'manual only')))
+        .attr('class', 'pill ' + (!alive ? 'pill-danger' : (res.enabled ? 'pill-success' : 'pill-muted')));
+      var withRecip = state.accounts.filter(function (a) {
+        return recip.list.some(function (x) { return x.active && (!x.companies.length || x.companies.indexOf(a.key) >= 0); });
+      }).length;
+      function cell(step, value, sub) {
+        return '<div><span class="flow-step">' + esc(step) + '</span><div class="flow-value">' + value + '</div>' +
+          (sub ? '<div class="flow-sub">' + esc(sub) + '</div>' : '') + '</div>';
+      }
+      $('#digestSchedBody').html(
+        cell('Frequency', esc('Every ' + every), 'last 7 days of posts per company') +
+        cell('Next send', r ? (r.queued ? 'Queued' : 'Sending ' + r.done + ' / ' + (r.total || '…'))
+                            : esc(res.enabled && j.next_run ? fmtUntil(j.next_run) : '—'),
+             r ? '' : (res.enabled ? '' : 'timetable off — use Send now')) +
+        cell('Last send', j.last_finished ? esc(fmtAgo(j.last_finished)) : 'Never',
+             j.last_finished ? (j.last_ok || 0) + ' sent' + (j.last_failed ? ', ' + j.last_failed + ' failed' : '') : '') +
+        cell('Companies covered', withRecip + ' / ' + state.accounts.length, 'have at least one active recipient')
+      );
+      $('#digestSendNowBtn').prop('disabled', !!r);
+    });
+  }
+
+  $('#digestSendNowBtn').on('click', function () {
+    var n = recip.list.filter(function (r) { return r.active; }).length;
+    if (!n) { $('#recipStatus').attr('class', 'run-status inline-status err').text('Add a recipient first.'); return; }
+    if (!confirm('Generate and email the digest now to ' + n + ' active recipient' + (n === 1 ? '' : 's') +
+                 '? This makes one LLM call per company.')) return;
+    var $btn = $(this).prop('disabled', true);
+    $.ajax({ url: '/api/scheduler/run', method: 'POST', contentType: 'application/json', data: JSON.stringify({ job: 'digest' }) })
+      .done(function () { $('#recipStatus').attr('class', 'run-status inline-status ok').text('Queued — sending starts within a few seconds.'); })
+      .fail(function (xhr) {
+        $btn.prop('disabled', false);
+        $('#recipStatus').attr('class', 'run-status inline-status err').text((xhr.responseJSON && xhr.responseJSON.error) || 'Could not start.');
+      })
+      .always(function () { setTimeout(loadDigestSchedule, 800); });
+  });
+  setInterval(function () { if (!$('#digestEmailsSection').hasClass('d-none')) loadDigestSchedule(); }, 15000);
   $(document).on('click', '.recent-run-open', function () { openTargetByKey($(this).data('key')); });
 
   /* ─── Command palette (Ctrl+K) ─────────────────────────── */
   var CMDK_PAGES = [
     { label: 'Overview', hint: 'Page', run: function () { showHome(); } },
     { label: 'Fetch & digest', hint: 'Scrape and summarise an existing target', run: function () { showStagedPipelineSection(); } },
+    { label: 'Digest emails', hint: 'Weekly digest schedule and recipients', run: function () { showDigestEmailsSection(); } },
     { label: 'New target', hint: 'Ad-hoc target from JSON', run: function () { showRunSection(); } },
     { label: 'People', hint: 'Re-run people', run: function () { showPeoplePageSection(); } },
     { label: 'CRM import', hint: 'Accounts and contacts not yet tracked', run: function () { showCrmPageSection(); } },

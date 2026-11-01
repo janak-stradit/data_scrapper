@@ -4,6 +4,9 @@ from config.py):
   news       every SCHEDULE_NEWS_HOURS — the news channels for every company
   companies  every SCHEDULE_COMPANIES_DAYS — a full scrape of every company
   people     every SCHEDULE_PEOPLE_DAYS — a full scrape of every person
+  digest     every SCHEDULE_DIGEST_DAYS — each company's digest of the last
+             SCHEDULE_DIGEST_SINCE_DAYS of posts, emailed to its recipients
+             (digest_mail.py; companies nobody receives are skipped)
 
 Each job runs its targets one at a time through runner.py, so every run
 shows up in Run history exactly like a manual one (tagged
@@ -16,8 +19,9 @@ server never interrupts a batch. Locally, `python main.py serve` runs the
 same loop in a background thread unless SCHEDULER_EXTERNAL=true.
 
 Scheduled targets run one at a time per lane: the news job has its own
-lane, companies and people share the other. So at most two scheduled
-targets run at once — Apify rejects more than a handful of concurrent
+lane, companies and people share another, and the digest job (LLM calls
+and mail only, no scraping) has a third. So at most two scheduled scrapes
+run at once — Apify rejects more than a handful of concurrent
 actor runs on this plan — while a people batch (~500 runs, a day or
 more) can no longer hold the 3-hourly news fetch back for its whole
 duration, which a single shared lock did.
@@ -56,7 +60,7 @@ HEARTBEAT_STALE_SECS = 90
 
 _state_lock = threading.Lock()
 # One scheduled target at a time per lane (see module docstring).
-_lane_locks = {"news": threading.Lock(), "full": threading.Lock()}
+_lane_locks = {"news": threading.Lock(), "full": threading.Lock(), "digest": threading.Lock()}
 _active = set()                    # jobs with a live batch thread in THIS process
 _batch_threads = []
 _stopping = threading.Event()      # set on SIGTERM: finish current targets, start nothing new
@@ -88,6 +92,15 @@ def _jobs() -> dict:
             "only": None,
             "limit": config.SCHEDULE_PEOPLE_LIMIT,
             "lane": "full",
+        },
+        "digest": {
+            "label": "Weekly digest email — every company",
+            "kind": "company",
+            "every_secs": config.SCHEDULE_DIGEST_DAYS * 86400,
+            "only": None,
+            "limit": 0,
+            "lane": "digest",
+            "action": "digest_mail",
         },
     }
 
@@ -168,6 +181,9 @@ def run_job(name: str) -> None:
         results, crash = list(batch["results"]), None
         try:
             targets = _targets(job["kind"])
+            if job.get("action") == "digest_mail":
+                import digest_mail
+                targets = [t for t in targets if digest_mail.recipients_for(t["key"])]
             done = set(batch["done"])
             todo = [t for t in targets if t["key"] not in done]
             _mutate_state(lambda state: state[name]["batch"].update(total=len(targets)))
@@ -180,7 +196,10 @@ def run_job(name: str) -> None:
                     if _stopping.is_set():
                         break
                     entry = runner.start(job["kind"], t, job["limit"], only=job["only"], trigger=f"schedule:{name}")
-                    updates = runner.execute(entry["run_id"], job["kind"], t, job["limit"], only=job["only"])
+                    if job.get("action") == "digest_mail":
+                        updates = runner.execute_digest_mail(entry["run_id"], t, config.SCHEDULE_DIGEST_SINCE_DAYS)
+                    else:
+                        updates = runner.execute(entry["run_id"], job["kind"], t, job["limit"], only=job["only"])
                 row = {"target": {"key": t["key"], "display_name": t["display_name"]},
                        "run_id": entry["run_id"], **updates}
                 results.append(row)
@@ -388,9 +407,10 @@ def _tick() -> None:
         if not config.SCHEDULER_ENABLED or job["every_secs"] <= 0:
             continue
         last = s.get("last_started")
-        if last is None and name == "people":
+        if last is None and name in ("people", "digest"):
             # Fresh install: start the clock instead of launching
-            # hundreds of person runs the moment it's deployed.
+            # hundreds of person runs (or mailing everyone) the moment
+            # it's deployed. "Run now" sends a digest straight away.
             _update_state(name, last_started=_now().isoformat())
             continue
         if last is None or (_now() - datetime.fromisoformat(last)).total_seconds() >= job["every_secs"]:

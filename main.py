@@ -467,6 +467,9 @@ def cmd_serve(args) -> int:
                 elif path == "/api/scheduler":
                     import scheduler
                     self._send_json(200, scheduler.status())
+                elif path == "/api/digest-recipients":
+                    import digest_mail
+                    self._send_json(200, {"recipients": digest_mail.load_recipients()})
                 else:
                     self.send_error(404)
                 return
@@ -733,8 +736,28 @@ def cmd_serve(args) -> int:
                 self._handle_digest()
             elif self.path == "/api/save-target":
                 self._handle_save_target()
+            elif self.path == "/api/digest-recipients":
+                self._handle_digest_recipients()
             else:
                 self.send_error(404)
+
+        def _handle_digest_recipients(self):
+            """POST {"recipients": [{"email", "name", "active", "companies"}]}
+            — replaces the scheduled digest's whole recipient list
+            (digest_mail.py validates it). Returns the list as stored."""
+            import digest_mail
+
+            try:
+                payload = self._read_json_body()
+            except json.JSONDecodeError:
+                self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
+                return
+            try:
+                saved = digest_mail.save_recipients((payload or {}).get("recipients"))
+            except ValueError as e:
+                self._send_json(400, {"ok": False, "error": str(e)})
+                return
+            self._send_json(200, {"ok": True, "recipients": saved})
 
         def _handle_send_email(self):
             from mailer import send_email, MailerError
@@ -798,7 +821,7 @@ def cmd_serve(args) -> int:
                 self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
                 return
             if job not in scheduler.status()["jobs"]:
-                self._send_json(400, {"ok": False, "error": "job must be \"news\", \"companies\" or \"people\""})
+                self._send_json(400, {"ok": False, "error": "job must be \"news\", \"companies\", \"people\" or \"digest\""})
                 return
             # Queued, not started here: whichever process runs the
             # scheduler (possibly another container) picks it up within

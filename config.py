@@ -165,6 +165,11 @@ SCHEDULE_COMPANIES_DAYS = _env_float("SCHEDULE_COMPANIES_DAYS", 3)
 SCHEDULE_COMPANIES_LIMIT = int(_env_float("SCHEDULE_COMPANIES_LIMIT", 20))
 SCHEDULE_PEOPLE_DAYS = _env_float("SCHEDULE_PEOPLE_DAYS", 3)
 SCHEDULE_PEOPLE_LIMIT = int(_env_float("SCHEDULE_PEOPLE_LIMIT", 20))
+# Digest emails: every SCHEDULE_DIGEST_DAYS, each company's digest of its
+# last SCHEDULE_DIGEST_SINCE_DAYS of posts goes to its recipients (managed
+# in the app — output/digest_recipients.json, see digest_mail.py).
+SCHEDULE_DIGEST_DAYS = _env_float("SCHEDULE_DIGEST_DAYS", 7)
+SCHEDULE_DIGEST_SINCE_DAYS = int(_env_float("SCHEDULE_DIGEST_SINCE_DAYS", 7))
 SCHEDULE_NOTIFY_TO = os.getenv("SCHEDULE_NOTIFY_TO", "Janak@stradit.com").strip()
 
 # Google News RSS locale.
