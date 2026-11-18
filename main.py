@@ -470,8 +470,21 @@ def cmd_serve(args) -> int:
                 elif path == "/api/digest-recipients":
                     import digest_mail
                     self._send_json(200, {"recipients": digest_mail.load_recipients()})
+                elif path == "/api/apify-token":
+                    import apify_settings
+                    self._send_json(200, apify_settings.status())
                 else:
                     self.send_error(404)
+                return
+
+            # Dot-segments are refused outright: ".." would let a crafted
+            # path normalise out of the public prefixes (translate_path
+            # collapses it), and dot-dirs under output/ hold secrets
+            # (output/.secrets/apify.json — see apify_settings.py).
+            # Checked on the decoded path, since translate_path decodes %2e.
+            from urllib.parse import unquote
+            if any(seg.startswith(".") for seg in unquote(path).replace("\\", "/").split("/")):
+                self.send_error(404)
                 return
 
             if path.startswith(self._PUBLIC_PREFIXES) or path in self._PUBLIC_EXACT:
@@ -738,6 +751,10 @@ def cmd_serve(args) -> int:
                 self._handle_save_target()
             elif self.path == "/api/digest-recipients":
                 self._handle_digest_recipients()
+            elif self.path == "/api/apify-token":
+                self._handle_apify_token(save=True)
+            elif self.path == "/api/apify-token/check":
+                self._handle_apify_token(save=False)
             else:
                 self.send_error(404)
 
@@ -758,6 +775,34 @@ def cmd_serve(args) -> int:
                 self._send_json(400, {"ok": False, "error": str(e)})
                 return
             self._send_json(200, {"ok": True, "recipients": saved})
+
+        def _handle_apify_token(self, save: bool):
+            """POST /api/apify-token {"token"} — verify with Apify and save
+            it as the token actors run with ("" clears it, falling back to
+            APIFY_TOKEN from the env). POST /api/apify-token/check {"token"?}
+            — verify only and return the balance; no token checks the one
+            in use. The token itself is never sent back."""
+            import apify_settings
+
+            try:
+                payload = self._read_json_body() or {}
+            except json.JSONDecodeError:
+                self._send_json(400, {"ok": False, "error": "Malformed JSON body"})
+                return
+            token = payload.get("token")
+            if token is not None and not isinstance(token, str):
+                self._send_json(400, {"ok": False, "error": "token must be a string"})
+                return
+            try:
+                if save:
+                    result = apify_settings.save_token(token or "")
+                    result["ok"] = True
+                else:
+                    result = apify_settings.check(token)
+            except apify_settings.ApifyCheckError as e:
+                self._send_json(400, {"ok": False, "error": str(e)})
+                return
+            self._send_json(200, result)
 
         def _handle_send_email(self):
             from mailer import send_email, MailerError

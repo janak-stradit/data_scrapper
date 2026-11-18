@@ -25,7 +25,8 @@ from typing import List, Dict, Any
 
 from apify_client import ApifyClientAsync
 
-from config import ACTORS, APIFY_TOKEN, DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
+import apify_settings
+from config import ACTORS, DEFAULT_POST_LIMIT, NEWS_LOCALE, TIMEOUTS
 from .base_scraper import BaseScraper
 
 
@@ -34,7 +35,7 @@ class CxoNewsScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("cxo_news")
-        self.client = ApifyClientAsync(APIFY_TOKEN)
+        self.client = ApifyClientAsync(apify_settings.get_token())
         self.actor_id = ACTORS["cxo_news"]
 
     async def scrape(

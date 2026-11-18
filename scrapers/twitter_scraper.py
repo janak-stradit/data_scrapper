@@ -2,7 +2,8 @@
 from typing import List, Dict, Any
 from apify_client import ApifyClientAsync
 
-from config import APIFY_TOKEN, ACTORS, TIMEOUTS, DEFAULT_POST_LIMIT
+import apify_settings
+from config import ACTORS, TIMEOUTS, DEFAULT_POST_LIMIT
 from .base_scraper import BaseScraper
 
 
@@ -11,7 +12,7 @@ class TwitterScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("twitter")
-        self.client = ApifyClientAsync(APIFY_TOKEN)
+        self.client = ApifyClientAsync(apify_settings.get_token())
         self.actor_id = ACTORS["twitter"]
 
     async def scrape(self, handle: str, limit: int = DEFAULT_POST_LIMIT) -> List[Dict[str, Any]]:

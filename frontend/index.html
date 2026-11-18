@@ -491,6 +491,11 @@
     .digest-sched > div + div { border-left: 1px solid var(--border); }
     .digest-sched .flow-value { font-size: 1.05rem; }
     .recip-editor { padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .apify-token-row { display: flex; gap: 8px; align-items: center; }
+    .apify-token-row .toolbar-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .apify-meter { height: 8px; border-radius: 99px; background: var(--surface-3); overflow: hidden; margin-top: 6px; }
+    .apify-meter > span { display: block; height: 100%; background: var(--accent); }
+    .apify-meter.warn > span { background: var(--danger); }
     .recip-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; }
     .recip-editor .toolbar-input { width: 100%; min-width: 0; flex: none; }
     .recip-companies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -935,6 +940,8 @@
       .main-pad { padding: 18px 16px 40px; }
       .flow { grid-template-columns: minmax(0, 1fr); }
       .recip-editor-grid { grid-template-columns: minmax(0, 1fr); }
+      .apify-token-row { flex-wrap: wrap; }
+      .apify-token-row .toolbar-input { flex-basis: 100%; }
       .digest-sched > div + div { border-left: 0; border-top: 1px solid var(--border); }
       .health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .flow-caption { display: none; }
@@ -989,6 +996,8 @@
       <div class="nav-group">Reference</div>
       <button type="button" class="nav-item" id="apiDocsNav" data-nav="docs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/></svg>API docs</button>
+      <button type="button" class="nav-item" id="settingsNav" data-nav="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.3-9.3"/><path d="m16 7 3 3"/><path d="m18 5 2 2"/></svg>Settings<span class="nav-count d-none" id="settingsNavWarn">!</span></button>
     </nav>
 
     <div class="side-targets">
@@ -1410,6 +1419,36 @@
         </div>
       </div>
 
+      <!-- Settings (Apify token) -->
+      <div id="settingsSection" class="d-none">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-sub">Credentials the pipeline runs with.</p>
+          </div>
+        </div>
+
+        <div class="card home-section">
+          <div class="card-head"><h2 class="card-title">Apify API token</h2><span class="pill" id="apifySource"></span></div>
+          <div class="card-body">
+            <p class="cell-sub" style="margin:0 0 12px;">Used by the LinkedIn, LinkedIn Jobs, Twitter/X and CXO news actors. A saved token takes effect from the next run (manual or scheduled) and overrides <code>APIFY_TOKEN</code> in the server env. Find yours in the <a href="https://console.apify.com/settings/integrations" target="_blank" rel="noopener">Apify console → Integrations</a>.</p>
+            <div class="cell-sub" id="apifyCurrent" style="margin-bottom:10px;"></div>
+            <label class="run-field-label" for="apifyTokenInput">New token</label>
+            <div class="apify-token-row">
+              <input type="password" id="apifyTokenInput" class="toolbar-input" placeholder="apify_api_…" autocomplete="off" spellcheck="false">
+              <button type="button" class="btn btn-sm" id="apifyShowBtn">Show</button>
+              <button type="button" class="btn btn-sm" id="apifyCheckBtn">Check balance</button>
+              <button type="button" class="btn btn-sm btn-primary" id="apifySaveBtn">Save</button>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <span class="run-status inline-status" id="apifyStatus"></span>
+              <button type="button" class="ghost-btn d-none" id="apifyClearBtn" style="margin-left:auto;">Revert to env token</button>
+            </div>
+          </div>
+          <div class="digest-sched d-none" id="apifyBalance" style="border-top:1px solid var(--border);"></div>
+        </div>
+      </div>
+
       <!-- API docs -->
       <div id="apiDocsSection" class="d-none">
         <div class="md-panel">
@@ -1520,7 +1559,7 @@ $(function () {
     '#emptyState', '#accountHeader', '#channelSection', '#digestSection',
     '#newsBriefSection', '#postSection', '#apiDocsSection', '#runSection',
     '#stagedPipelineSection', '#historyPageSection', '#peoplePageSection',
-    '#crmPageSection', '#digestEmailsSection'
+    '#crmPageSection', '#digestEmailsSection', '#settingsSection'
   ];
   function showPage(sectionId, crumbLabel, navKey) {
     $(PAGE_SECTIONS.join(',')).addClass('d-none');
@@ -4766,6 +4805,112 @@ $(function () {
   setInterval(function () { if (!$('#digestEmailsSection').hasClass('d-none')) loadDigestSchedule(); }, 15000);
   $(document).on('click', '.recent-run-open', function () { openTargetByKey($(this).data('key')); });
 
+  /* ─── Settings: Apify token ────────────────────────────── */
+  // The server never returns the token — only a masked form. "Check
+  // balance" tests the typed token, or the one in use when left blank.
+  function showSettingsSection() {
+    showPage('#settingsSection', 'Settings', 'settings');
+    $('#apifyStatus').text('');
+    loadApifyStatus(true);
+  }
+  $('#settingsNav').on('click', showSettingsSection);
+
+  function fmtUsd(n) { return typeof n === 'number' ? '$' + n.toFixed(2) : '—'; }
+
+  function renderApifyStatus(st) {
+    var src = st.source === 'ui' ? 'Saved in UI' : st.source === 'env' ? 'From server env' : 'Not set';
+    $('#apifySource').text(src).attr('class', 'pill ' + (st.configured ? 'pill-success' : 'pill-muted'));
+    $('#settingsNavWarn').toggleClass('d-none', !!st.configured);
+    $('#apifyCurrent').html(st.configured
+      ? 'In use: <code>' + esc(st.masked) + '</code>' + (st.updated_at ? ' · saved ' + esc(new Date(st.updated_at).toLocaleString()) : '')
+      : 'No token is set — Apify actors will fail until you save one.');
+    $('#apifyClearBtn').toggleClass('d-none', st.source !== 'ui');
+  }
+
+  function renderApifyBalance(b) {
+    if (!b) { $('#apifyBalance').addClass('d-none').empty(); return; }
+    var pct = (typeof b.usage_usd === 'number' && b.limit_usd) ? Math.min(100, b.usage_usd / b.limit_usd * 100) : null;
+    function cell(label, value, sub) {
+      return '<div><div class="run-field-label">' + esc(label) + '</div><div style="font-size:18px;font-weight:600;">' +
+        value + '</div>' + (sub ? '<div class="cell-sub">' + sub + '</div>' : '') + '</div>';
+    }
+    $('#apifyBalance').removeClass('d-none').html(
+      cell('Account', esc(b.username || '—'), esc(b.plan || '')) +
+      cell('Remaining this cycle',
+        typeof b.remaining_usd === 'number' && b.remaining_usd < 0
+          ? '<span style="color:var(--danger);">$0.00</span>' : esc(fmtUsd(b.remaining_usd)),
+        (typeof b.remaining_usd === 'number' && b.remaining_usd < 0
+          ? '<span style="color:var(--danger);">Over the limit by ' + esc(fmtUsd(-b.remaining_usd)) + ' — actors may be refused</span>' : '') +
+        (pct === null ? '' : '<div class="apify-meter' + (pct >= 90 ? ' warn' : '') + '"><span style="width:' + pct.toFixed(1) + '%"></span></div>')) +
+      cell('Used / limit', esc(fmtUsd(b.usage_usd)) + ' <span class="cell-sub">/ ' + esc(fmtUsd(b.limit_usd)) + '</span>', '') +
+      cell('Cycle ends', b.cycle_end ? esc(new Date(b.cycle_end).toLocaleDateString()) : '—', '')
+    );
+  }
+
+  function apifyMsg(cls, text) { $('#apifyStatus').attr('class', 'run-status inline-status ' + cls).text(text); }
+  function apifyErr(xhr) { return (xhr.responseJSON && xhr.responseJSON.error) || 'Request failed — is the server running?'; }
+  function apifyPost(url, token) {
+    return $.ajax({ url: url, method: 'POST', contentType: 'application/json', data: JSON.stringify({ token: token }) });
+  }
+
+  function loadApifyStatus(withBalance) {
+    $.getJSON('/api/apify-token').done(function (st) {
+      renderApifyStatus(st);
+      if (withBalance && st.configured) checkApify('');
+      else if (!st.configured) renderApifyBalance(null);
+    }).fail(function () { apifyMsg('err', 'Could not load settings — is the server running?'); });
+  }
+
+  function checkApify(token) {
+    apifyMsg('', 'Checking with Apify…');
+    $('#apifyCheckBtn').prop('disabled', true);
+    return apifyPost('/api/apify-token/check', token)
+      .done(function (b) {
+        renderApifyBalance(b);
+        apifyMsg('ok', token ? 'Token is valid — click Save to use it.' : 'Balance of the token in use.');
+      })
+      .fail(function (xhr) { renderApifyBalance(null); apifyMsg('err', apifyErr(xhr)); })
+      .always(function () { $('#apifyCheckBtn').prop('disabled', false); });
+  }
+
+  $('#apifyShowBtn').on('click', function () {
+    var $i = $('#apifyTokenInput'), hidden = $i.attr('type') === 'password';
+    $i.attr('type', hidden ? 'text' : 'password');
+    $(this).text(hidden ? 'Hide' : 'Show');
+  });
+  $('#apifyCheckBtn').on('click', function () { checkApify($.trim($('#apifyTokenInput').val())); });
+  $('#apifyTokenInput').on('keydown', function (e) { if (e.key === 'Enter') $('#apifySaveBtn').trigger('click'); });
+
+  $('#apifySaveBtn').on('click', function () {
+    var token = $.trim($('#apifyTokenInput').val());
+    if (!token) { apifyMsg('err', 'Paste a token first.'); return; }
+    var $b = $(this).prop('disabled', true);
+    apifyMsg('', 'Verifying and saving…');
+    apifyPost('/api/apify-token', token)
+      .done(function (st) {
+        $('#apifyTokenInput').val('');
+        renderApifyStatus(st);
+        renderApifyBalance(st.balance);
+        apifyMsg('ok', 'Saved — the next run will use this token.');
+      })
+      .fail(function (xhr) { apifyMsg('err', apifyErr(xhr)); })
+      .always(function () { $b.prop('disabled', false); });
+  });
+
+  $('#apifyClearBtn').on('click', function () {
+    if (!confirm('Remove the token saved here and fall back to APIFY_TOKEN from the server env?')) return;
+    apifyPost('/api/apify-token', '')
+      .done(function (st) {
+        renderApifyStatus(st);
+        apifyMsg('ok', 'Reverted to the env token.');
+        if (st.configured) checkApify(''); else renderApifyBalance(null);
+      })
+      .fail(function (xhr) { apifyMsg('err', apifyErr(xhr)); });
+  });
+
+  // Flag a missing token in the sidebar from page load.
+  $.getJSON('/api/apify-token').done(function (st) { $('#settingsNavWarn').toggleClass('d-none', !!st.configured); });
+
   /* ─── Command palette (Ctrl+K) ─────────────────────────── */
   var CMDK_PAGES = [
     { label: 'Overview', hint: 'Page', run: function () { showHome(); } },
@@ -4775,7 +4920,8 @@ $(function () {
     { label: 'People', hint: 'Re-run people', run: function () { showPeoplePageSection(); } },
     { label: 'CRM import', hint: 'Accounts and contacts not yet tracked', run: function () { showCrmPageSection(); } },
     { label: 'Run history', hint: 'Page', run: function () { showHistoryPageSection(); } },
-    { label: 'API docs', hint: 'Page', run: function () { showApiDocsSection(); } }
+    { label: 'API docs', hint: 'Page', run: function () { showApiDocsSection(); } },
+    { label: 'Settings', hint: 'Apify token and balance', run: function () { showSettingsSection(); } }
   ];
   var cmdk = { items: [], sel: 0 };
 
