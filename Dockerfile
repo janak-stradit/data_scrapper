@@ -10,7 +10,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # the system libraries it needs — python:3.12-slim ships none of them.
 # Without this every browser fetch fails with "Executable doesn't exist":
 # blog/newsroom come back empty, news/bloomberg headline-only.
-RUN playwright install --with-deps chromium     && rm -rf /var/lib/apt/lists/*
+# libatomic1 first: newer Playwright's bundled Node links against it, and
+# without it the `playwright` CLI dies before --with-deps can install it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && playwright install --with-deps chromium \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
