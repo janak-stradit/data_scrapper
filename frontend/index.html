@@ -587,6 +587,11 @@
     .ch-count { font-size: 1.35rem; font-weight: 700; letter-spacing: -.02em; line-height: 1; font-variant-numeric: tabular-nums; }
     .ch-meta { font-size: .74rem; color: var(--text-3); margin-top: 3px; }
     .ch-meta.text-danger { color: var(--danger); font-weight: 500; }
+    .ch-err-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .ch-err-toggle { background: none; border: 0; padding: 0; margin-top: 4px; font-size: .74rem; font-weight: 600; color: var(--danger); text-decoration: underline; cursor: pointer; }
+    .ch-err-full { margin-top: 6px; padding: 8px 10px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border);
+                   font-size: .74rem; line-height: 1.45; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow-y: auto; cursor: text; }
+    .channel-card.err-open .ch-err-preview { display: none; }
     .ch-progress { height: 4px; background: var(--surface-3); border-radius: 99px; margin-top: 12px; overflow: hidden; }
     .ch-progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s var(--ease); }
     .channel-fetch-btn {
@@ -1112,6 +1117,9 @@
             </div>
           </div>
           <div class="hero-actions">
+            <label class="run-limit-label" title="How many posts each channel fetches — used by Fetch all and each channel's Fetch new / Retry">Posts per channel
+              <input type="number" id="accountFetchLimit" class="run-limit-input" min="1" max="200" step="1" placeholder="20">
+            </label>
             <button type="button" class="channel-fetch-all-btn" id="channelFetchAllBtn">⟳ Fetch all channels</button>
           </div>
           <div class="run-status" id="channelFetchAllStatus"></div>
@@ -1446,6 +1454,14 @@
             </div>
           </div>
           <div class="digest-sched d-none" id="apifyBalance" style="border-top:1px solid var(--border);"></div>
+        </div>
+
+        <div class="history-panel d-none" id="apifyActorsPanel">
+          <div class="history-toolbar">
+            <div class="history-toolbar-title">Actors</div>
+            <span class="cell-sub" id="apifyActorsNote"></span>
+          </div>
+          <div id="apifyActors"></div>
         </div>
       </div>
 
@@ -1817,6 +1833,7 @@ $(function () {
     $('#channelGrid').html(skeletonCards(8));
     $('#channelFetchAllStatus').attr('class', 'run-status').empty();
     $('#channelFetchAllBtn').prop('disabled', false).html('⟳ Fetch all channels');
+    $('#accountFetchLimit').val('');  // refilled from this target's last run once it loads
     $('#crumbs').html('<li class="breadcrumb-item active">' + esc(label) + '</li>');
     window.scrollTo(0, 0);
 
@@ -1933,6 +1950,13 @@ $(function () {
       $('#overviewDigest').empty();
     }
 
+    // Pre-fill the fetch size with what this target last ran with,
+    // unless the user has already typed a number for it.
+    if (!$('#accountFetchLimit').val()) {
+      var q = (state.account && state.account.json && state.account.json.query) || {};
+      $('#accountFetchLimit').val(clampFetchLimit(q.limit) || 20);
+    }
+
     // Biggest channels first, failed ones last.
     var ordered = channels.slice().sort(function (a, b) {
       var fa = data[a].success === false, fb = data[b].success === false;
@@ -1945,6 +1969,12 @@ $(function () {
       var blk = data[ch], m = channelMeta(ch);
       var good = blk.success !== false;
       var cnt = blk.count || 0;
+      // Full error behind a toggle — the 2-line preview cuts off the
+      // part that matters (e.g. "…monthly usage limit exceeded").
+      var errDetail = !good && blk.error
+        ? '<button type="button" class="ch-err-toggle">Details</button>' +
+          '<div class="ch-err-full d-none">' + esc(blk.error) + '</div>'
+        : '';
       return '<div class="channel-card' + (good ? '' : ' failed') + (state.channel === ch ? ' active' : '') + ' fade-in" data-channel="' + esc(ch) + '">' +
           '<div class="ch-top">' +
             '<div class="ch-icon ' + m.cls + '">' + m.icon + '</div>' +
@@ -1953,10 +1983,10 @@ $(function () {
           (good || cnt
             ? '<div class="ch-count">' + cnt.toLocaleString() + '</div>' +
               (good ? '<div class="ch-meta">posts stored</div>'
-                    : '<div class="ch-meta text-danger" title="' + esc(blk.error || '') + '">Last scrape failed · older posts kept</div>') +
+                    : '<div class="ch-meta text-danger" title="' + esc(blk.error || '') + '">Last scrape failed · older posts kept</div>' + errDetail) +
               '<div class="ch-progress"><div class="ch-progress-fill" style="width:' + Math.max(2, Math.round(cnt / maxCount * 100)) + '%"></div></div>'
             : '<div class="ch-meta text-danger" title="' + esc(blk.error || '') + '">Last scrape failed</div>' +
-              '<div class="ch-meta" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + esc(blk.error || '') + '</div>') +
+              '<div class="ch-meta ch-err-preview">' + esc(blk.error || '') + '</div>' + errDetail) +
           '<button type="button" class="channel-fetch-btn" data-channel="' + esc(ch) + '">' + (good ? '⟳ Fetch new' : '↻ Retry') + '</button>' +
         '</div>';
     }).join('');
@@ -4045,6 +4075,32 @@ $(function () {
      channel via `only`, then refreshes the channel grid in place. Never
      generates a digest — this is fetch-and-store only, matching the
      Pipeline page's "① Fetch" stage but scoped to a single channel. */
+  // Posts-per-channel for the company page's fetch buttons (1–200).
+  function clampFetchLimit(v) {
+    var n = parseInt(v, 10);
+    return n >= 1 ? Math.min(200, n) : null;
+  }
+  function accountFetchLimit() {
+    var $i = $('#accountFetchLimit'), n = clampFetchLimit($i.val());
+    if (!n) {
+      $('#channelFetchAllStatus').attr('class', 'run-status err').text('Posts per channel must be a number from 1 to 200.');
+      $i.trigger('focus');
+      return null;
+    }
+    $i.val(n);
+    return n;
+  }
+
+  $('#channelGrid').on('click', '.ch-err-toggle', function (e) {
+    e.stopPropagation();
+    var $card = $(this).closest('.channel-card').toggleClass('err-open');
+    var open = $card.hasClass('err-open');
+    $card.find('.ch-err-full').toggleClass('d-none', !open);
+    $(this).text(open ? 'Hide details' : 'Details');
+  });
+  // Selecting/copying the error text shouldn't open the channel.
+  $('#channelGrid').on('click', '.ch-err-full', function (e) { e.stopPropagation(); });
+
   $('#channelGrid').on('click', '.channel-fetch-btn', function (e) {
     e.stopPropagation();
     var $btn = $(this);
@@ -4057,7 +4113,8 @@ $(function () {
       return;
     }
 
-    var limit = (state.account.json.query && state.account.json.query.limit) || 20;
+    var limit = accountFetchLimit();
+    if (!limit) return;
     $btn.prop('disabled', true).html('<span class="btn-spinner"></span>Fetching…');
 
     $.ajax({
@@ -4120,7 +4177,8 @@ $(function () {
       return;
     }
 
-    var limit = (state.account.json.query && state.account.json.query.limit) || 20;
+    var limit = accountFetchLimit();
+    if (!limit) return;
     $btn.prop('disabled', true).html('<span class="btn-spinner"></span>Fetching all…');
     $('.channel-fetch-btn').prop('disabled', true);
     $status.attr('class', 'run-status').text(
@@ -4827,7 +4885,30 @@ $(function () {
     $('#apifyClearBtn').toggleClass('d-none', st.source !== 'ui');
   }
 
+  // One row per Apify-backed channel: can this key run it right now?
+  // An actor can be reachable yet still blocked by an empty balance.
+  function renderApifyActors(b) {
+    if (!b || !b.actors) { $('#apifyActorsPanel').addClass('d-none'); return; }
+    var noCredit = typeof b.remaining_usd === 'number' && b.remaining_usd <= 0;
+    var ready = 0;
+    var rows = b.actors.map(function (a) {
+      var st;
+      if (!a.ok) st = '<span class="pill pill-danger">Unavailable</span><div class="cell-sub" style="color:var(--danger);">' + esc(a.error || '') + '</div>';
+      else if (noCredit) st = '<span class="pill pill-warning">No credit</span><div class="cell-sub">Reachable, but the account has no usage left this cycle.</div>';
+      else { st = '<span class="pill pill-success">Ready</span>'; ready++; }
+      return '<tr class="rh-row"><td class="rh-target">' + esc(a.label) + '</td>' +
+        '<td><a href="' + esc(a.url || '#') + '" target="_blank" rel="noopener"><code>' + esc(a.actor_id) + '</code></a>' +
+          (a.pricing ? '<div class="cell-sub">' + esc(a.pricing) + '</div>' : '') + '</td>' +
+        '<td>' + st + '</td></tr>';
+    }).join('');
+    $('#apifyActorsNote').text(ready + ' of ' + b.actors.length + ' ready · Store actors need no install, any token can run them');
+    $('#apifyActors').html('<div class="table-wrap no-max"><table class="run-history-table"><thead><tr>' +
+      '<th>Channel</th><th>Actor</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>');
+    $('#apifyActorsPanel').removeClass('d-none');
+  }
+
   function renderApifyBalance(b) {
+    renderApifyActors(b);
     if (!b) { $('#apifyBalance').addClass('d-none').empty(); return; }
     var pct = (typeof b.usage_usd === 'number' && b.limit_usd) ? Math.min(100, b.usage_usd / b.limit_usd * 100) : null;
     function cell(label, value, sub) {

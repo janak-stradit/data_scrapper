@@ -12,7 +12,7 @@ any path with a dot-segment, so it is never served over /output/.
 """
 import json
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 from dotenv import load_dotenv
@@ -91,6 +91,8 @@ def check(token: Optional[str] = None) -> Dict[str, Any]:
     except requests.RequestException as e:
         raise ApifyCheckError(f"Could not reach Apify: {e}") from e
 
+    actors = check_actors(token)
+
     used = (limits.get("current") or {}).get("monthlyUsageUsd")
     cap = (limits.get("limits") or {}).get("maxMonthlyUsageUsd")
     remaining = (cap - used) if isinstance(cap, (int, float)) and isinstance(used, (int, float)) else None
@@ -106,7 +108,55 @@ def check(token: Optional[str] = None) -> Dict[str, Any]:
         "cycle_start": cycle.get("startAt"),
         "cycle_end": cycle.get("endAt"),
         "masked": mask(token),
+        "actors": actors,
     }
+
+
+# The channels that still run on Apify (blog/reddit/news moved off it).
+ACTOR_CHANNELS = {
+    "linkedin": "LinkedIn posts",
+    "linkedin_jobs": "Job postings",
+    "twitter": "Twitter/X",
+    "cxo_news": "Executive moves",
+}
+
+
+def check_actors(token: str) -> List[Dict[str, Any]]:
+    """Can this token run each actor the pipeline uses? Read-only — looks
+    each actor up, never starts a run. Public Store actors need no install,
+    so "ok" here means the actor exists and this account may call it;
+    whether there's credit to pay for the run is the balance's job."""
+    from concurrent.futures import ThreadPoolExecutor
+    from config import ACTORS
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    def one(key: str) -> Dict[str, Any]:
+        actor_id = ACTORS.get(key, "")
+        row = {"key": key, "label": ACTOR_CHANNELS[key], "actor_id": actor_id,
+               "url": f"https://console.apify.com/actors/{actor_id.replace('/', '~')}" if actor_id else None}
+        try:
+            r = requests.get(f"{_API}/acts/{actor_id.replace('/', '~')}", headers=headers, timeout=15)
+        except requests.RequestException as e:
+            return {**row, "ok": False, "error": f"Could not reach Apify: {e}"}
+        if r.status_code == 404:
+            return {**row, "ok": False, "error": "Actor not found — it may have been renamed or removed from the Apify Store."}
+        if r.status_code in (401, 403):
+            return {**row, "ok": False, "error": "This token isn't allowed to use this actor."}
+        if not r.ok:
+            return {**row, "ok": False, "error": f"Apify returned HTTP {r.status_code}."}
+        data = r.json().get("data") or {}
+        pricing = (data.get("pricingInfos") or [{}])[-1].get("pricingModel") or "FREE"
+        ok, error = True, None
+        if pricing == "FLAT_PRICE_PER_MONTH":
+            # Rental actors are the one case that needs a step in the
+            # console first — Apify has no API to start a rental.
+            ok, error = False, "Rental actor — rent it once in the Apify console with this account."
+        return {**row, "ok": ok, "error": error, "title": data.get("title"),
+                "pricing": pricing.replace("_", " ").lower()}
+
+    with ThreadPoolExecutor(max_workers=len(ACTOR_CHANNELS)) as pool:
+        return list(pool.map(one, ACTOR_CHANNELS))
 
 
 def save_token(token: str) -> Dict[str, Any]:
