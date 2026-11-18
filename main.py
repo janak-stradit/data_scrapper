@@ -914,9 +914,13 @@ def cmd_serve(args) -> int:
                 return
 
             try:
-                limit = int(payload.get("limit") or 10)
+                limit = int(payload.get("limit", 10))
             except (TypeError, ValueError):
                 self._send_json(400, {"ok": False, "error": "limit must be a number"})
+                return
+            if not 1 <= limit <= 200:
+                # Paid actors bill per result — cap it so a typo can't run up the bill.
+                self._send_json(400, {"ok": False, "error": "limit must be between 1 and 200"})
                 return
 
             started_entry = runner.start(kind, target, limit, only=only)
