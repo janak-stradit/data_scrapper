@@ -149,6 +149,31 @@ COMPANY_TARGETS: Dict[str, Dict[str, Any]] = {
             'OR promoted OR succeeds)'
         ),
     },
+    # Hyphenated key on purpose: it's the CRM accounts.key for DTCC and the
+    # key its existing posts/run history are stored under. Was an ad-hoc
+    # /api/run target (config only in Postgres) with no Job postings or
+    # Executive moves channel — moved here so it matches the others.
+    "depository-trust-clearing": {
+        "display_name": "Depository Trust & Clearing Corporation",
+        "ticker": None,  # privately held, user-owned by its member firms
+        "linkedin_url": "https://www.linkedin.com/company/dtcc/",
+        "linkedin_jobs_query": "https://www.linkedin.com/company/dtcc/",
+        "twitter_handle": "@The_DTCC",
+        "reddit_query": "The Depository Trust & Clearing Corporation site:reddit.com",
+        "news_query": "The Depository Trust & Clearing Corporation news",
+        "blog_url": "https://www.dtcc.com/newsroom",
+        "rss_url": "https://news.google.com/rss/search?q=Depository+Trust+%26+Clearing&hl=en-US&gl=US&ceid=US:en",
+        # Bare "DTCC" is unambiguous in news; the full name catches
+        # articles that never use the acronym.
+        "cxo_news_query": (
+            '"DTCC" OR "Depository Trust & Clearing Corporation" '
+            '(CEO OR CFO OR COO OR CTO OR President OR "Chief Investment Officer" '
+            'OR "Chief Risk Officer" OR VP OR "Vice President" OR SVP OR EVP '
+            'OR "Senior Vice President" OR "Executive Vice President") '
+            '(joins OR appointed OR named OR resigns OR "steps down" OR retires '
+            'OR promoted OR succeeds)'
+        ),
+    },
 }
 COMPANY_TARGETS.update(custom_targets.load_section("companies"))
 
@@ -171,6 +196,10 @@ ALIASES = {
     "vanguard": "vanguard",
     "vanguard_group": "vanguard",
     "the_vanguard_group": "vanguard",
+    "depository-trust-clearing": "depository-trust-clearing",
+    "depository_trust_clearing": "depository-trust-clearing",
+    "depository_trust_&_clearing_corporation": "depository-trust-clearing",
+    "dtcc": "depository-trust-clearing",
 }
 for _key in custom_targets.load_section("companies"):
     ALIASES.setdefault(_key, _key)
