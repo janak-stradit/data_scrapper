@@ -573,6 +573,25 @@ don't leak internal stack traces.
 
 ---
 
+## Apify token — `GET /api/apify-token`, `POST /api/apify-token`, `POST /api/apify-token/check`
+
+The token the Apify actors (LinkedIn, LinkedIn Jobs, Twitter/X, CXO news)
+run with. One saved here overrides `APIFY_TOKEN` from the env and is used
+from the next run on, by both the web server and the scheduler. The token
+itself is never returned — only a masked form.
+
+- `GET /api/apify-token` → `{"configured", "source": "ui"|"env"|null, "masked", "updated_at"}`
+- `POST /api/apify-token` `{"token": "apify_api_…"}` — verifies the token with
+  Apify, then saves it; returns the GET shape plus `balance`. `{"token": ""}`
+  removes the saved token (falls back to the env one).
+- `POST /api/apify-token/check` `{"token"?}` — verifies without saving and
+  returns the balance; omit `token` to check the one in use:
+  `{"ok", "username", "plan", "usage_usd", "limit_usd", "remaining_usd", "cycle_start", "cycle_end", "masked"}`
+
+A rejected or unreachable token gives `400 {"ok": false, "error"}`.
+
+---
+
 ## Reading results
 
 Account/people data has proper endpoints (above). A few other things
